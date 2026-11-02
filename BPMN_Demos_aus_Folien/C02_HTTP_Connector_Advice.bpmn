@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_C02_HTTP_Connector_Advice" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_C02_HTTP_Connector_Advice">
+    <bpmn:participant id="P_C02" name="Advice of the Day" processRef="advice-of-the-day" />
+  </bpmn:collaboration>
+  <bpmn:process id="advice-of-the-day" name="Advice of the Day" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>05b Serviceaufrufe, Folien 3–11. Die Serviceaufgabe ruft per HTTP-Connector (Connector ID http-connector) die öffentliche API https://api.adviceslip.com/advice auf (GET). Connector-Ausgabe: advice_of_the_day = ${response} (der Antworttext). 'Check Advice' zeigt die ganze Antwort und – wie auf Folie 11 – die einzeln mit Spin herausgezogenen Felder slip.id und slip.advice. Voraussetzung: Der CIB-seven-Container hat Internetzugang.</bpmn:documentation>
+    <bpmn:startEvent id="C02_Start">
+      <bpmn:outgoing>Flow_C02_Start_C02_Call</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="C02_Call" name="Call Advice">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">https://api.adviceslip.com/advice</camunda:inputParameter>
+            <camunda:inputParameter name="method">GET</camunda:inputParameter>
+            <camunda:outputParameter name="advice_of_the_day">${response}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C02_Start_C02_Call</bpmn:incoming>
+      <bpmn:outgoing>Flow_C02_Call_C02_Check</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="C02_Check" name="Check Advice" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="advice_of_the_day" label="Advice of the day" type="string" />
+          <camunda:formField id="adviceId" label="Advice ID" type="long" defaultValue='${S(advice_of_the_day).prop("slip").prop("id").numberValue()}' />
+          <camunda:formField id="advice" label="Advice" type="string" defaultValue='${S(advice_of_the_day).prop("slip").prop("advice").stringValue()}' />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C02_Call_C02_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_C02_Check_C02_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="C02_End">
+      <bpmn:incoming>Flow_C02_Check_C02_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C02_Start_C02_Call" sourceRef="C02_Start" targetRef="C02_Call" />
+    <bpmn:sequenceFlow id="Flow_C02_Call_C02_Check" sourceRef="C02_Call" targetRef="C02_Check" />
+    <bpmn:sequenceFlow id="Flow_C02_Check_C02_End" sourceRef="C02_Check" targetRef="C02_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_C02_HTTP_Connector_Advice">
+    <bpmndi:BPMNPlane id="BPMNPlane_C02_HTTP_Connector_Advice" bpmnElement="Collaboration_C02_HTTP_Connector_Advice">
+      <bpmndi:BPMNShape id="P_C02_di" bpmnElement="P_C02" isHorizontal="true"><dc:Bounds x="140" y="40" width="560" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C02_Start_di" bpmnElement="C02_Start"><dc:Bounds x="192" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C02_Call_di" bpmnElement="C02_Call"><dc:Bounds x="270" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C02_Check_di" bpmnElement="C02_Check"><dc:Bounds x="430" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C02_End_di" bpmnElement="C02_End"><dc:Bounds x="602" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_C02_Start_C02_Call_di" bpmnElement="Flow_C02_Start_C02_Call"><di:waypoint x="228" y="140" /><di:waypoint x="270" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C02_Call_C02_Check_di" bpmnElement="Flow_C02_Call_C02_Check"><di:waypoint x="370" y="140" /><di:waypoint x="430" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C02_Check_C02_End_di" bpmnElement="Flow_C02_Check_C02_End"><di:waypoint x="530" y="140" /><di:waypoint x="602" y="140" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

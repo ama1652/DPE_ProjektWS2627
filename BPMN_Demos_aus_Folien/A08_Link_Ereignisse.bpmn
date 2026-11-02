@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A08_Link_Ereignisse" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A08_Link_Ereignisse">
+    <bpmn:participant id="P_A08_A" name="A: Schleife mit langem Rückfluss" processRef="A08_A_Schleife" />
+    <bpmn:participant id="P_A08_B" name="B: Gleiche Schleife mit Link-Ereignissen ('Label A')" processRef="A08_B_Link" />
+  </bpmn:collaboration>
+  <bpmn:process id="A08_A_Schleife" name="A: Schleife mit langem Rückfluss" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 8: Link-Ereignisse ersetzen einen langen Sequenzfluss innerhalb DESSELBEN Prozesses (wie 'springe zu Label A'). Schwarzes Link-Ereignis = werfen, weißes = fangen. Folie 9: Link darf NICHT die Grenze eines Teilprozesses überspringen. Step 6 ist hier eine Benutzeraufgabe, damit du 'Approved?' beantworten kannst (sonst Endlosschleife).</bpmn:documentation>
+    <bpmn:startEvent id="A08A_Start" name="Manual Start">
+      <bpmn:outgoing>Flow_A08A_Start_A08A_Gw</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="A08A_Gw">
+      <bpmn:incoming>Flow_A08A_Start_A08A_Gw</bpmn:incoming>
+      <bpmn:incoming>Flow_A08A_Appr_A08A_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_Gw_A08A_S1</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="A08A_S1" name="Step 1" camunda:expression="${execution.setVariable('step1', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08A_Gw_A08A_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_S1_A08A_S2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08A_S2" name="Step 2" camunda:expression="${execution.setVariable('step2', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08A_S1_A08A_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_S2_A08A_S3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08A_S3" name="Step 3" camunda:expression="${execution.setVariable('step3', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08A_S2_A08A_S3</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_S3_A08A_S4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08A_S4" name="Step 4" camunda:expression="${execution.setVariable('step4', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08A_S3_A08A_S4</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_S4_A08A_S5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08A_S5" name="Step 5" camunda:expression="${execution.setVariable('step5', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08A_S4_A08A_S5</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_S5_A08A_S6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="A08A_S6" name="Step 6" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="approved" label="Approved?" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A08A_S5_A08A_S6</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_S6_A08A_Appr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A08A_Appr" name="Approved?">
+      <bpmn:incoming>Flow_A08A_S6_A08A_Appr</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08A_Appr_A08A_End</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A08A_Appr_A08A_Gw</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="A08A_End" name="Success">
+      <bpmn:incoming>Flow_A08A_Appr_A08A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A08A_Start_A08A_Gw" sourceRef="A08A_Start" targetRef="A08A_Gw" />
+    <bpmn:sequenceFlow id="Flow_A08A_Gw_A08A_S1" sourceRef="A08A_Gw" targetRef="A08A_S1" />
+    <bpmn:sequenceFlow id="Flow_A08A_S1_A08A_S2" sourceRef="A08A_S1" targetRef="A08A_S2" />
+    <bpmn:sequenceFlow id="Flow_A08A_S2_A08A_S3" sourceRef="A08A_S2" targetRef="A08A_S3" />
+    <bpmn:sequenceFlow id="Flow_A08A_S3_A08A_S4" sourceRef="A08A_S3" targetRef="A08A_S4" />
+    <bpmn:sequenceFlow id="Flow_A08A_S4_A08A_S5" sourceRef="A08A_S4" targetRef="A08A_S5" />
+    <bpmn:sequenceFlow id="Flow_A08A_S5_A08A_S6" sourceRef="A08A_S5" targetRef="A08A_S6" />
+    <bpmn:sequenceFlow id="Flow_A08A_S6_A08A_Appr" sourceRef="A08A_S6" targetRef="A08A_Appr" />
+    <bpmn:sequenceFlow id="Flow_A08A_Appr_A08A_End" name="Yes" sourceRef="A08A_Appr" targetRef="A08A_End">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A08A_Appr_A08A_Gw" name="No" sourceRef="A08A_Appr" targetRef="A08A_Gw">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:process id="A08_B_Link" name="B: Gleiche Schleife mit Link-Ereignissen ('Label A')" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 8: Link-Ereignisse ersetzen einen langen Sequenzfluss innerhalb DESSELBEN Prozesses (wie 'springe zu Label A'). Schwarzes Link-Ereignis = werfen, weißes = fangen. Folie 9: Link darf NICHT die Grenze eines Teilprozesses überspringen. Step 6 ist hier eine Benutzeraufgabe, damit du 'Approved?' beantworten kannst (sonst Endlosschleife).</bpmn:documentation>
+    <bpmn:startEvent id="A08B_Start" name="Manual Start">
+      <bpmn:outgoing>Flow_A08B_Start_A08B_Gw</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="A08B_Gw">
+      <bpmn:incoming>Flow_A08B_Start_A08B_Gw</bpmn:incoming>
+      <bpmn:incoming>Flow_A08B_LCatch_A08B_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_Gw_A08B_S1</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="A08B_S1" name="Step 1" camunda:expression="${execution.setVariable('step1', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08B_Gw_A08B_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_S1_A08B_S2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08B_S2" name="Step 2" camunda:expression="${execution.setVariable('step2', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08B_S1_A08B_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_S2_A08B_S3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08B_S3" name="Step 3" camunda:expression="${execution.setVariable('step3', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08B_S2_A08B_S3</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_S3_A08B_S4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08B_S4" name="Step 4" camunda:expression="${execution.setVariable('step4', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08B_S3_A08B_S4</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_S4_A08B_S5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="A08B_S5" name="Step 5" camunda:expression="${execution.setVariable('step5', 'ausgeführt')}">
+      <bpmn:incoming>Flow_A08B_S4_A08B_S5</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_S5_A08B_S6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="A08B_S6" name="Step 6" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="approved" label="Approved?" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A08B_S5_A08B_S6</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_S6_A08B_Appr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A08B_Appr" name="Approved?">
+      <bpmn:incoming>Flow_A08B_S6_A08B_Appr</bpmn:incoming>
+      <bpmn:outgoing>Flow_A08B_Appr_A08B_End</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A08B_Appr_A08B_LThrow</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="A08B_End" name="Success">
+      <bpmn:incoming>Flow_A08B_Appr_A08B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:intermediateThrowEvent id="A08B_LThrow" name="Label A">
+      <bpmn:incoming>Flow_A08B_Appr_A08B_LThrow</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkDef_A08B_LThrow" name="LabelA" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="A08B_LCatch" name="Label A">
+      <bpmn:outgoing>Flow_A08B_LCatch_A08B_Gw</bpmn:outgoing>
+      <bpmn:linkEventDefinition id="LinkDef_A08B_LCatch" name="LabelA" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_A08B_Start_A08B_Gw" sourceRef="A08B_Start" targetRef="A08B_Gw" />
+    <bpmn:sequenceFlow id="Flow_A08B_Gw_A08B_S1" sourceRef="A08B_Gw" targetRef="A08B_S1" />
+    <bpmn:sequenceFlow id="Flow_A08B_S1_A08B_S2" sourceRef="A08B_S1" targetRef="A08B_S2" />
+    <bpmn:sequenceFlow id="Flow_A08B_S2_A08B_S3" sourceRef="A08B_S2" targetRef="A08B_S3" />
+    <bpmn:sequenceFlow id="Flow_A08B_S3_A08B_S4" sourceRef="A08B_S3" targetRef="A08B_S4" />
+    <bpmn:sequenceFlow id="Flow_A08B_S4_A08B_S5" sourceRef="A08B_S4" targetRef="A08B_S5" />
+    <bpmn:sequenceFlow id="Flow_A08B_S5_A08B_S6" sourceRef="A08B_S5" targetRef="A08B_S6" />
+    <bpmn:sequenceFlow id="Flow_A08B_S6_A08B_Appr" sourceRef="A08B_S6" targetRef="A08B_Appr" />
+    <bpmn:sequenceFlow id="Flow_A08B_Appr_A08B_End" name="Yes" sourceRef="A08B_Appr" targetRef="A08B_End">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A08B_Appr_A08B_LThrow" name="No" sourceRef="A08B_Appr" targetRef="A08B_LThrow">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A08B_LCatch_A08B_Gw" sourceRef="A08B_LCatch" targetRef="A08B_Gw" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A08_Link_Ereignisse">
+    <bpmndi:BPMNPlane id="BPMNPlane_A08_Link_Ereignisse" bpmnElement="Collaboration_A08_Link_Ereignisse">
+      <bpmndi:BPMNShape id="P_A08_A_di" bpmnElement="P_A08_A" isHorizontal="true"><dc:Bounds x="140" y="40" width="1080" height="230" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A08_B_di" bpmnElement="P_A08_B" isHorizontal="true"><dc:Bounds x="140" y="300" width="1080" height="230" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_Start_di" bpmnElement="A08A_Start"><dc:Bounds x="182" y="112" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="158" y="152" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_Gw_di" bpmnElement="A08A_Gw" isMarkerVisible="true"><dc:Bounds x="245" y="105" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_S1_di" bpmnElement="A08A_S1"><dc:Bounds x="320" y="90" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_S2_di" bpmnElement="A08A_S2"><dc:Bounds x="450" y="90" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_S3_di" bpmnElement="A08A_S3"><dc:Bounds x="580" y="90" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_S4_di" bpmnElement="A08A_S4"><dc:Bounds x="710" y="90" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_S5_di" bpmnElement="A08A_S5"><dc:Bounds x="840" y="90" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_S6_di" bpmnElement="A08A_S6"><dc:Bounds x="970" y="90" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_Appr_di" bpmnElement="A08A_Appr" isMarkerVisible="true"><dc:Bounds x="1085" y="105" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1078" y="75" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08A_End_di" bpmnElement="A08A_End"><dc:Bounds x="1162" y="112" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1150" y="152" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_Start_di" bpmnElement="A08B_Start"><dc:Bounds x="182" y="372" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="158" y="412" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_Gw_di" bpmnElement="A08B_Gw" isMarkerVisible="true"><dc:Bounds x="245" y="365" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_S1_di" bpmnElement="A08B_S1"><dc:Bounds x="320" y="350" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_S2_di" bpmnElement="A08B_S2"><dc:Bounds x="450" y="350" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_S3_di" bpmnElement="A08B_S3"><dc:Bounds x="580" y="350" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_S4_di" bpmnElement="A08B_S4"><dc:Bounds x="710" y="350" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_S5_di" bpmnElement="A08B_S5"><dc:Bounds x="840" y="350" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_S6_di" bpmnElement="A08B_S6"><dc:Bounds x="970" y="350" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_Appr_di" bpmnElement="A08B_Appr" isMarkerVisible="true"><dc:Bounds x="1085" y="365" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1078" y="335" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_End_di" bpmnElement="A08B_End"><dc:Bounds x="1162" y="372" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1150" y="412" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_LThrow_di" bpmnElement="A08B_LThrow"><dc:Bounds x="1092" y="462" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1080" y="502" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A08B_LCatch_di" bpmnElement="A08B_LCatch"><dc:Bounds x="252" y="462" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="240" y="502" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A08A_Start_A08A_Gw_di" bpmnElement="Flow_A08A_Start_A08A_Gw"><di:waypoint x="218" y="130" /><di:waypoint x="245" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_Gw_A08A_S1_di" bpmnElement="Flow_A08A_Gw_A08A_S1"><di:waypoint x="295" y="130" /><di:waypoint x="320" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_S1_A08A_S2_di" bpmnElement="Flow_A08A_S1_A08A_S2"><di:waypoint x="420" y="130" /><di:waypoint x="450" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_S2_A08A_S3_di" bpmnElement="Flow_A08A_S2_A08A_S3"><di:waypoint x="550" y="130" /><di:waypoint x="580" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_S3_A08A_S4_di" bpmnElement="Flow_A08A_S3_A08A_S4"><di:waypoint x="680" y="130" /><di:waypoint x="710" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_S4_A08A_S5_di" bpmnElement="Flow_A08A_S4_A08A_S5"><di:waypoint x="810" y="130" /><di:waypoint x="840" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_S5_A08A_S6_di" bpmnElement="Flow_A08A_S5_A08A_S6"><di:waypoint x="940" y="130" /><di:waypoint x="970" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_S6_A08A_Appr_di" bpmnElement="Flow_A08A_S6_A08A_Appr"><di:waypoint x="1070" y="130" /><di:waypoint x="1085" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_Appr_A08A_End_di" bpmnElement="Flow_A08A_Appr_A08A_End"><di:waypoint x="1135" y="130" /><di:waypoint x="1162" y="130" /><bpmndi:BPMNLabel><dc:Bounds x="1150" y="112" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08A_Appr_A08A_Gw_di" bpmnElement="Flow_A08A_Appr_A08A_Gw"><di:waypoint x="1110" y="155" /><di:waypoint x="1110" y="220" /><di:waypoint x="270" y="220" /><di:waypoint x="270" y="155" /><bpmndi:BPMNLabel><dc:Bounds x="285" y="202" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_Start_A08B_Gw_di" bpmnElement="Flow_A08B_Start_A08B_Gw"><di:waypoint x="218" y="390" /><di:waypoint x="245" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_Gw_A08B_S1_di" bpmnElement="Flow_A08B_Gw_A08B_S1"><di:waypoint x="295" y="390" /><di:waypoint x="320" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_S1_A08B_S2_di" bpmnElement="Flow_A08B_S1_A08B_S2"><di:waypoint x="420" y="390" /><di:waypoint x="450" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_S2_A08B_S3_di" bpmnElement="Flow_A08B_S2_A08B_S3"><di:waypoint x="550" y="390" /><di:waypoint x="580" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_S3_A08B_S4_di" bpmnElement="Flow_A08B_S3_A08B_S4"><di:waypoint x="680" y="390" /><di:waypoint x="710" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_S4_A08B_S5_di" bpmnElement="Flow_A08B_S4_A08B_S5"><di:waypoint x="810" y="390" /><di:waypoint x="840" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_S5_A08B_S6_di" bpmnElement="Flow_A08B_S5_A08B_S6"><di:waypoint x="940" y="390" /><di:waypoint x="970" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_S6_A08B_Appr_di" bpmnElement="Flow_A08B_S6_A08B_Appr"><di:waypoint x="1070" y="390" /><di:waypoint x="1085" y="390" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_Appr_A08B_End_di" bpmnElement="Flow_A08B_Appr_A08B_End"><di:waypoint x="1135" y="390" /><di:waypoint x="1162" y="390" /><bpmndi:BPMNLabel><dc:Bounds x="1150" y="372" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_Appr_A08B_LThrow_di" bpmnElement="Flow_A08B_Appr_A08B_LThrow"><di:waypoint x="1110" y="415" /><di:waypoint x="1110" y="462" /><bpmndi:BPMNLabel><dc:Bounds x="1115" y="432" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A08B_LCatch_A08B_Gw_di" bpmnElement="Flow_A08B_LCatch_A08B_Gw"><di:waypoint x="270" y="462" /><di:waypoint x="270" y="415" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

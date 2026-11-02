@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A29_Prozesse_starten" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A29_Prozesse_starten">
+    <bpmn:participant id="P_A29_O" name="Original: drei Startereignisse (nur Ansicht – so in CIB seven nicht ausführbar)" processRef="A29_O_Original" />
+    <bpmn:participant id="P_A29_A" name="A: Normaler Start + Nachrichtenstart (ausführbar)" processRef="A29_A_MehrereStarts" />
+    <bpmn:participant id="P_A29_B" name="B: Instanziierendes ereignisbasiertes Gateway – exklusiv (nur Ansicht)" processRef="A29_B_EventGwExklusiv" />
+    <bpmn:participant id="P_A29_C" name="C: Instanziierendes ereignisbasiertes Gateway – parallel (nur Ansicht)" processRef="A29_C_EventGwParallel" />
+  </bpmn:collaboration>
+  <bpmn:process id="A29_O_Original" name="Original: drei Startereignisse (nur Ansicht – so in CIB seven nicht ausführbar)" isExecutable="false">
+    <bpmn:documentation>Folie 29 oben: normales, Nachrichten- und Timer-Startereignis in EINEM Prozess. CIB seven lehnt das beim Hochladen ab (ENGINE-09005: 'multiple none start events or timer start events not supported'). Ausführbare Variante: Pool A.</bpmn:documentation>
+    <bpmn:startEvent id="A29O_SNone" name="Create Report via Invocation">
+      <bpmn:outgoing>Flow_A29O_SNone_A29O_Calc</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="A29O_SMsg" name="Create Report via Message">
+      <bpmn:outgoing>Flow_A29O_SMsg_A29O_Calc</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A29O_SMsg" messageRef="Message_A29_ReportAnfrage" />
+    </bpmn:startEvent>
+    <bpmn:startEvent id="A29O_STimer" name="Create Report at end of month">
+      <bpmn:outgoing>Flow_A29O_STimer_A29O_Xor</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A29O_STimer">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">0 0 0 L * ?</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:task id="A29O_Calc" name="Calculate time period for report">
+      <bpmn:incoming>Flow_A29O_SNone_A29O_Calc</bpmn:incoming>
+      <bpmn:incoming>Flow_A29O_SMsg_A29O_Calc</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29O_Calc_A29O_Xor</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="A29O_Xor">
+      <bpmn:incoming>Flow_A29O_STimer_A29O_Xor</bpmn:incoming>
+      <bpmn:incoming>Flow_A29O_Calc_A29O_Xor</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29O_Xor_A29O_Rep</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="A29O_Rep" name="Create report">
+      <bpmn:incoming>Flow_A29O_Xor_A29O_Rep</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29O_Rep_A29O_End</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="A29O_End">
+      <bpmn:incoming>Flow_A29O_Rep_A29O_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A29O_SNone_A29O_Calc" sourceRef="A29O_SNone" targetRef="A29O_Calc" />
+    <bpmn:sequenceFlow id="Flow_A29O_SMsg_A29O_Calc" sourceRef="A29O_SMsg" targetRef="A29O_Calc" />
+    <bpmn:sequenceFlow id="Flow_A29O_STimer_A29O_Xor" sourceRef="A29O_STimer" targetRef="A29O_Xor" />
+    <bpmn:sequenceFlow id="Flow_A29O_Calc_A29O_Xor" sourceRef="A29O_Calc" targetRef="A29O_Xor" />
+    <bpmn:sequenceFlow id="Flow_A29O_Xor_A29O_Rep" sourceRef="A29O_Xor" targetRef="A29O_Rep" />
+    <bpmn:sequenceFlow id="Flow_A29O_Rep_A29O_End" sourceRef="A29O_Rep" targetRef="A29O_End" />
+  </bpmn:process>
+  <bpmn:process id="A29_A_MehrereStarts" name="A: Normaler Start + Nachrichtenstart (ausführbar)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Ausführbare Variante von Folie 29 oben: Ein Prozess darf in CIB seven ein normales Startereignis und beliebig viele Nachrichten-Startereignisse haben, aber NICHT zusätzlich einen Timer-Start. Jeder Start erzeugt eine eigene Instanz: Tasklist/REST oder ./dpe-demo.sh msg A29_ReportAnfrage. Der Timer-Start bräuchte einen eigenen Prozess.</bpmn:documentation>
+    <bpmn:startEvent id="A29A_SNone" name="Create Report via Invocation">
+      <bpmn:outgoing>Flow_A29A_SNone_A29A_Calc</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="A29A_SMsg" name="Create Report via Message">
+      <bpmn:outgoing>Flow_A29A_SMsg_A29A_Calc</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A29A_SMsg" messageRef="Message_A29_ReportAnfrage" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="A29A_Calc" name="Calculate time period for report" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A29A_SNone_A29A_Calc</bpmn:incoming>
+      <bpmn:incoming>Flow_A29A_SMsg_A29A_Calc</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29A_Calc_A29A_Rep</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A29A_Rep" name="Create report" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A29A_Calc_A29A_Rep</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29A_Rep_A29A_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A29A_End">
+      <bpmn:incoming>Flow_A29A_Rep_A29A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A29A_SNone_A29A_Calc" sourceRef="A29A_SNone" targetRef="A29A_Calc" />
+    <bpmn:sequenceFlow id="Flow_A29A_SMsg_A29A_Calc" sourceRef="A29A_SMsg" targetRef="A29A_Calc" />
+    <bpmn:sequenceFlow id="Flow_A29A_Calc_A29A_Rep" sourceRef="A29A_Calc" targetRef="A29A_Rep" />
+    <bpmn:sequenceFlow id="Flow_A29A_Rep_A29A_End" sourceRef="A29A_Rep" targetRef="A29A_End" />
+  </bpmn:process>
+  <bpmn:process id="A29_B_EventGwExklusiv" name="B: Instanziierendes ereignisbasiertes Gateway – exklusiv (nur Ansicht)" isExecutable="false">
+    <bpmn:documentation>Folie 29 Mitte: Wartet auf das erste Ereignis, nur dieser Pfad startet. In Camunda 7 nicht ausführbar.</bpmn:documentation>
+    <bpmn:eventBasedGateway id="A29B_Gw" instantiate="true" eventGatewayType="Exclusive">
+      <bpmn:outgoing>Flow_A29B_Gw_A29B_Msg</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A29B_Gw_A29B_Tim</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="A29B_Msg" name="Create Report via Message">
+      <bpmn:incoming>Flow_A29B_Gw_A29B_Msg</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29B_Msg_A29B_Calc</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A29B_Msg" messageRef="Message_A29_ReportAnfrage" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="A29B_Tim" name="Create Report at end of month">
+      <bpmn:incoming>Flow_A29B_Gw_A29B_Tim</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29B_Tim_A29B_Xor</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A29B_Tim">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">0 0 0 L * ?</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="A29B_Calc" name="Calculate time period for report">
+      <bpmn:incoming>Flow_A29B_Msg_A29B_Calc</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29B_Calc_A29B_Xor</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="A29B_Xor">
+      <bpmn:incoming>Flow_A29B_Calc_A29B_Xor</bpmn:incoming>
+      <bpmn:incoming>Flow_A29B_Tim_A29B_Xor</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29B_Xor_A29B_Rep</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="A29B_Rep" name="Create report">
+      <bpmn:incoming>Flow_A29B_Xor_A29B_Rep</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29B_Rep_A29B_End</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="A29B_End">
+      <bpmn:incoming>Flow_A29B_Rep_A29B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A29B_Gw_A29B_Msg" sourceRef="A29B_Gw" targetRef="A29B_Msg" />
+    <bpmn:sequenceFlow id="Flow_A29B_Gw_A29B_Tim" sourceRef="A29B_Gw" targetRef="A29B_Tim" />
+    <bpmn:sequenceFlow id="Flow_A29B_Msg_A29B_Calc" sourceRef="A29B_Msg" targetRef="A29B_Calc" />
+    <bpmn:sequenceFlow id="Flow_A29B_Calc_A29B_Xor" sourceRef="A29B_Calc" targetRef="A29B_Xor" />
+    <bpmn:sequenceFlow id="Flow_A29B_Tim_A29B_Xor" sourceRef="A29B_Tim" targetRef="A29B_Xor" />
+    <bpmn:sequenceFlow id="Flow_A29B_Xor_A29B_Rep" sourceRef="A29B_Xor" targetRef="A29B_Rep" />
+    <bpmn:sequenceFlow id="Flow_A29B_Rep_A29B_End" sourceRef="A29B_Rep" targetRef="A29B_End" />
+  </bpmn:process>
+  <bpmn:process id="A29_C_EventGwParallel" name="C: Instanziierendes ereignisbasiertes Gateway – parallel (nur Ansicht)" isExecutable="false">
+    <bpmn:documentation>Folie 29 unten: ALLE Ereignisse müssen eintreffen, bevor es weitergeht. In Camunda 7 nicht ausführbar.</bpmn:documentation>
+    <bpmn:eventBasedGateway id="A29C_Gw" instantiate="true" eventGatewayType="Parallel">
+      <bpmn:outgoing>Flow_A29C_Gw_A29C_Msg</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A29C_Gw_A29C_Tim</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="A29C_Msg" name="Create Report">
+      <bpmn:incoming>Flow_A29C_Gw_A29C_Msg</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29C_Msg_A29C_Join</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A29C_Msg" messageRef="Message_A29_ReportAnfrage" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="A29C_Tim" name="End of Month Reached">
+      <bpmn:incoming>Flow_A29C_Gw_A29C_Tim</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29C_Tim_A29C_Join</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A29C_Tim">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">0 0 0 L * ?</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:parallelGateway id="A29C_Join">
+      <bpmn:incoming>Flow_A29C_Msg_A29C_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A29C_Tim_A29C_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29C_Join_A29C_Rep</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="A29C_Rep" name="Create report">
+      <bpmn:incoming>Flow_A29C_Join_A29C_Rep</bpmn:incoming>
+      <bpmn:outgoing>Flow_A29C_Rep_A29C_End</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="A29C_End">
+      <bpmn:incoming>Flow_A29C_Rep_A29C_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A29C_Gw_A29C_Msg" sourceRef="A29C_Gw" targetRef="A29C_Msg" />
+    <bpmn:sequenceFlow id="Flow_A29C_Gw_A29C_Tim" sourceRef="A29C_Gw" targetRef="A29C_Tim" />
+    <bpmn:sequenceFlow id="Flow_A29C_Msg_A29C_Join" sourceRef="A29C_Msg" targetRef="A29C_Join" />
+    <bpmn:sequenceFlow id="Flow_A29C_Tim_A29C_Join" sourceRef="A29C_Tim" targetRef="A29C_Join" />
+    <bpmn:sequenceFlow id="Flow_A29C_Join_A29C_Rep" sourceRef="A29C_Join" targetRef="A29C_Rep" />
+    <bpmn:sequenceFlow id="Flow_A29C_Rep_A29C_End" sourceRef="A29C_Rep" targetRef="A29C_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_A29_ReportAnfrage" name="A29_ReportAnfrage" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A29_Prozesse_starten">
+    <bpmndi:BPMNPlane id="BPMNPlane_A29_Prozesse_starten" bpmnElement="Collaboration_A29_Prozesse_starten">
+      <bpmndi:BPMNShape id="P_A29_O_di" bpmnElement="P_A29_O" isHorizontal="true"><dc:Bounds x="140" y="40" width="760" height="300" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A29_A_di" bpmnElement="P_A29_A" isHorizontal="true"><dc:Bounds x="140" y="380" width="760" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A29_B_di" bpmnElement="P_A29_B" isHorizontal="true"><dc:Bounds x="140" y="640" width="760" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A29_C_di" bpmnElement="P_A29_C" isHorizontal="true"><dc:Bounds x="140" y="900" width="760" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29O_SNone_di" bpmnElement="A29O_SNone"><dc:Bounds x="222" y="82" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="170" y="122" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29O_SMsg_di" bpmnElement="A29O_SMsg"><dc:Bounds x="222" y="182" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="170" y="222" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29O_STimer_di" bpmnElement="A29O_STimer"><dc:Bounds x="222" y="272" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="170" y="312" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29O_Calc_di" bpmnElement="A29O_Calc"><dc:Bounds x="330" y="110" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29O_Xor_di" bpmnElement="A29O_Xor" isMarkerVisible="true"><dc:Bounds x="505" y="205" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29O_Rep_di" bpmnElement="A29O_Rep"><dc:Bounds x="610" y="190" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29O_End_di" bpmnElement="A29O_End"><dc:Bounds x="772" y="212" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29A_SNone_di" bpmnElement="A29A_SNone"><dc:Bounds x="222" y="422" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="170" y="462" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29A_SMsg_di" bpmnElement="A29A_SMsg"><dc:Bounds x="222" y="522" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="170" y="562" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29A_Calc_di" bpmnElement="A29A_Calc"><dc:Bounds x="330" y="450" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29A_Rep_di" bpmnElement="A29A_Rep"><dc:Bounds x="510" y="450" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29A_End_di" bpmnElement="A29A_End"><dc:Bounds x="682" y="472" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29B_Gw_di" bpmnElement="A29B_Gw"><dc:Bounds x="205" y="725" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29B_Msg_di" bpmnElement="A29B_Msg"><dc:Bounds x="312" y="672" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="260" y="642" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29B_Tim_di" bpmnElement="A29B_Tim"><dc:Bounds x="312" y="792" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="260" y="832" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29B_Calc_di" bpmnElement="A29B_Calc"><dc:Bounds x="410" y="650" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29B_Xor_di" bpmnElement="A29B_Xor" isMarkerVisible="true"><dc:Bounds x="565" y="725" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29B_Rep_di" bpmnElement="A29B_Rep"><dc:Bounds x="660" y="710" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29B_End_di" bpmnElement="A29B_End"><dc:Bounds x="812" y="732" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29C_Gw_di" bpmnElement="A29C_Gw"><dc:Bounds x="205" y="985" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29C_Msg_di" bpmnElement="A29C_Msg"><dc:Bounds x="312" y="932" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="284" y="902" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29C_Tim_di" bpmnElement="A29C_Tim"><dc:Bounds x="312" y="1052" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="260" y="1092" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29C_Join_di" bpmnElement="A29C_Join"><dc:Bounds x="425" y="985" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29C_Rep_di" bpmnElement="A29C_Rep"><dc:Bounds x="520" y="970" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A29C_End_di" bpmnElement="A29C_End"><dc:Bounds x="672" y="992" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A29O_SNone_A29O_Calc_di" bpmnElement="Flow_A29O_SNone_A29O_Calc"><di:waypoint x="258" y="100" /><di:waypoint x="300" y="100" /><di:waypoint x="300" y="150" /><di:waypoint x="330" y="150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29O_SMsg_A29O_Calc_di" bpmnElement="Flow_A29O_SMsg_A29O_Calc"><di:waypoint x="258" y="200" /><di:waypoint x="300" y="200" /><di:waypoint x="300" y="150" /><di:waypoint x="330" y="150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29O_STimer_A29O_Xor_di" bpmnElement="Flow_A29O_STimer_A29O_Xor"><di:waypoint x="258" y="290" /><di:waypoint x="530" y="290" /><di:waypoint x="530" y="255" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29O_Calc_A29O_Xor_di" bpmnElement="Flow_A29O_Calc_A29O_Xor"><di:waypoint x="430" y="150" /><di:waypoint x="530" y="150" /><di:waypoint x="530" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29O_Xor_A29O_Rep_di" bpmnElement="Flow_A29O_Xor_A29O_Rep"><di:waypoint x="555" y="230" /><di:waypoint x="610" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29O_Rep_A29O_End_di" bpmnElement="Flow_A29O_Rep_A29O_End"><di:waypoint x="710" y="230" /><di:waypoint x="772" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29A_SNone_A29A_Calc_di" bpmnElement="Flow_A29A_SNone_A29A_Calc"><di:waypoint x="258" y="440" /><di:waypoint x="300" y="440" /><di:waypoint x="300" y="490" /><di:waypoint x="330" y="490" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29A_SMsg_A29A_Calc_di" bpmnElement="Flow_A29A_SMsg_A29A_Calc"><di:waypoint x="258" y="540" /><di:waypoint x="300" y="540" /><di:waypoint x="300" y="490" /><di:waypoint x="330" y="490" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29A_Calc_A29A_Rep_di" bpmnElement="Flow_A29A_Calc_A29A_Rep"><di:waypoint x="430" y="490" /><di:waypoint x="510" y="490" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29A_Rep_A29A_End_di" bpmnElement="Flow_A29A_Rep_A29A_End"><di:waypoint x="610" y="490" /><di:waypoint x="682" y="490" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29B_Gw_A29B_Msg_di" bpmnElement="Flow_A29B_Gw_A29B_Msg"><di:waypoint x="230" y="725" /><di:waypoint x="230" y="690" /><di:waypoint x="312" y="690" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29B_Gw_A29B_Tim_di" bpmnElement="Flow_A29B_Gw_A29B_Tim"><di:waypoint x="230" y="775" /><di:waypoint x="230" y="810" /><di:waypoint x="312" y="810" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29B_Msg_A29B_Calc_di" bpmnElement="Flow_A29B_Msg_A29B_Calc"><di:waypoint x="348" y="690" /><di:waypoint x="410" y="690" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29B_Calc_A29B_Xor_di" bpmnElement="Flow_A29B_Calc_A29B_Xor"><di:waypoint x="510" y="690" /><di:waypoint x="590" y="690" /><di:waypoint x="590" y="725" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29B_Tim_A29B_Xor_di" bpmnElement="Flow_A29B_Tim_A29B_Xor"><di:waypoint x="348" y="810" /><di:waypoint x="590" y="810" /><di:waypoint x="590" y="775" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29B_Xor_A29B_Rep_di" bpmnElement="Flow_A29B_Xor_A29B_Rep"><di:waypoint x="615" y="750" /><di:waypoint x="660" y="750" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29B_Rep_A29B_End_di" bpmnElement="Flow_A29B_Rep_A29B_End"><di:waypoint x="760" y="750" /><di:waypoint x="812" y="750" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29C_Gw_A29C_Msg_di" bpmnElement="Flow_A29C_Gw_A29C_Msg"><di:waypoint x="230" y="985" /><di:waypoint x="230" y="950" /><di:waypoint x="312" y="950" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29C_Gw_A29C_Tim_di" bpmnElement="Flow_A29C_Gw_A29C_Tim"><di:waypoint x="230" y="1035" /><di:waypoint x="230" y="1070" /><di:waypoint x="312" y="1070" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29C_Msg_A29C_Join_di" bpmnElement="Flow_A29C_Msg_A29C_Join"><di:waypoint x="348" y="950" /><di:waypoint x="450" y="950" /><di:waypoint x="450" y="985" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29C_Tim_A29C_Join_di" bpmnElement="Flow_A29C_Tim_A29C_Join"><di:waypoint x="348" y="1070" /><di:waypoint x="450" y="1070" /><di:waypoint x="450" y="1035" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29C_Join_A29C_Rep_di" bpmnElement="Flow_A29C_Join_A29C_Rep"><di:waypoint x="475" y="1010" /><di:waypoint x="520" y="1010" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A29C_Rep_A29C_End_di" bpmnElement="Flow_A29C_Rep_A29C_End"><di:waypoint x="620" y="1010" /><di:waypoint x="672" y="1010" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

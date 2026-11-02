@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_L04_Executions_parallel_lokal" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_L04_Executions_parallel_lokal">
+    <bpmn:participant id="P_L04" name="Executions und lokale Variablen" processRef="L04_Executions" />
+  </bpmn:collaboration>
+  <bpmn:process id="L04_Executions" name="Executions und lokale Variablen" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>04 Sichtbarkeit, Folien 3–8. Am parallelen Gateway erzeugt die Engine für jeden Pfad eine eigene Execution. Prozessstart: customer='Kermit' (global, Execution 1 = Prozessinstanz). Execution Listener (start) setzen LOKAL worker='Fozzie' bzw. worker='Gonzo' auf den beiden parallelen Executions – gleicher Name, kein Konflikt. Task Listener (create) an 'receive payment' setzt eine TASK-lokale Variable customer='Hugo', die 'Kermit' dort überschattet (Folie 7). Im Cockpit während beide Aufgaben offen sind die Spalte Scope ansehen; in 'archive order' ist nur noch customer='Kermit' übrig.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <camunda:executionListener expression='${execution.setVariable("customer", "Kermit")}' event="start" />
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="L04_Start">
+      <bpmn:outgoing>Flow_L04_Start_L04_Split</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="L04_Split">
+      <bpmn:incoming>Flow_L04_Start_L04_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_L04_Split_L04_Pay</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L04_Split_L04_Ship</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="L04_Pay" name="receive payment" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression='${execution.setVariableLocal("worker", "Fozzie")}' event="start" />
+        <camunda:taskListener expression='${task.setVariableLocal("customer", "Hugo")}' event="create" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L04_Split_L04_Pay</bpmn:incoming>
+      <bpmn:outgoing>Flow_L04_Pay_L04_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="L04_Ship" name="ship order" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression='${execution.setVariableLocal("worker", "Gonzo")}' event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L04_Split_L04_Ship</bpmn:incoming>
+      <bpmn:outgoing>Flow_L04_Ship_L04_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="L04_Join">
+      <bpmn:incoming>Flow_L04_Pay_L04_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_L04_Ship_L04_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_L04_Join_L04_Archive</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="L04_Archive" name="archive order" camunda:assignee="demo">
+      <bpmn:documentation>Generisches Formular: Variablen laden – worker ist verschwunden.</bpmn:documentation>
+      <bpmn:incoming>Flow_L04_Join_L04_Archive</bpmn:incoming>
+      <bpmn:outgoing>Flow_L04_Archive_L04_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L04_End">
+      <bpmn:incoming>Flow_L04_Archive_L04_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L04_Start_L04_Split" sourceRef="L04_Start" targetRef="L04_Split" />
+    <bpmn:sequenceFlow id="Flow_L04_Split_L04_Pay" sourceRef="L04_Split" targetRef="L04_Pay" />
+    <bpmn:sequenceFlow id="Flow_L04_Split_L04_Ship" sourceRef="L04_Split" targetRef="L04_Ship" />
+    <bpmn:sequenceFlow id="Flow_L04_Pay_L04_Join" sourceRef="L04_Pay" targetRef="L04_Join" />
+    <bpmn:sequenceFlow id="Flow_L04_Ship_L04_Join" sourceRef="L04_Ship" targetRef="L04_Join" />
+    <bpmn:sequenceFlow id="Flow_L04_Join_L04_Archive" sourceRef="L04_Join" targetRef="L04_Archive" />
+    <bpmn:sequenceFlow id="Flow_L04_Archive_L04_End" sourceRef="L04_Archive" targetRef="L04_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_L04_Executions_parallel_lokal">
+    <bpmndi:BPMNPlane id="BPMNPlane_L04_Executions_parallel_lokal" bpmnElement="Collaboration_L04_Executions_parallel_lokal">
+      <bpmndi:BPMNShape id="P_L04_di" bpmnElement="P_L04" isHorizontal="true"><dc:Bounds x="140" y="40" width="860" height="330" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L04_Start_di" bpmnElement="L04_Start"><dc:Bounds x="182" y="187" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L04_Split_di" bpmnElement="L04_Split"><dc:Bounds x="265" y="180" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L04_Pay_di" bpmnElement="L04_Pay"><dc:Bounds x="380" y="70" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L04_Ship_di" bpmnElement="L04_Ship"><dc:Bounds x="380" y="260" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L04_Join_di" bpmnElement="L04_Join"><dc:Bounds x="555" y="180" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L04_Archive_di" bpmnElement="L04_Archive"><dc:Bounds x="660" y="165" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L04_End_di" bpmnElement="L04_End"><dc:Bounds x="832" y="187" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_L04_Start_L04_Split_di" bpmnElement="Flow_L04_Start_L04_Split"><di:waypoint x="218" y="205" /><di:waypoint x="265" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L04_Split_L04_Pay_di" bpmnElement="Flow_L04_Split_L04_Pay"><di:waypoint x="290" y="180" /><di:waypoint x="290" y="110" /><di:waypoint x="380" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L04_Split_L04_Ship_di" bpmnElement="Flow_L04_Split_L04_Ship"><di:waypoint x="290" y="230" /><di:waypoint x="290" y="300" /><di:waypoint x="380" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L04_Pay_L04_Join_di" bpmnElement="Flow_L04_Pay_L04_Join"><di:waypoint x="480" y="110" /><di:waypoint x="580" y="110" /><di:waypoint x="580" y="180" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L04_Ship_L04_Join_di" bpmnElement="Flow_L04_Ship_L04_Join"><di:waypoint x="480" y="300" /><di:waypoint x="580" y="300" /><di:waypoint x="580" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L04_Join_L04_Archive_di" bpmnElement="Flow_L04_Join_L04_Archive"><di:waypoint x="605" y="205" /><di:waypoint x="660" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L04_Archive_L04_End_di" bpmnElement="Flow_L04_Archive_L04_End"><di:waypoint x="760" y="205" /><di:waypoint x="832" y="205" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

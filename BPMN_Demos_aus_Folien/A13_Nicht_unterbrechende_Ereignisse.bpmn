@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A13_Nicht_unterbrechende_Ereignisse" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A13_Nicht_unterbrechende_Ereignisse">
+    <bpmn:participant id="P_A13_A" name="A: Ereignis an jeder einzelnen Aufgabe" processRef="A13_A_AnAufgaben" />
+    <bpmn:participant id="P_A13_B" name="B: Ereignis am Teilprozess" processRef="A13_B_AmTeilprozess" />
+  </bpmn:collaboration>
+  <bpmn:process id="A13_A_AnAufgaben" name="A: Ereignis an jeder einzelnen Aufgabe" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 13 oben: Nicht unterbrechende Nachrichtenereignisse (gestrichelt). Während eine Buchung läuft, kann eine Kreditkartenänderung eintreffen; die Buchung läuft weiter UND 'Update Credit Card Data' startet parallel. Auslösen: ./dpe-demo.sh msg A13_Kreditkarte &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A13A_Start">
+      <bpmn:outgoing>Flow_A13A_Start_A13A_T0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="A13A_T0" name="Book Flight (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A13A_Start_A13A_T0</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13A_T0_A13A_T1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="A13A_B0" attachedToRef="A13A_T0" cancelActivity="false">
+      <bpmn:outgoing>Flow_A13A_B0_A13A_Upd</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A13A_B0" messageRef="Message_A13_Kreditkarte" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A13A_T1" name="Book Hotel (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A13A_T0_A13A_T1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13A_T1_A13A_T2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="A13A_B1" attachedToRef="A13A_T1" cancelActivity="false">
+      <bpmn:outgoing>Flow_A13A_B1_A13A_Upd</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A13A_B1" messageRef="Message_A13_Kreditkarte" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A13A_T2" name="Book Rental Car (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A13A_T1_A13A_T2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13A_T2_A13A_Charge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="A13A_B2" attachedToRef="A13A_T2" cancelActivity="false">
+      <bpmn:outgoing>Flow_A13A_B2_A13A_Upd</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A13A_B2" messageRef="Message_A13_Kreditkarte" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="A13A_Charge" name="Charge Credit Card" camunda:expression="${execution.setVariable('kreditkarteBelastet', true)}">
+      <bpmn:incoming>Flow_A13A_T2_A13A_Charge</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13A_Charge_A13A_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="A13A_End">
+      <bpmn:incoming>Flow_A13A_Charge_A13A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A13A_Upd" name="Update Credit Card Data" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A13A_B0_A13A_Upd</bpmn:incoming>
+      <bpmn:incoming>Flow_A13A_B1_A13A_Upd</bpmn:incoming>
+      <bpmn:incoming>Flow_A13A_B2_A13A_Upd</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13A_Upd_A13A_End2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A13A_End2">
+      <bpmn:incoming>Flow_A13A_Upd_A13A_End2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A13A_Start_A13A_T0" sourceRef="A13A_Start" targetRef="A13A_T0" />
+    <bpmn:sequenceFlow id="Flow_A13A_T0_A13A_T1" sourceRef="A13A_T0" targetRef="A13A_T1" />
+    <bpmn:sequenceFlow id="Flow_A13A_T1_A13A_T2" sourceRef="A13A_T1" targetRef="A13A_T2" />
+    <bpmn:sequenceFlow id="Flow_A13A_T2_A13A_Charge" sourceRef="A13A_T2" targetRef="A13A_Charge" />
+    <bpmn:sequenceFlow id="Flow_A13A_Charge_A13A_End" sourceRef="A13A_Charge" targetRef="A13A_End" />
+    <bpmn:sequenceFlow id="Flow_A13A_B0_A13A_Upd" sourceRef="A13A_B0" targetRef="A13A_Upd" />
+    <bpmn:sequenceFlow id="Flow_A13A_B1_A13A_Upd" sourceRef="A13A_B1" targetRef="A13A_Upd" />
+    <bpmn:sequenceFlow id="Flow_A13A_B2_A13A_Upd" sourceRef="A13A_B2" targetRef="A13A_Upd" />
+    <bpmn:sequenceFlow id="Flow_A13A_Upd_A13A_End2" sourceRef="A13A_Upd" targetRef="A13A_End2" />
+  </bpmn:process>
+  <bpmn:process id="A13_B_AmTeilprozess" name="B: Ereignis am Teilprozess" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 13 unten: Das Ereignis hängt am ganzen Teilprozess und ist aktiv, solange irgendeine Buchung läuft. Auslösen: ./dpe-demo.sh msg A13_KreditkarteSub &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A13B_Start">
+      <bpmn:outgoing>Flow_A13B_Start_A13B_Sub</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="A13B_Sub" name="Travel Booking">
+      <bpmn:incoming>Flow_A13B_Start_A13B_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13B_Sub_A13B_Charge</bpmn:outgoing>
+      <bpmn:startEvent id="A13B_S_Start">
+        <bpmn:outgoing>Flow_A13B_S_Start_A13B_T0</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="A13B_T0" name="Book Flight (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A13B_S_Start_A13B_T0</bpmn:incoming>
+        <bpmn:outgoing>Flow_A13B_T0_A13B_T1</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="A13B_T1" name="Book Hotel (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A13B_T0_A13B_T1</bpmn:incoming>
+        <bpmn:outgoing>Flow_A13B_T1_A13B_T2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="A13B_T2" name="Book Rental Car (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A13B_T1_A13B_T2</bpmn:incoming>
+        <bpmn:outgoing>Flow_A13B_T2_A13B_S_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="A13B_S_End">
+        <bpmn:incoming>Flow_A13B_T2_A13B_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A13B_S_Start_A13B_T0" sourceRef="A13B_S_Start" targetRef="A13B_T0" />
+      <bpmn:sequenceFlow id="Flow_A13B_T0_A13B_T1" sourceRef="A13B_T0" targetRef="A13B_T1" />
+      <bpmn:sequenceFlow id="Flow_A13B_T1_A13B_T2" sourceRef="A13B_T1" targetRef="A13B_T2" />
+      <bpmn:sequenceFlow id="Flow_A13B_T2_A13B_S_End" sourceRef="A13B_T2" targetRef="A13B_S_End" />
+    </bpmn:subProcess>
+    <bpmn:serviceTask id="A13B_Charge" name="Charge Credit Card" camunda:expression="${execution.setVariable('kreditkarteBelastet', true)}">
+      <bpmn:incoming>Flow_A13B_Sub_A13B_Charge</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13B_Charge_A13B_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="A13B_End">
+      <bpmn:incoming>Flow_A13B_Charge_A13B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="A13B_B" attachedToRef="A13B_Sub" cancelActivity="false">
+      <bpmn:outgoing>Flow_A13B_B_A13B_Upd</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A13B_B" messageRef="Message_A13_KreditkarteSub" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A13B_Upd" name="Update Credit Card Data" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A13B_B_A13B_Upd</bpmn:incoming>
+      <bpmn:outgoing>Flow_A13B_Upd_A13B_End2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A13B_End2">
+      <bpmn:incoming>Flow_A13B_Upd_A13B_End2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A13B_Start_A13B_Sub" sourceRef="A13B_Start" targetRef="A13B_Sub" />
+    <bpmn:sequenceFlow id="Flow_A13B_Sub_A13B_Charge" sourceRef="A13B_Sub" targetRef="A13B_Charge" />
+    <bpmn:sequenceFlow id="Flow_A13B_Charge_A13B_End" sourceRef="A13B_Charge" targetRef="A13B_End" />
+    <bpmn:sequenceFlow id="Flow_A13B_B_A13B_Upd" sourceRef="A13B_B" targetRef="A13B_Upd" />
+    <bpmn:sequenceFlow id="Flow_A13B_Upd_A13B_End2" sourceRef="A13B_Upd" targetRef="A13B_End2" />
+  </bpmn:process>
+  <bpmn:message id="Message_A13_Kreditkarte" name="A13_Kreditkarte" />
+  <bpmn:message id="Message_A13_KreditkarteSub" name="A13_KreditkarteSub" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A13_Nicht_unterbrechende_Ereignisse">
+    <bpmndi:BPMNPlane id="BPMNPlane_A13_Nicht_unterbrechende_Ereignisse" bpmnElement="Collaboration_A13_Nicht_unterbrechende_Ereignisse">
+      <bpmndi:BPMNShape id="P_A13_A_di" bpmnElement="P_A13_A" isHorizontal="true"><dc:Bounds x="140" y="40" width="900" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A13_B_di" bpmnElement="P_A13_B" isHorizontal="true"><dc:Bounds x="140" y="340" width="900" height="300" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_Sub_di" bpmnElement="A13B_Sub" isExpanded="true"><dc:Bounds x="240" y="380" width="470" height="130" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_Start_di" bpmnElement="A13A_Start"><dc:Bounds x="182" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_T0_di" bpmnElement="A13A_T0"><dc:Bounds x="250" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_B0_di" bpmnElement="A13A_B0"><dc:Bounds x="312" y="142" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_T1_di" bpmnElement="A13A_T1"><dc:Bounds x="390" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_B1_di" bpmnElement="A13A_B1"><dc:Bounds x="452" y="142" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_T2_di" bpmnElement="A13A_T2"><dc:Bounds x="530" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_B2_di" bpmnElement="A13A_B2"><dc:Bounds x="592" y="142" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_Charge_di" bpmnElement="A13A_Charge"><dc:Bounds x="670" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_End_di" bpmnElement="A13A_End"><dc:Bounds x="822" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_Upd_di" bpmnElement="A13A_Upd"><dc:Bounds x="670" y="190" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13A_End2_di" bpmnElement="A13A_End2"><dc:Bounds x="822" y="212" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_Start_di" bpmnElement="A13B_Start"><dc:Bounds x="172" y="427" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_S_Start_di" bpmnElement="A13B_S_Start"><dc:Bounds x="252" y="432" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_T0_di" bpmnElement="A13B_T0"><dc:Bounds x="310" y="410" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_T1_di" bpmnElement="A13B_T1"><dc:Bounds x="435" y="410" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_T2_di" bpmnElement="A13B_T2"><dc:Bounds x="560" y="410" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_S_End_di" bpmnElement="A13B_S_End"><dc:Bounds x="662" y="432" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_Charge_di" bpmnElement="A13B_Charge"><dc:Bounds x="770" y="405" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_End_di" bpmnElement="A13B_End"><dc:Bounds x="922" y="427" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_B_di" bpmnElement="A13B_B"><dc:Bounds x="668" y="492" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_Upd_di" bpmnElement="A13B_Upd"><dc:Bounds x="770" y="540" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A13B_End2_di" bpmnElement="A13B_End2"><dc:Bounds x="922" y="562" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A13A_Start_A13A_T0_di" bpmnElement="Flow_A13A_Start_A13A_T0"><di:waypoint x="218" y="120" /><di:waypoint x="250" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_T0_A13A_T1_di" bpmnElement="Flow_A13A_T0_A13A_T1"><di:waypoint x="350" y="120" /><di:waypoint x="390" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_T1_A13A_T2_di" bpmnElement="Flow_A13A_T1_A13A_T2"><di:waypoint x="490" y="120" /><di:waypoint x="530" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_T2_A13A_Charge_di" bpmnElement="Flow_A13A_T2_A13A_Charge"><di:waypoint x="630" y="120" /><di:waypoint x="670" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_Charge_A13A_End_di" bpmnElement="Flow_A13A_Charge_A13A_End"><di:waypoint x="770" y="120" /><di:waypoint x="822" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_B0_A13A_Upd_di" bpmnElement="Flow_A13A_B0_A13A_Upd"><di:waypoint x="330" y="178" /><di:waypoint x="330" y="230" /><di:waypoint x="670" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_B1_A13A_Upd_di" bpmnElement="Flow_A13A_B1_A13A_Upd"><di:waypoint x="470" y="178" /><di:waypoint x="470" y="230" /><di:waypoint x="670" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_B2_A13A_Upd_di" bpmnElement="Flow_A13A_B2_A13A_Upd"><di:waypoint x="610" y="178" /><di:waypoint x="610" y="230" /><di:waypoint x="670" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13A_Upd_A13A_End2_di" bpmnElement="Flow_A13A_Upd_A13A_End2"><di:waypoint x="770" y="230" /><di:waypoint x="822" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_S_Start_A13B_T0_di" bpmnElement="Flow_A13B_S_Start_A13B_T0"><di:waypoint x="288" y="450" /><di:waypoint x="310" y="450" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_T0_A13B_T1_di" bpmnElement="Flow_A13B_T0_A13B_T1"><di:waypoint x="410" y="450" /><di:waypoint x="435" y="450" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_T1_A13B_T2_di" bpmnElement="Flow_A13B_T1_A13B_T2"><di:waypoint x="535" y="450" /><di:waypoint x="560" y="450" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_T2_A13B_S_End_di" bpmnElement="Flow_A13B_T2_A13B_S_End"><di:waypoint x="660" y="450" /><di:waypoint x="662" y="450" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_Start_A13B_Sub_di" bpmnElement="Flow_A13B_Start_A13B_Sub"><di:waypoint x="208" y="445" /><di:waypoint x="240" y="445" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_Sub_A13B_Charge_di" bpmnElement="Flow_A13B_Sub_A13B_Charge"><di:waypoint x="710" y="445" /><di:waypoint x="770" y="445" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_Charge_A13B_End_di" bpmnElement="Flow_A13B_Charge_A13B_End"><di:waypoint x="870" y="445" /><di:waypoint x="922" y="445" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_B_A13B_Upd_di" bpmnElement="Flow_A13B_B_A13B_Upd"><di:waypoint x="686" y="528" /><di:waypoint x="686" y="580" /><di:waypoint x="770" y="580" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A13B_Upd_A13B_End2_di" bpmnElement="Flow_A13B_Upd_A13B_End2"><di:waypoint x="870" y="580" /><di:waypoint x="922" y="580" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

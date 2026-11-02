@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E28_Inklusives_Zusammenfuehren" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E28_Inklusives_Zusammenfuehren">
+    <bpmn:participant id="P_E28" name="Inclusive Join" processRef="E28_InklusiverJoin" />
+  </bpmn:collaboration>
+  <bpmn:process id="E28_InklusiverJoin" name="Inclusive Join" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 28: Wann läuft es am zusammenführenden ODER-Gateway weiter? Es wartet nur auf Token, die noch ankommen KÖNNEN. Probiere: Option 1 + Option 2 wählen, dann bei 'Do Something 2' die zweite Frage mit NEIN beantworten -&gt; das Token endet in End 2 und das ODER-Gateway lässt das Token von oben weiter. ACHTUNG, getestet auf CIB seven 2.2.0: Das klappt nur, wenn du ZUERST die 2. Frage mit Nein beantwortest und DANN 'Do Something 1' erledigst. Andersherum wartet das Token dauerhaft am ODER-Gateway, weil die Engine den Join nur beim Ankommen eines Tokens prüft (Abweichung vom BPMN-Standard).</bpmn:documentation>
+    <bpmn:startEvent id="E28_Start">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="option1" label="Option 1?" type="boolean" defaultValue="True" />
+          <camunda:formField id="option2" label="Option 2?" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_E28_Start_E28_Split</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:inclusiveGateway id="E28_Split" name="1st question">
+      <bpmn:incoming>Flow_E28_Start_E28_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_E28_Split_E28_DS1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E28_Split_E28_DS2</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="E28_DS1" name="Do Something 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E28_Split_E28_DS1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E28_DS1_E28_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E28_DS2" name="Do Something 2" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="zweiteFrage" label="2nd question: Ja?" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E28_Split_E28_DS2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E28_DS2_E28_Xor</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E28_Xor" name="2nd question">
+      <bpmn:incoming>Flow_E28_DS2_E28_Xor</bpmn:incoming>
+      <bpmn:outgoing>Flow_E28_Xor_E28_Join</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E28_Xor_E28_End2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:inclusiveGateway id="E28_Join">
+      <bpmn:incoming>Flow_E28_DS1_E28_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E28_Xor_E28_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_E28_Join_E28_DS3</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="E28_DS3" name="Do Something 3" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E28_Join_E28_DS3</bpmn:incoming>
+      <bpmn:outgoing>Flow_E28_DS3_E28_End1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E28_End1" name="End 1">
+      <bpmn:incoming>Flow_E28_DS3_E28_End1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="E28_End2" name="End 2">
+      <bpmn:incoming>Flow_E28_Xor_E28_End2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E28_Start_E28_Split" sourceRef="E28_Start" targetRef="E28_Split" />
+    <bpmn:sequenceFlow id="Flow_E28_Split_E28_DS1" name="Option 1" sourceRef="E28_Split" targetRef="E28_DS1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${option1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E28_Split_E28_DS2" name="Option 2" sourceRef="E28_Split" targetRef="E28_DS2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${option2}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E28_DS1_E28_Join" sourceRef="E28_DS1" targetRef="E28_Join" />
+    <bpmn:sequenceFlow id="Flow_E28_DS2_E28_Xor" sourceRef="E28_DS2" targetRef="E28_Xor" />
+    <bpmn:sequenceFlow id="Flow_E28_Xor_E28_Join" name="Yes" sourceRef="E28_Xor" targetRef="E28_Join">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${zweiteFrage}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E28_Xor_E28_End2" name="No" sourceRef="E28_Xor" targetRef="E28_End2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!zweiteFrage}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E28_Join_E28_DS3" sourceRef="E28_Join" targetRef="E28_DS3" />
+    <bpmn:sequenceFlow id="Flow_E28_DS3_E28_End1" sourceRef="E28_DS3" targetRef="E28_End1" />
+    <bpmn:textAnnotation id="E28_A1"><bpmn:text>30 days</bpmn:text></bpmn:textAnnotation>
+    <bpmn:textAnnotation id="E28_A2"><bpmn:text>45 days</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_E28_DS1_E28_A1" sourceRef="E28_DS1" targetRef="E28_A1" />
+    <bpmn:association id="Assoc_E28_DS2_E28_A2" sourceRef="E28_DS2" targetRef="E28_A2" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E28_Inklusives_Zusammenfuehren">
+    <bpmndi:BPMNPlane id="BPMNPlane_E28_Inklusives_Zusammenfuehren" bpmnElement="Collaboration_E28_Inklusives_Zusammenfuehren">
+      <bpmndi:BPMNShape id="P_E28_di" bpmnElement="P_E28" isHorizontal="true"><dc:Bounds x="160" y="40" width="860" height="340" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_Start_di" bpmnElement="E28_Start"><dc:Bounds x="202" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_Split_di" bpmnElement="E28_Split"><dc:Bounds x="275" y="115" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="258" y="85" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_DS1_di" bpmnElement="E28_DS1"><dc:Bounds x="410" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_DS2_di" bpmnElement="E28_DS2"><dc:Bounds x="410" y="230" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_Xor_di" bpmnElement="E28_Xor" isMarkerVisible="true"><dc:Bounds x="575" y="245" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="629" y="263" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_Join_di" bpmnElement="E28_Join"><dc:Bounds x="675" y="115" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_DS3_di" bpmnElement="E28_DS3"><dc:Bounds x="770" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_End1_di" bpmnElement="E28_End1"><dc:Bounds x="932" y="122" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="920" y="162" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_End2_di" bpmnElement="E28_End2"><dc:Bounds x="932" y="322" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="920" y="362" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_A1_di" bpmnElement="E28_A1"><dc:Bounds x="525" y="190" width="70" height="30" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E28_A2_di" bpmnElement="E28_A2"><dc:Bounds x="525" y="335" width="70" height="30" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E28_Start_E28_Split_di" bpmnElement="Flow_E28_Start_E28_Split"><di:waypoint x="238" y="140" /><di:waypoint x="275" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_Split_E28_DS1_di" bpmnElement="Flow_E28_Split_E28_DS1"><di:waypoint x="325" y="140" /><di:waypoint x="410" y="140" /><bpmndi:BPMNLabel><dc:Bounds x="340" y="122" width="48" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_Split_E28_DS2_di" bpmnElement="Flow_E28_Split_E28_DS2"><di:waypoint x="300" y="165" /><di:waypoint x="300" y="270" /><di:waypoint x="410" y="270" /><bpmndi:BPMNLabel><dc:Bounds x="315" y="252" width="48" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_DS1_E28_Join_di" bpmnElement="Flow_E28_DS1_E28_Join"><di:waypoint x="510" y="140" /><di:waypoint x="675" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_DS2_E28_Xor_di" bpmnElement="Flow_E28_DS2_E28_Xor"><di:waypoint x="510" y="270" /><di:waypoint x="575" y="270" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_Xor_E28_Join_di" bpmnElement="Flow_E28_Xor_E28_Join"><di:waypoint x="625" y="270" /><di:waypoint x="700" y="270" /><di:waypoint x="700" y="165" /><bpmndi:BPMNLabel><dc:Bounds x="640" y="252" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_Xor_E28_End2_di" bpmnElement="Flow_E28_Xor_E28_End2"><di:waypoint x="600" y="295" /><di:waypoint x="600" y="340" /><di:waypoint x="932" y="340" /><bpmndi:BPMNLabel><dc:Bounds x="615" y="322" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_Join_E28_DS3_di" bpmnElement="Flow_E28_Join_E28_DS3"><di:waypoint x="725" y="140" /><di:waypoint x="770" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E28_DS3_E28_End1_di" bpmnElement="Flow_E28_DS3_E28_End1"><di:waypoint x="870" y="140" /><di:waypoint x="932" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_E28_DS1_E28_A1_di" bpmnElement="Assoc_E28_DS1_E28_A1"><di:waypoint x="500" y="180" /><di:waypoint x="525" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_E28_DS2_E28_A2_di" bpmnElement="Assoc_E28_DS2_E28_A2"><di:waypoint x="490" y="310" /><di:waypoint x="525" y="350" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

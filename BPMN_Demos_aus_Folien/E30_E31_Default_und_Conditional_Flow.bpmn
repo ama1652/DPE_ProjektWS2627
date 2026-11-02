@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E30_E31_Default_und_Conditional_Flow" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E30_E31_Default_und_Conditional_Flow">
+    <bpmn:participant id="P_E30_A" name="A: XOR mit Marker (X) und Default Flow – Folie 30 links" processRef="E30_A_DefaultFlow" />
+    <bpmn:participant id="P_E30_B" name="B: XOR ohne Marker (gleiche Bedeutung, laut Notizen nicht verwenden) – Folie 30 rechts" processRef="E30_B_DefaultFlow" />
+    <bpmn:participant id="P_E31_C" name="C: Conditional Flow direkt an der Aufgabe – Folie 31" processRef="E31_ConditionalFlow" />
+  </bpmn:collaboration>
+  <bpmn:process id="E30_A_DefaultFlow" name="A: XOR mit Marker (X) und Default Flow – Folie 30 links" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 30: Genau EIN Pfad wird genommen. Trifft keine Bedingung zu, greift der Default Flow (Schrägstrich) -&gt; Task 4. Ohne Default Flow würde der Prozess mit einem Fehler stehen bleiben.</bpmn:documentation>
+    <bpmn:startEvent id="E30A_Start">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="x" label="Bestellwert x" type="long" defaultValue="20000" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_E30A_Start_E30A_Check</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E30A_Check" name="Check Order Request" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="x" label="Bestellwert x" type="long" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E30A_Start_E30A_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30A_Check_E30A_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E30A_Gw" default="Flow_E30A_Gw_E30A_T4">
+      <bpmn:incoming>Flow_E30A_Check_E30A_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30A_Gw_E30A_T1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E30A_Gw_E30A_T2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E30A_Gw_E30A_T3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E30A_Gw_E30A_T4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="E30A_Merge">
+      <bpmn:incoming>Flow_E30A_T1_E30A_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_E30A_T2_E30A_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_E30A_T3_E30A_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_E30A_T4_E30A_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30A_Merge_E30A_End</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E30A_End">
+      <bpmn:incoming>Flow_E30A_Merge_E30A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="E30A_T1" name="Task 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30A_Gw_E30A_T1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30A_T1_E30A_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E30A_T2" name="Task 2" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30A_Gw_E30A_T2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30A_T2_E30A_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E30A_T3" name="Task 3" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30A_Gw_E30A_T3</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30A_T3_E30A_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E30A_T4" name="Task 4" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30A_Gw_E30A_T4</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30A_T4_E30A_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_E30A_Gw_E30A_T1" name="x&lt;10.000" sourceRef="E30A_Gw" targetRef="E30A_T1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &lt; 10000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E30A_T1_E30A_Merge" sourceRef="E30A_T1" targetRef="E30A_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30A_Gw_E30A_T2" name="10.000&lt;= x &lt;50.000" sourceRef="E30A_Gw" targetRef="E30A_T2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &gt;= 10000 &amp;&amp; x &lt; 50000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E30A_T2_E30A_Merge" sourceRef="E30A_T2" targetRef="E30A_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30A_Gw_E30A_T3" name="50.000&lt;= x &lt; 100.000" sourceRef="E30A_Gw" targetRef="E30A_T3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &gt;= 50000 &amp;&amp; x &lt; 100000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E30A_T3_E30A_Merge" sourceRef="E30A_T3" targetRef="E30A_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30A_Gw_E30A_T4" name="Default" sourceRef="E30A_Gw" targetRef="E30A_T4" />
+    <bpmn:sequenceFlow id="Flow_E30A_T4_E30A_Merge" sourceRef="E30A_T4" targetRef="E30A_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30A_Start_E30A_Check" sourceRef="E30A_Start" targetRef="E30A_Check" />
+    <bpmn:sequenceFlow id="Flow_E30A_Check_E30A_Gw" sourceRef="E30A_Check" targetRef="E30A_Gw" />
+    <bpmn:sequenceFlow id="Flow_E30A_Merge_E30A_End" sourceRef="E30A_Merge" targetRef="E30A_End" />
+  </bpmn:process>
+  <bpmn:process id="E30_B_DefaultFlow" name="B: XOR ohne Marker (gleiche Bedeutung, laut Notizen nicht verwenden) – Folie 30 rechts" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 30: Genau EIN Pfad wird genommen. Trifft keine Bedingung zu, greift der Default Flow (Schrägstrich) -&gt; Task 4. Ohne Default Flow würde der Prozess mit einem Fehler stehen bleiben.</bpmn:documentation>
+    <bpmn:startEvent id="E30B_Start">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="x" label="Bestellwert x" type="long" defaultValue="20000" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_E30B_Start_E30B_Check</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E30B_Check" name="Check Order Request" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="x" label="Bestellwert x" type="long" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E30B_Start_E30B_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30B_Check_E30B_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E30B_Gw" default="Flow_E30B_Gw_E30B_T4">
+      <bpmn:incoming>Flow_E30B_Check_E30B_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30B_Gw_E30B_T1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E30B_Gw_E30B_T2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E30B_Gw_E30B_T3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E30B_Gw_E30B_T4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="E30B_Merge">
+      <bpmn:incoming>Flow_E30B_T1_E30B_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_E30B_T2_E30B_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_E30B_T3_E30B_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_E30B_T4_E30B_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30B_Merge_E30B_End</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E30B_End">
+      <bpmn:incoming>Flow_E30B_Merge_E30B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="E30B_T1" name="Task 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30B_Gw_E30B_T1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30B_T1_E30B_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E30B_T2" name="Task 2" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30B_Gw_E30B_T2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30B_T2_E30B_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E30B_T3" name="Task 3" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30B_Gw_E30B_T3</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30B_T3_E30B_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E30B_T4" name="Task 4" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E30B_Gw_E30B_T4</bpmn:incoming>
+      <bpmn:outgoing>Flow_E30B_T4_E30B_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_E30B_Gw_E30B_T1" name="x&lt;10.000" sourceRef="E30B_Gw" targetRef="E30B_T1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &lt; 10000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E30B_T1_E30B_Merge" sourceRef="E30B_T1" targetRef="E30B_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30B_Gw_E30B_T2" name="10.000&lt;= x &lt;50.000" sourceRef="E30B_Gw" targetRef="E30B_T2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &gt;= 10000 &amp;&amp; x &lt; 50000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E30B_T2_E30B_Merge" sourceRef="E30B_T2" targetRef="E30B_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30B_Gw_E30B_T3" name="50.000&lt;= x &lt; 100.000" sourceRef="E30B_Gw" targetRef="E30B_T3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &gt;= 50000 &amp;&amp; x &lt; 100000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E30B_T3_E30B_Merge" sourceRef="E30B_T3" targetRef="E30B_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30B_Gw_E30B_T4" name="Default" sourceRef="E30B_Gw" targetRef="E30B_T4" />
+    <bpmn:sequenceFlow id="Flow_E30B_T4_E30B_Merge" sourceRef="E30B_T4" targetRef="E30B_Merge" />
+    <bpmn:sequenceFlow id="Flow_E30B_Start_E30B_Check" sourceRef="E30B_Start" targetRef="E30B_Check" />
+    <bpmn:sequenceFlow id="Flow_E30B_Check_E30B_Gw" sourceRef="E30B_Check" targetRef="E30B_Gw" />
+    <bpmn:sequenceFlow id="Flow_E30B_Merge_E30B_End" sourceRef="E30B_Merge" targetRef="E30B_End" />
+  </bpmn:process>
+  <bpmn:process id="E31_ConditionalFlow" name="C: Conditional Flow direkt an der Aufgabe – Folie 31" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 31: Bedingte Flüsse direkt an der Aufgabe (kleine Raute). Verhalten wie ein INKLUSIVES Gateway: jeder Fluss mit wahrer Bedingung wird genommen. Laut Notizen in der Vorlesung nicht verwenden. Hier sind die Bedingungen überschneidungsfrei; Task 4 ist der Default Flow.</bpmn:documentation>
+    <bpmn:startEvent id="E31_Start">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="x" label="Bestellwert x" type="long" defaultValue="20000" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_E31_Start_E31_Check</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E31_Check" name="Check Order Request" camunda:assignee="demo" default="Flow_E31_Check_E31_T4">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="x" label="Bestellwert x" type="long" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E31_Start_E31_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_E31_Check_E31_T1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E31_Check_E31_T2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E31_Check_E31_T3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E31_Check_E31_T4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E31_T1" name="Task 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E31_Check_E31_T1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E31_T1_E31_End1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E31_End1">
+      <bpmn:incoming>Flow_E31_T1_E31_End1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="E31_T2" name="Task 2" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E31_Check_E31_T2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E31_T2_E31_End2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E31_End2">
+      <bpmn:incoming>Flow_E31_T2_E31_End2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="E31_T3" name="Task 3" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E31_Check_E31_T3</bpmn:incoming>
+      <bpmn:outgoing>Flow_E31_T3_E31_End3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E31_End3">
+      <bpmn:incoming>Flow_E31_T3_E31_End3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="E31_T4" name="Task 4" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E31_Check_E31_T4</bpmn:incoming>
+      <bpmn:outgoing>Flow_E31_T4_E31_End4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E31_End4">
+      <bpmn:incoming>Flow_E31_T4_E31_End4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E31_Check_E31_T1" name="x&lt;10.000" sourceRef="E31_Check" targetRef="E31_T1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &lt; 10000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E31_T1_E31_End1" sourceRef="E31_T1" targetRef="E31_End1" />
+    <bpmn:sequenceFlow id="Flow_E31_Check_E31_T2" name="10.000&lt;= x &lt;50.000" sourceRef="E31_Check" targetRef="E31_T2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &gt;= 10000 &amp;&amp; x &lt; 50000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E31_T2_E31_End2" sourceRef="E31_T2" targetRef="E31_End2" />
+    <bpmn:sequenceFlow id="Flow_E31_Check_E31_T3" name="50.000&lt;= x &lt; 100.000" sourceRef="E31_Check" targetRef="E31_T3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${x &gt;= 50000 &amp;&amp; x &lt; 100000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E31_T3_E31_End3" sourceRef="E31_T3" targetRef="E31_End3" />
+    <bpmn:sequenceFlow id="Flow_E31_Check_E31_T4" name="Default" sourceRef="E31_Check" targetRef="E31_T4" />
+    <bpmn:sequenceFlow id="Flow_E31_T4_E31_End4" sourceRef="E31_T4" targetRef="E31_End4" />
+    <bpmn:sequenceFlow id="Flow_E31_Start_E31_Check" sourceRef="E31_Start" targetRef="E31_Check" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E30_E31_Default_und_Conditional_Flow">
+    <bpmndi:BPMNPlane id="BPMNPlane_E30_E31_Default_und_Conditional_Flow" bpmnElement="Collaboration_E30_E31_Default_und_Conditional_Flow">
+      <bpmndi:BPMNShape id="P_E30_A_di" bpmnElement="P_E30_A" isHorizontal="true"><dc:Bounds x="160" y="40" width="760" height="400" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E30_B_di" bpmnElement="P_E30_B" isHorizontal="true"><dc:Bounds x="160" y="470" width="760" height="400" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E31_C_di" bpmnElement="P_E31_C" isHorizontal="true"><dc:Bounds x="160" y="900" width="760" height="400" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_Start_di" bpmnElement="E30A_Start"><dc:Bounds x="202" y="222" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_Check_di" bpmnElement="E30A_Check"><dc:Bounds x="270" y="200" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_Gw_di" bpmnElement="E30A_Gw" isMarkerVisible="true"><dc:Bounds x="405" y="215" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_Merge_di" bpmnElement="E30A_Merge" isMarkerVisible="true"><dc:Bounds x="715" y="215" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_End_di" bpmnElement="E30A_End"><dc:Bounds x="822" y="222" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_T1_di" bpmnElement="E30A_T1"><dc:Bounds x="570" y="50" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_T2_di" bpmnElement="E30A_T2"><dc:Bounds x="570" y="150" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_T3_di" bpmnElement="E30A_T3"><dc:Bounds x="570" y="250" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30A_T4_di" bpmnElement="E30A_T4"><dc:Bounds x="570" y="350" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_Start_di" bpmnElement="E30B_Start"><dc:Bounds x="202" y="652" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_Check_di" bpmnElement="E30B_Check"><dc:Bounds x="270" y="630" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_Gw_di" bpmnElement="E30B_Gw" isMarkerVisible="false"><dc:Bounds x="405" y="645" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_Merge_di" bpmnElement="E30B_Merge" isMarkerVisible="true"><dc:Bounds x="715" y="645" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_End_di" bpmnElement="E30B_End"><dc:Bounds x="822" y="652" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_T1_di" bpmnElement="E30B_T1"><dc:Bounds x="570" y="480" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_T2_di" bpmnElement="E30B_T2"><dc:Bounds x="570" y="580" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_T3_di" bpmnElement="E30B_T3"><dc:Bounds x="570" y="680" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E30B_T4_di" bpmnElement="E30B_T4"><dc:Bounds x="570" y="780" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_Start_di" bpmnElement="E31_Start"><dc:Bounds x="202" y="1082" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_Check_di" bpmnElement="E31_Check"><dc:Bounds x="270" y="1060" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_T1_di" bpmnElement="E31_T1"><dc:Bounds x="570" y="910" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_End1_di" bpmnElement="E31_End1"><dc:Bounds x="742" y="932" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_T2_di" bpmnElement="E31_T2"><dc:Bounds x="570" y="1010" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_End2_di" bpmnElement="E31_End2"><dc:Bounds x="742" y="1032" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_T3_di" bpmnElement="E31_T3"><dc:Bounds x="570" y="1110" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_End3_di" bpmnElement="E31_End3"><dc:Bounds x="742" y="1132" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_T4_di" bpmnElement="E31_T4"><dc:Bounds x="570" y="1210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E31_End4_di" bpmnElement="E31_End4"><dc:Bounds x="742" y="1232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E30A_Gw_E30A_T1_di" bpmnElement="Flow_E30A_Gw_E30A_T1"><di:waypoint x="430" y="215" /><di:waypoint x="430" y="90" /><di:waypoint x="570" y="90" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="72" width="48" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_T1_E30A_Merge_di" bpmnElement="Flow_E30A_T1_E30A_Merge"><di:waypoint x="670" y="90" /><di:waypoint x="740" y="90" /><di:waypoint x="740" y="215" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_Gw_E30A_T2_di" bpmnElement="Flow_E30A_Gw_E30A_T2"><di:waypoint x="430" y="215" /><di:waypoint x="430" y="190" /><di:waypoint x="570" y="190" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="172" width="108" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_T2_E30A_Merge_di" bpmnElement="Flow_E30A_T2_E30A_Merge"><di:waypoint x="670" y="190" /><di:waypoint x="740" y="190" /><di:waypoint x="740" y="215" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_Gw_E30A_T3_di" bpmnElement="Flow_E30A_Gw_E30A_T3"><di:waypoint x="430" y="265" /><di:waypoint x="430" y="290" /><di:waypoint x="570" y="290" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="272" width="120" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_T3_E30A_Merge_di" bpmnElement="Flow_E30A_T3_E30A_Merge"><di:waypoint x="670" y="290" /><di:waypoint x="740" y="290" /><di:waypoint x="740" y="265" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_Gw_E30A_T4_di" bpmnElement="Flow_E30A_Gw_E30A_T4"><di:waypoint x="430" y="265" /><di:waypoint x="430" y="390" /><di:waypoint x="570" y="390" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="372" width="42" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_T4_E30A_Merge_di" bpmnElement="Flow_E30A_T4_E30A_Merge"><di:waypoint x="670" y="390" /><di:waypoint x="740" y="390" /><di:waypoint x="740" y="265" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_Start_E30A_Check_di" bpmnElement="Flow_E30A_Start_E30A_Check"><di:waypoint x="238" y="240" /><di:waypoint x="270" y="240" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_Check_E30A_Gw_di" bpmnElement="Flow_E30A_Check_E30A_Gw"><di:waypoint x="370" y="240" /><di:waypoint x="405" y="240" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30A_Merge_E30A_End_di" bpmnElement="Flow_E30A_Merge_E30A_End"><di:waypoint x="765" y="240" /><di:waypoint x="822" y="240" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_Gw_E30B_T1_di" bpmnElement="Flow_E30B_Gw_E30B_T1"><di:waypoint x="430" y="645" /><di:waypoint x="430" y="520" /><di:waypoint x="570" y="520" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="502" width="48" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_T1_E30B_Merge_di" bpmnElement="Flow_E30B_T1_E30B_Merge"><di:waypoint x="670" y="520" /><di:waypoint x="740" y="520" /><di:waypoint x="740" y="645" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_Gw_E30B_T2_di" bpmnElement="Flow_E30B_Gw_E30B_T2"><di:waypoint x="430" y="645" /><di:waypoint x="430" y="620" /><di:waypoint x="570" y="620" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="602" width="108" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_T2_E30B_Merge_di" bpmnElement="Flow_E30B_T2_E30B_Merge"><di:waypoint x="670" y="620" /><di:waypoint x="740" y="620" /><di:waypoint x="740" y="645" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_Gw_E30B_T3_di" bpmnElement="Flow_E30B_Gw_E30B_T3"><di:waypoint x="430" y="695" /><di:waypoint x="430" y="720" /><di:waypoint x="570" y="720" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="702" width="120" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_T3_E30B_Merge_di" bpmnElement="Flow_E30B_T3_E30B_Merge"><di:waypoint x="670" y="720" /><di:waypoint x="740" y="720" /><di:waypoint x="740" y="695" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_Gw_E30B_T4_di" bpmnElement="Flow_E30B_Gw_E30B_T4"><di:waypoint x="430" y="695" /><di:waypoint x="430" y="820" /><di:waypoint x="570" y="820" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="802" width="42" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_T4_E30B_Merge_di" bpmnElement="Flow_E30B_T4_E30B_Merge"><di:waypoint x="670" y="820" /><di:waypoint x="740" y="820" /><di:waypoint x="740" y="695" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_Start_E30B_Check_di" bpmnElement="Flow_E30B_Start_E30B_Check"><di:waypoint x="238" y="670" /><di:waypoint x="270" y="670" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_Check_E30B_Gw_di" bpmnElement="Flow_E30B_Check_E30B_Gw"><di:waypoint x="370" y="670" /><di:waypoint x="405" y="670" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E30B_Merge_E30B_End_di" bpmnElement="Flow_E30B_Merge_E30B_End"><di:waypoint x="765" y="670" /><di:waypoint x="822" y="670" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_Check_E31_T1_di" bpmnElement="Flow_E31_Check_E31_T1"><di:waypoint x="370" y="1100" /><di:waypoint x="420" y="1100" /><di:waypoint x="420" y="950" /><di:waypoint x="570" y="950" /><bpmndi:BPMNLabel><dc:Bounds x="435" y="932" width="48" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_T1_E31_End1_di" bpmnElement="Flow_E31_T1_E31_End1"><di:waypoint x="670" y="950" /><di:waypoint x="742" y="950" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_Check_E31_T2_di" bpmnElement="Flow_E31_Check_E31_T2"><di:waypoint x="370" y="1100" /><di:waypoint x="420" y="1100" /><di:waypoint x="420" y="1050" /><di:waypoint x="570" y="1050" /><bpmndi:BPMNLabel><dc:Bounds x="435" y="1032" width="108" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_T2_E31_End2_di" bpmnElement="Flow_E31_T2_E31_End2"><di:waypoint x="670" y="1050" /><di:waypoint x="742" y="1050" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_Check_E31_T3_di" bpmnElement="Flow_E31_Check_E31_T3"><di:waypoint x="370" y="1100" /><di:waypoint x="420" y="1100" /><di:waypoint x="420" y="1150" /><di:waypoint x="570" y="1150" /><bpmndi:BPMNLabel><dc:Bounds x="435" y="1132" width="120" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_T3_E31_End3_di" bpmnElement="Flow_E31_T3_E31_End3"><di:waypoint x="670" y="1150" /><di:waypoint x="742" y="1150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_Check_E31_T4_di" bpmnElement="Flow_E31_Check_E31_T4"><di:waypoint x="370" y="1100" /><di:waypoint x="420" y="1100" /><di:waypoint x="420" y="1250" /><di:waypoint x="570" y="1250" /><bpmndi:BPMNLabel><dc:Bounds x="435" y="1232" width="42" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_T4_E31_End4_di" bpmnElement="Flow_E31_T4_E31_End4"><di:waypoint x="670" y="1250" /><di:waypoint x="742" y="1250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E31_Start_E31_Check_di" bpmnElement="Flow_E31_Start_E31_Check"><di:waypoint x="238" y="1100" /><di:waypoint x="270" y="1100" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_C04_Kollaborativ_Einstieg" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_C04_Kollaborativ_Einstieg">
+    <bpmn:participant id="P_C04_Sender" name="08 Sender" processRef="C04_Sender" />
+    <bpmn:participant id="P_C04_Empf" name="08 Empfänger" processRef="C04_Empfaenger" />
+    <bpmn:messageFlow id="MsgFlow_C04_S_Send_C04_R_Start" name="Auftrag" sourceRef="C04_S_Send" targetRef="C04_R_Start" />
+  </bpmn:collaboration>
+  <bpmn:process id="C04_Sender" name="08 Sender" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>08a Kollaborative Prozesse (Einstieg), Folien 3–6. HIER STARTEN. Der Send Task startet über createMessageCorrelation("auftragsnachricht") den Empfängerprozess und gibt product='Auto' und quantity=1 mit. Alternative laut Folie 6: Empfänger direkt per REST/Postman starten (POST /engine-rest/message).</bpmn:documentation>
+    <bpmn:startEvent id="C04_S_Start">
+      <bpmn:outgoing>Flow_C04_S_Start_C04_S_Send</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="C04_S_Send" name="Sende Auftrag" camunda:expression='${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation("auftragsnachricht").setVariable("product","Auto").setVariable("quantity",1).correlateWithResult()}'>
+      <bpmn:incoming>Flow_C04_S_Start_C04_S_Send</bpmn:incoming>
+      <bpmn:outgoing>Flow_C04_S_Send_C04_S_End</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="C04_S_End">
+      <bpmn:incoming>Flow_C04_S_Send_C04_S_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C04_S_Start_C04_S_Send" sourceRef="C04_S_Start" targetRef="C04_S_Send" />
+    <bpmn:sequenceFlow id="Flow_C04_S_Send_C04_S_End" sourceRef="C04_S_Send" targetRef="C04_S_End" />
+  </bpmn:process>
+  <bpmn:process id="C04_Empfaenger" name="08 Empfänger" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Wird über die Nachricht 'auftragsnachricht' gestartet. Die mitgeschickten Variablen erscheinen im Formular (Default-Werte ${product} und ${quantity}).</bpmn:documentation>
+    <bpmn:startEvent id="C04_R_Start" name="Auftrag empfangen">
+      <bpmn:outgoing>Flow_C04_R_Start_C04_R_Show</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_C04_R_Start" messageRef="Message_auftragsnachricht" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="C04_R_Show" name="Auftrag anzeigen" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="product" label="Produkt" type="string" defaultValue="${product}" />
+          <camunda:formField id="quantity" label="Menge" type="long" defaultValue="${quantity}" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C04_R_Start_C04_R_Show</bpmn:incoming>
+      <bpmn:outgoing>Flow_C04_R_Show_C04_R_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="C04_R_End">
+      <bpmn:incoming>Flow_C04_R_Show_C04_R_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C04_R_Start_C04_R_Show" sourceRef="C04_R_Start" targetRef="C04_R_Show" />
+    <bpmn:sequenceFlow id="Flow_C04_R_Show_C04_R_End" sourceRef="C04_R_Show" targetRef="C04_R_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_auftragsnachricht" name="auftragsnachricht" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_C04_Kollaborativ_Einstieg">
+    <bpmndi:BPMNPlane id="BPMNPlane_C04_Kollaborativ_Einstieg" bpmnElement="Collaboration_C04_Kollaborativ_Einstieg">
+      <bpmndi:BPMNShape id="P_C04_Sender_di" bpmnElement="P_C04_Sender" isHorizontal="true"><dc:Bounds x="140" y="40" width="560" height="180" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_C04_Empf_di" bpmnElement="P_C04_Empf" isHorizontal="true"><dc:Bounds x="140" y="270" width="560" height="180" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C04_S_Start_di" bpmnElement="C04_S_Start"><dc:Bounds x="202" y="112" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C04_S_Send_di" bpmnElement="C04_S_Send"><dc:Bounds x="330" y="90" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C04_S_End_di" bpmnElement="C04_S_End"><dc:Bounds x="522" y="112" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C04_R_Start_di" bpmnElement="C04_R_Start"><dc:Bounds x="362" y="342" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="320" y="382" width="119" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C04_R_Show_di" bpmnElement="C04_R_Show"><dc:Bounds x="450" y="320" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C04_R_End_di" bpmnElement="C04_R_End"><dc:Bounds x="612" y="342" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_C04_S_Start_C04_S_Send_di" bpmnElement="Flow_C04_S_Start_C04_S_Send"><di:waypoint x="238" y="130" /><di:waypoint x="330" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C04_S_Send_C04_S_End_di" bpmnElement="Flow_C04_S_Send_C04_S_End"><di:waypoint x="430" y="130" /><di:waypoint x="522" y="130" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C04_R_Start_C04_R_Show_di" bpmnElement="Flow_C04_R_Start_C04_R_Show"><di:waypoint x="398" y="360" /><di:waypoint x="450" y="360" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C04_R_Show_C04_R_End_di" bpmnElement="Flow_C04_R_Show_C04_R_End"><di:waypoint x="550" y="360" /><di:waypoint x="612" y="360" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_C04_S_Send_C04_R_Start_di" bpmnElement="MsgFlow_C04_S_Send_C04_R_Start"><di:waypoint x="380" y="170" /><di:waypoint x="380" y="342" /><bpmndi:BPMNLabel><dc:Bounds x="386" y="249" width="42" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A28_Gruppe_und_Datenspeicher" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A28_Gruppe_und_Datenspeicher">
+    <bpmn:participant id="P_A28_Kunde" name="Customer (extern)" processRef="A28_Kunde" />
+    <bpmn:participant id="P_A28" name="Customer Service Care Process" processRef="A28_CustomerService" />
+    <bpmn:messageFlow id="MsgFlow_A28_K_End_A28_Start" sourceRef="A28_K_End" targetRef="A28_Start" />
+    <bpmn:group id="A28_Group" categoryValueRef="CV_A28_Group" />
+  </bpmn:collaboration>
+  <bpmn:process id="A28_Kunde" name="Customer (extern)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>HIER STARTEN: Der Kunde erfasst eine Beschwerde; die Nachricht startet den Customer Service Care Process.</bpmn:documentation>
+    <bpmn:startEvent id="A28_K_Start">
+      <bpmn:outgoing>Flow_A28_K_Start_A28_K_Enter</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="A28_K_Enter" name="1 Enter Complaint" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="beschwerde" label="Beschwerde" type="string" defaultValue="Lieferung beschädigt" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A28_K_Start_A28_K_Enter</bpmn:incoming>
+      <bpmn:outgoing>Flow_A28_K_Enter_A28_K_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A28_K_End" name="senden">
+      <bpmn:incoming>Flow_A28_K_Enter_A28_K_End</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A28_K_End" messageRef="Message_A28_Beschwerde" camunda:expression="${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation('A28_Beschwerde').setVariable('korrelationsId', execution.getProcessInstanceId()).correlateStartMessage() != null}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A28_K_Start_A28_K_Enter" sourceRef="A28_K_Start" targetRef="A28_K_Enter" />
+    <bpmn:sequenceFlow id="Flow_A28_K_Enter_A28_K_End" sourceRef="A28_K_Enter" targetRef="A28_K_End" />
+  </bpmn:process>
+  <bpmn:process id="A28_CustomerService" name="Customer Service Care Process" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 28: Gruppe (gestrichelter Rahmen 'Decision-Loop') hebt Elemente optisch hervor und bewirkt NICHTS. Datenspeicher (Zylinder) überlebt das Prozessende – im Gegensatz zu Datenobjekten. Bei 'Decide on Complaint': 'ja' -&gt; Update Order UND Review Decision (inklusives Gateway), 'nein' -&gt; nur Review, 'experte' -&gt; Evaluate Complaint und zurück.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_A28_CustomerService">
+      <bpmn:lane id="Lane_A28_0" name="Clerk">
+        <bpmn:flowNodeRef>A28_Update</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A28_End2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_A28_1" name="Expert">
+        <bpmn:flowNodeRef>A28_Eval</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_A28_2" name="Account Manager">
+        <bpmn:flowNodeRef>A28_Decide</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A28_Gw</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_A28_3" name="Customer">
+        <bpmn:flowNodeRef>A28_Start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A28_Create</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A28_Review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>A28_End1</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="A28_Start">
+      <bpmn:outgoing>Flow_A28_Start_A28_Create</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A28_Start" messageRef="Message_A28_Beschwerde" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="A28_Create" name="2 Create Complaint" camunda:expression="${execution.setVariable('beschwerdeGespeichert', true)}">
+      <bpmn:incoming>Flow_A28_Start_A28_Create</bpmn:incoming>
+      <bpmn:outgoing>Flow_A28_Create_A28_Decide</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DOA_A28_Create_A28_DB"><bpmn:targetRef>A28_DB</bpmn:targetRef></bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="A28_Decide" name="3 Decide on Complaint" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="entscheidung" label="Entscheidung" type="enum" defaultValue="ja">
+            <camunda:value id="ja" name="Yes" />
+            <camunda:value id="nein" name="No" />
+            <camunda:value id="experte" name="Involve Expert" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A28_Create_A28_Decide</bpmn:incoming>
+      <bpmn:incoming>Flow_A28_Eval_A28_Decide</bpmn:incoming>
+      <bpmn:outgoing>Flow_A28_Decide_A28_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="A28_Gw">
+      <bpmn:incoming>Flow_A28_Decide_A28_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_A28_Gw_A28_Eval</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A28_Gw_A28_Review</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A28_Gw_A28_Update</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="A28_Eval" name="5 Evaluate Complaint" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="entscheidung" label="Neue Empfehlung" type="enum" defaultValue="ja">
+            <camunda:value id="ja" name="Yes" />
+            <camunda:value id="nein" name="No" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A28_Gw_A28_Eval</bpmn:incoming>
+      <bpmn:outgoing>Flow_A28_Eval_A28_Decide</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A28_Review" name="4 Review Decision" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A28_Gw_A28_Review</bpmn:incoming>
+      <bpmn:outgoing>Flow_A28_Review_A28_End1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A28_End1">
+      <bpmn:incoming>Flow_A28_Review_A28_End1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A28_Update" name="6 Update Order" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A28_Gw_A28_Update</bpmn:incoming>
+      <bpmn:outgoing>Flow_A28_Update_A28_End2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A28_End2">
+      <bpmn:incoming>Flow_A28_Update_A28_End2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="A28_DB" name="Complaint-DB" />
+    <bpmn:sequenceFlow id="Flow_A28_Start_A28_Create" sourceRef="A28_Start" targetRef="A28_Create" />
+    <bpmn:sequenceFlow id="Flow_A28_Create_A28_Decide" sourceRef="A28_Create" targetRef="A28_Decide" />
+    <bpmn:sequenceFlow id="Flow_A28_Decide_A28_Gw" sourceRef="A28_Decide" targetRef="A28_Gw" />
+    <bpmn:sequenceFlow id="Flow_A28_Gw_A28_Eval" name="Involve Expert" sourceRef="A28_Gw" targetRef="A28_Eval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung == 'experte'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A28_Eval_A28_Decide" sourceRef="A28_Eval" targetRef="A28_Decide" />
+    <bpmn:sequenceFlow id="Flow_A28_Gw_A28_Review" name="Yes or No" sourceRef="A28_Gw" targetRef="A28_Review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung != 'experte'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A28_Gw_A28_Update" name="Yes" sourceRef="A28_Gw" targetRef="A28_Update">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung == 'ja'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A28_Review_A28_End1" sourceRef="A28_Review" targetRef="A28_End1" />
+    <bpmn:sequenceFlow id="Flow_A28_Update_A28_End2" sourceRef="A28_Update" targetRef="A28_End2" />
+  </bpmn:process>
+  <bpmn:message id="Message_A28_Beschwerde" name="A28_Beschwerde" />
+  <bpmn:category id="Cat_A28_Group"><bpmn:categoryValue id="CV_A28_Group" value="Decision-Loop" /></bpmn:category>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A28_Gruppe_und_Datenspeicher">
+    <bpmndi:BPMNPlane id="BPMNPlane_A28_Gruppe_und_Datenspeicher" bpmnElement="Collaboration_A28_Gruppe_und_Datenspeicher">
+      <bpmndi:BPMNShape id="P_A28_Kunde_di" bpmnElement="P_A28_Kunde" isHorizontal="true"><dc:Bounds x="140" y="430" width="230" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A28_di" bpmnElement="P_A28" isHorizontal="true"><dc:Bounds x="420" y="40" width="520" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_A28_0_di" bpmnElement="Lane_A28_0" isHorizontal="true"><dc:Bounds x="450" y="40" width="490" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_A28_1_di" bpmnElement="Lane_A28_1" isHorizontal="true"><dc:Bounds x="450" y="160" width="490" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_A28_2_di" bpmnElement="Lane_A28_2" isHorizontal="true"><dc:Bounds x="450" y="280" width="490" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_A28_3_di" bpmnElement="Lane_A28_3" isHorizontal="true"><dc:Bounds x="450" y="400" width="490" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Group_di" bpmnElement="A28_Group"><dc:Bounds x="590" y="200" width="200" height="180" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_K_Start_di" bpmnElement="A28_K_Start"><dc:Bounds x="157" y="492" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_K_Enter_di" bpmnElement="A28_K_Enter"><dc:Bounds x="210" y="470" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_K_End_di" bpmnElement="A28_K_End"><dc:Bounds x="322" y="492" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="310" y="532" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Start_di" bpmnElement="A28_Start"><dc:Bounds x="502" y="442" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Create_di" bpmnElement="A28_Create"><dc:Bounds x="560" y="420" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Decide_di" bpmnElement="A28_Decide"><dc:Bounds x="560" y="300" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Gw_di" bpmnElement="A28_Gw"><dc:Bounds x="705" y="315" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Eval_di" bpmnElement="A28_Eval"><dc:Bounds x="680" y="180" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Review_di" bpmnElement="A28_Review"><dc:Bounds x="680" y="420" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_End1_di" bpmnElement="A28_End1"><dc:Bounds x="862" y="442" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_Update_di" bpmnElement="A28_Update"><dc:Bounds x="770" y="60" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_End2_di" bpmnElement="A28_End2"><dc:Bounds x="882" y="82" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A28_DB_di" bpmnElement="A28_DB"><dc:Bounds x="585" y="545" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="568" y="599" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A28_K_Start_A28_K_Enter_di" bpmnElement="Flow_A28_K_Start_A28_K_Enter"><di:waypoint x="193" y="510" /><di:waypoint x="210" y="510" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_K_Enter_A28_K_End_di" bpmnElement="Flow_A28_K_Enter_A28_K_End"><di:waypoint x="310" y="510" /><di:waypoint x="322" y="510" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Start_A28_Create_di" bpmnElement="Flow_A28_Start_A28_Create"><di:waypoint x="538" y="460" /><di:waypoint x="560" y="460" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Create_A28_Decide_di" bpmnElement="Flow_A28_Create_A28_Decide"><di:waypoint x="610" y="420" /><di:waypoint x="610" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Decide_A28_Gw_di" bpmnElement="Flow_A28_Decide_A28_Gw"><di:waypoint x="660" y="340" /><di:waypoint x="705" y="340" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Gw_A28_Eval_di" bpmnElement="Flow_A28_Gw_A28_Eval"><di:waypoint x="730" y="315" /><di:waypoint x="730" y="260" /><bpmndi:BPMNLabel><dc:Bounds x="735" y="280" width="84" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Eval_A28_Decide_di" bpmnElement="Flow_A28_Eval_A28_Decide"><di:waypoint x="680" y="220" /><di:waypoint x="610" y="220" /><di:waypoint x="610" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Gw_A28_Review_di" bpmnElement="Flow_A28_Gw_A28_Review"><di:waypoint x="730" y="365" /><di:waypoint x="730" y="420" /><bpmndi:BPMNLabel><dc:Bounds x="735" y="386" width="54" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Gw_A28_Update_di" bpmnElement="Flow_A28_Gw_A28_Update"><di:waypoint x="755" y="340" /><di:waypoint x="820" y="340" /><di:waypoint x="820" y="140" /><bpmndi:BPMNLabel><dc:Bounds x="770" y="322" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Review_A28_End1_di" bpmnElement="Flow_A28_Review_A28_End1"><di:waypoint x="780" y="460" /><di:waypoint x="862" y="460" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A28_Update_A28_End2_di" bpmnElement="Flow_A28_Update_A28_End2"><di:waypoint x="870" y="100" /><di:waypoint x="882" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A28_K_End_A28_Start_di" bpmnElement="MsgFlow_A28_K_End_A28_Start"><di:waypoint x="358" y="510" /><di:waypoint x="400" y="510" /><di:waypoint x="400" y="460" /><di:waypoint x="502" y="460" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_A28_Create_A28_DB_di" bpmnElement="DOA_A28_Create_A28_DB"><di:waypoint x="625" y="500" /><di:waypoint x="610" y="545" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

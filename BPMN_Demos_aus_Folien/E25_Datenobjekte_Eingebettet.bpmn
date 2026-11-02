@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E25_Datenobjekte_Eingebettet" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E25_Datenobjekte_Eingebettet">
+    <bpmn:participant id="P_E25" name="Master Data Process" processRef="E25_MasterDataProcess" />
+  </bpmn:collaboration>
+  <bpmn:process id="E25_MasterDataProcess" name="Master Data Process" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folien 24/25: Eingebetteter Teilprozess. Er sieht die Daten des Elternprozesses direkt (Call by Reference). Änderst du 'nachname' im Teilprozess, ist die Änderung danach auch im Elternprozess sichtbar. Nachteil laut Folie: eingebettete Teilprozesse sind nicht wiederverwendbar.</bpmn:documentation>
+    <bpmn:dataObjectReference id="E25_DO_Master" name="Master Data" dataObjectRef="DO_E25_DO_Master" />
+    <bpmn:dataObject id="DO_E25_DO_Master" />
+    <bpmn:dataObjectReference id="E25_DO_Corr" name="Corrected Master Data" dataObjectRef="DO_E25_DO_Corr" />
+    <bpmn:dataObject id="DO_E25_DO_Corr" />
+    <bpmn:startEvent id="E25_Start">
+      <bpmn:outgoing>Flow_E25_Start_E25_Enter</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E25_Enter" name="Enter Master Data" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="vorname" label="Vorname" type="string" defaultValue="Erika" />
+          <camunda:formField id="nachname" label="Nachname (absichtlich mit Fehler)" type="string" defaultValue="Mustremann" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E25_Start_E25_Enter</bpmn:incoming>
+      <bpmn:outgoing>Flow_E25_Enter_E25_Sub</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DOA_E25_Enter_E25_DO_Master"><bpmn:targetRef>E25_DO_Master</bpmn:targetRef></bpmn:dataOutputAssociation>
+    </bpmn:userTask>
+    <bpmn:subProcess id="E25_Sub" name="Master Data Review Process (eingebettet)">
+      <bpmn:incoming>Flow_E25_Enter_E25_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_E25_Sub_E25_Store</bpmn:outgoing>
+      <bpmn:dataObjectReference id="E25_S_DO_Err" name="Master Data with Errorlist" dataObjectRef="DO_E25_S_DO_Err" />
+      <bpmn:dataObject id="DO_E25_S_DO_Err" isCollection="true" />
+      <bpmn:startEvent id="E25_S_Start">
+        <bpmn:outgoing>Flow_E25_S_Start_E25_S_Check</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:businessRuleTask id="E25_S_Check" name="Check Master Data" camunda:expression="${execution.setVariable('fehlerliste', 'Nachname prüfen')}">
+        <bpmn:incoming>Flow_E25_S_Start_E25_S_Check</bpmn:incoming>
+        <bpmn:outgoing>Flow_E25_S_Check_E25_S_Correct</bpmn:outgoing>
+        <bpmn:dataOutputAssociation id="DOA_E25_S_Check_E25_S_DO_Err"><bpmn:targetRef>E25_S_DO_Err</bpmn:targetRef></bpmn:dataOutputAssociation>
+      </bpmn:businessRuleTask>
+      <bpmn:userTask id="E25_S_Correct" name="Correct Errors" camunda:assignee="demo">
+        <bpmn:extensionElements>
+          <camunda:formData>
+            <camunda:formField id="nachname" label="Nachname korrigieren (ändert das ORIGINAL)" type="string" />
+          </camunda:formData>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_E25_S_Check_E25_S_Correct</bpmn:incoming>
+        <bpmn:outgoing>Flow_E25_S_Correct_E25_S_Final</bpmn:outgoing>
+        <bpmn:property id="Prop_E25_S_Correct_E25_S_DO_Err" name="__targetRef_placeholder" />
+        <bpmn:dataInputAssociation id="DIA_E25_S_Correct_E25_S_DO_Err"><bpmn:sourceRef>E25_S_DO_Err</bpmn:sourceRef><bpmn:targetRef>Prop_E25_S_Correct_E25_S_DO_Err</bpmn:targetRef></bpmn:dataInputAssociation>
+      </bpmn:userTask>
+      <bpmn:userTask id="E25_S_Final" name="Final Check and Approval" camunda:assignee="demo">
+        <bpmn:incoming>Flow_E25_S_Correct_E25_S_Final</bpmn:incoming>
+        <bpmn:outgoing>Flow_E25_S_Final_E25_S_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="E25_S_End">
+        <bpmn:incoming>Flow_E25_S_Final_E25_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_E25_S_Start_E25_S_Check" sourceRef="E25_S_Start" targetRef="E25_S_Check" />
+      <bpmn:sequenceFlow id="Flow_E25_S_Check_E25_S_Correct" sourceRef="E25_S_Check" targetRef="E25_S_Correct" />
+      <bpmn:sequenceFlow id="Flow_E25_S_Correct_E25_S_Final" sourceRef="E25_S_Correct" targetRef="E25_S_Final" />
+      <bpmn:sequenceFlow id="Flow_E25_S_Final_E25_S_End" sourceRef="E25_S_Final" targetRef="E25_S_End" />
+    </bpmn:subProcess>
+    <bpmn:serviceTask id="E25_Store" name="Store Master Data" camunda:expression="${execution.setVariable('gespeichert', vorname.concat(' ').concat(nachname))}">
+      <bpmn:incoming>Flow_E25_Sub_E25_Store</bpmn:incoming>
+      <bpmn:outgoing>Flow_E25_Store_E25_End</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DOA_E25_Store_E25_DO_Corr"><bpmn:targetRef>E25_DO_Corr</bpmn:targetRef></bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="E25_End">
+      <bpmn:incoming>Flow_E25_Store_E25_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E25_Start_E25_Enter" sourceRef="E25_Start" targetRef="E25_Enter" />
+    <bpmn:sequenceFlow id="Flow_E25_Enter_E25_Sub" sourceRef="E25_Enter" targetRef="E25_Sub" />
+    <bpmn:sequenceFlow id="Flow_E25_Sub_E25_Store" sourceRef="E25_Sub" targetRef="E25_Store" />
+    <bpmn:sequenceFlow id="Flow_E25_Store_E25_End" sourceRef="E25_Store" targetRef="E25_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E25_Datenobjekte_Eingebettet">
+    <bpmndi:BPMNPlane id="BPMNPlane_E25_Datenobjekte_Eingebettet" bpmnElement="Collaboration_E25_Datenobjekte_Eingebettet">
+      <bpmndi:BPMNShape id="P_E25_di" bpmnElement="P_E25" isHorizontal="true"><dc:Bounds x="160" y="40" width="1060" height="380" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_Sub_di" bpmnElement="E25_Sub" isExpanded="true"><dc:Bounds x="420" y="150" width="520" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_DO_Master_di" bpmnElement="E25_DO_Master"><dc:Bounds x="312" y="65" width="36" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="292" y="119" width="77" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_DO_Corr_di" bpmnElement="E25_DO_Corr"><dc:Bounds x="1022" y="65" width="36" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="970" y="119" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_Start_di" bpmnElement="E25_Start"><dc:Bounds x="202" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_Enter_di" bpmnElement="E25_Enter"><dc:Bounds x="270" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_S_DO_Err_di" bpmnElement="E25_S_DO_Err"><dc:Bounds x="682" y="165" width="36" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="630" y="219" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_S_Start_di" bpmnElement="E25_S_Start"><dc:Bounds x="437" y="282" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_S_Check_di" bpmnElement="E25_S_Check"><dc:Bounds x="490" y="260" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_S_Correct_di" bpmnElement="E25_S_Correct"><dc:Bounds x="640" y="260" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_S_Final_di" bpmnElement="E25_S_Final"><dc:Bounds x="785" y="260" width="90" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_S_End_di" bpmnElement="E25_S_End"><dc:Bounds x="887" y="282" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_Store_di" bpmnElement="E25_Store"><dc:Bounds x="990" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E25_End_di" bpmnElement="E25_End"><dc:Bounds x="1142" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E25_S_Start_E25_S_Check_di" bpmnElement="Flow_E25_S_Start_E25_S_Check"><di:waypoint x="473" y="300" /><di:waypoint x="490" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E25_S_Check_E25_S_Correct_di" bpmnElement="Flow_E25_S_Check_E25_S_Correct"><di:waypoint x="590" y="300" /><di:waypoint x="640" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E25_S_Correct_E25_S_Final_di" bpmnElement="Flow_E25_S_Correct_E25_S_Final"><di:waypoint x="740" y="300" /><di:waypoint x="785" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E25_S_Final_E25_S_End_di" bpmnElement="Flow_E25_S_Final_E25_S_End"><di:waypoint x="875" y="300" /><di:waypoint x="887" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E25_Start_E25_Enter_di" bpmnElement="Flow_E25_Start_E25_Enter"><di:waypoint x="238" y="250" /><di:waypoint x="270" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E25_Enter_E25_Sub_di" bpmnElement="Flow_E25_Enter_E25_Sub"><di:waypoint x="370" y="250" /><di:waypoint x="395" y="250" /><di:waypoint x="395" y="260" /><di:waypoint x="420" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E25_Sub_E25_Store_di" bpmnElement="Flow_E25_Sub_E25_Store"><di:waypoint x="940" y="260" /><di:waypoint x="965" y="260" /><di:waypoint x="965" y="250" /><di:waypoint x="990" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E25_Store_E25_End_di" bpmnElement="Flow_E25_Store_E25_End"><di:waypoint x="1090" y="250" /><di:waypoint x="1142" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_E25_Enter_E25_DO_Master_di" bpmnElement="DOA_E25_Enter_E25_DO_Master"><di:waypoint x="335" y="210" /><di:waypoint x="330" y="115" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_E25_S_Check_E25_S_DO_Err_di" bpmnElement="DOA_E25_S_Check_E25_S_DO_Err"><di:waypoint x="555" y="260" /><di:waypoint x="700" y="215" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DIA_E25_S_Correct_E25_S_DO_Err_di" bpmnElement="DIA_E25_S_Correct_E25_S_DO_Err"><di:waypoint x="700" y="215" /><di:waypoint x="675" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_E25_Store_E25_DO_Corr_di" bpmnElement="DOA_E25_Store_E25_DO_Corr"><di:waypoint x="1055" y="210" /><di:waypoint x="1040" y="115" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

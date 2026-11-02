@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_C03_REST_Order_Quarkus" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_C03_REST_Order_Quarkus">
+    <bpmn:participant id="P_C03" name="Order Process with Quarkus Service Calls" processRef="order-process-quarkus" />
+  </bpmn:collaboration>
+  <bpmn:process id="order-process-quarkus" name="Order Process with Quarkus Service Calls" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>06 Microservices, Folien 53–60. Der Prozess ruft einen eigenen REST-Service (Quarkus, Port 8088) auf: 'Create order' = POST http://host.docker.internal:8088/resources/orders mit JSON-Payload, 'Read order' = GET .../orders/{id}. host.docker.internal = 'der Mac aus Sicht des Docker-Containers'. VORAUSSETZUNG: Der Quarkus-Order-Service aus 06/F. 41–50 läuft auf Port 8088 – ohne ihn bleibt die Instanz mit einem Incident bei 'Create order' stehen.</bpmn:documentation>
+    <bpmn:startEvent id="C03_Start" name="Add new order">
+      <bpmn:outgoing>Flow_C03_Start_C03_Enter</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="C03_Enter" name="Enter order" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="product" label="Product" type="string" defaultValue="Käsekuchen" />
+          <camunda:formField id="quantity" label="Quantity" type="long" defaultValue="20" />
+          <camunda:formField id="comment" label="Comment" type="string" defaultValue="Herausragende Qualität" />
+        </camunda:formData>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="JavaScript">var order = S(JSON.stringify(
+{
+    product: execution.getVariable("product"),
+    quantity: execution.getVariable("quantity"),
+    comment: execution.getVariable("comment")
+}
+), "application/json");
+execution.setVariable("order", order);</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C03_Start_C03_Enter</bpmn:incoming>
+      <bpmn:outgoing>Flow_C03_Enter_C03_Create</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="C03_Create" name="Create order">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">http://host.docker.internal:8088/resources/orders</camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="payload"><camunda:script scriptFormat="JavaScript">execution.getVariable("order").toString();</camunda:script></camunda:inputParameter>
+            <camunda:inputParameter name="headers"><camunda:map><camunda:entry key="Content-Type">application/json</camunda:entry></camunda:map></camunda:inputParameter>
+            <camunda:outputParameter name="resultCreate">${response}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="JavaScript">var order = S(execution.getVariable("resultCreate"), "application/json");
+execution.setVariable("id", order.prop("id").numberValue());</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C03_Enter_C03_Create</bpmn:incoming>
+      <bpmn:outgoing>Flow_C03_Create_C03_Read</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="C03_Read" name="Read order">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url"><camunda:script scriptFormat="JavaScript">var id = execution.getVariable("id");
+"http://host.docker.internal:8088/resources/orders/" + id;</camunda:script></camunda:inputParameter>
+            <camunda:inputParameter name="method">GET</camunda:inputParameter>
+            <camunda:outputParameter name="orderAsString">${response}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="JavaScript">execution.setVariable("orderNew", S(execution.getVariable("orderAsString"), "application/json"));</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C03_Create_C03_Read</bpmn:incoming>
+      <bpmn:outgoing>Flow_C03_Read_C03_Display</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="C03_Display" name="Display order" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="id" label="ID" type="long" defaultValue='${orderNew.prop("id").numberValue()}'>
+            <camunda:validation><camunda:constraint name="readonly" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="product" label="Product" type="string" defaultValue='${orderNew.prop("product").stringValue()}' />
+          <camunda:formField id="quantity" label="Quantity" type="long" defaultValue='${orderNew.prop("quantity").numberValue()}' />
+          <camunda:formField id="comment" label="Comment" type="string" defaultValue='${orderNew.prop("comment").stringValue()}' />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C03_Read_C03_Display</bpmn:incoming>
+      <bpmn:outgoing>Flow_C03_Display_C03_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="C03_End" name="New order successfully added">
+      <bpmn:incoming>Flow_C03_Display_C03_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C03_Start_C03_Enter" sourceRef="C03_Start" targetRef="C03_Enter" />
+    <bpmn:sequenceFlow id="Flow_C03_Enter_C03_Create" sourceRef="C03_Enter" targetRef="C03_Create" />
+    <bpmn:sequenceFlow id="Flow_C03_Create_C03_Read" sourceRef="C03_Create" targetRef="C03_Read" />
+    <bpmn:sequenceFlow id="Flow_C03_Read_C03_Display" sourceRef="C03_Read" targetRef="C03_Display" />
+    <bpmn:sequenceFlow id="Flow_C03_Display_C03_End" sourceRef="C03_Display" targetRef="C03_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_C03_REST_Order_Quarkus">
+    <bpmndi:BPMNPlane id="BPMNPlane_C03_REST_Order_Quarkus" bpmnElement="Collaboration_C03_REST_Order_Quarkus">
+      <bpmndi:BPMNShape id="P_C03_di" bpmnElement="P_C03" isHorizontal="true"><dc:Bounds x="140" y="40" width="860" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C03_Start_di" bpmnElement="C03_Start"><dc:Bounds x="182" y="122" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="154" y="162" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C03_Enter_di" bpmnElement="C03_Enter"><dc:Bounds x="260" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C03_Create_di" bpmnElement="C03_Create"><dc:Bounds x="410" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C03_Read_di" bpmnElement="C03_Read"><dc:Bounds x="560" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C03_Display_di" bpmnElement="C03_Display"><dc:Bounds x="710" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C03_End_di" bpmnElement="C03_End"><dc:Bounds x="882" y="122" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="830" y="162" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_C03_Start_C03_Enter_di" bpmnElement="Flow_C03_Start_C03_Enter"><di:waypoint x="218" y="140" /><di:waypoint x="260" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C03_Enter_C03_Create_di" bpmnElement="Flow_C03_Enter_C03_Create"><di:waypoint x="360" y="140" /><di:waypoint x="410" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C03_Create_C03_Read_di" bpmnElement="Flow_C03_Create_C03_Read"><di:waypoint x="510" y="140" /><di:waypoint x="560" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C03_Read_C03_Display_di" bpmnElement="Flow_C03_Read_C03_Display"><di:waypoint x="660" y="140" /><di:waypoint x="710" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C03_Display_C03_End_di" bpmnElement="Flow_C03_Display_C03_End"><di:waypoint x="810" y="140" /><di:waypoint x="882" y="140" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_C06" name="Temperatur-Kritikalität" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <decision id="temperatureCriticality" name="Decide on criticality" camunda:historyTimeToLive="180">
+    <decisionTable id="DecisionTable_C06" hitPolicy="UNIQUE">
+      <input id="Input_Temperature" label="Temperature">
+        <inputExpression id="InputExpression_Temperature" typeRef="long">
+          <text>max(temp1, temp2, temp3, temp4)</text>
+        </inputExpression>
+      </input>
+      <output id="Output_Critical" label="Critical?" name="isCritical" typeRef="boolean" />
+      <rule id="Rule_Critical">
+        <inputEntry id="UnaryTests_1"><text>&gt;= 400</text></inputEntry>
+        <outputEntry id="LiteralExpression_1"><text>true</text></outputEntry>
+      </rule>
+      <rule id="Rule_NotCritical">
+        <inputEntry id="UnaryTests_2"><text>&lt; 400</text></inputEntry>
+        <outputEntry id="LiteralExpression_2"><text>false</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_C06">
+      <dmndi:DMNShape id="DMNShape_C06" dmnElementRef="temperatureCriticality">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

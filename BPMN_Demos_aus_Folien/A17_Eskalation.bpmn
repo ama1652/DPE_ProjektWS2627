@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A17_Eskalation" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A17_Eskalation">
+    <bpmn:participant id="P_A17" name="Travel Booking – Escalation" processRef="A17_Escalation" />
+  </bpmn:collaboration>
+  <bpmn:process id="A17_Escalation" name="Travel Booking – Escalation" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 17: Eskalationen für die Kommunikation zwischen Kind- und Elternprozess. Jede Buchung kann mit ./dpe-demo.sh escalate &lt;taskId&gt; NICHT_BUCHBAR scheitern; der Teilprozess wirft dann eine EIGENE Eskalation (FEHLER_FLUG / FEHLER_HOTEL / FEHLER_MIETWAGEN), und der Elternprozess startet die passende Fehlerbehandlung.</bpmn:documentation>
+    <bpmn:startEvent id="A17_Start">
+      <bpmn:outgoing>Flow_A17_Start_A17_Sub</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="A17_Sub" name="Travel Booking">
+      <bpmn:incoming>Flow_A17_Start_A17_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A17_Sub_A17_End</bpmn:outgoing>
+      <bpmn:startEvent id="A17_S_Start">
+        <bpmn:outgoing>Flow_A17_S_Start_A17_T0</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:endEvent id="A17_S_End">
+        <bpmn:incoming>Flow_A17_T2_A17_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:userTask id="A17_T0" name="Book Flight (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A17_S_Start_A17_T0</bpmn:incoming>
+        <bpmn:outgoing>Flow_A17_T0_A17_T1</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A17_TB0" attachedToRef="A17_T0">
+        <bpmn:outgoing>Flow_A17_TB0_A17_EE0</bpmn:outgoing>
+        <bpmn:escalationEventDefinition id="EscalationDef_A17_TB0" escalationRef="Escalation_NICHT_BUCHBAR" />
+      </bpmn:boundaryEvent>
+      <bpmn:endEvent id="A17_EE0" name="Erroneous Flight Booking">
+        <bpmn:incoming>Flow_A17_TB0_A17_EE0</bpmn:incoming>
+        <bpmn:escalationEventDefinition id="EscalationDef_A17_EE0" escalationRef="Escalation_FEHLER_FLUG" />
+      </bpmn:endEvent>
+      <bpmn:userTask id="A17_T1" name="Book Hotel (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A17_T0_A17_T1</bpmn:incoming>
+        <bpmn:outgoing>Flow_A17_T1_A17_T2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A17_TB1" attachedToRef="A17_T1">
+        <bpmn:outgoing>Flow_A17_TB1_A17_EE1</bpmn:outgoing>
+        <bpmn:escalationEventDefinition id="EscalationDef_A17_TB1" escalationRef="Escalation_NICHT_BUCHBAR" />
+      </bpmn:boundaryEvent>
+      <bpmn:endEvent id="A17_EE1" name="Erroneous Hotel Booking">
+        <bpmn:incoming>Flow_A17_TB1_A17_EE1</bpmn:incoming>
+        <bpmn:escalationEventDefinition id="EscalationDef_A17_EE1" escalationRef="Escalation_FEHLER_HOTEL" />
+      </bpmn:endEvent>
+      <bpmn:userTask id="A17_T2" name="Book Rental Car (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A17_T1_A17_T2</bpmn:incoming>
+        <bpmn:outgoing>Flow_A17_T2_A17_S_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A17_TB2" attachedToRef="A17_T2">
+        <bpmn:outgoing>Flow_A17_TB2_A17_EE2</bpmn:outgoing>
+        <bpmn:escalationEventDefinition id="EscalationDef_A17_TB2" escalationRef="Escalation_NICHT_BUCHBAR" />
+      </bpmn:boundaryEvent>
+      <bpmn:endEvent id="A17_EE2" name="Erroneous Rental Car Booking">
+        <bpmn:incoming>Flow_A17_TB2_A17_EE2</bpmn:incoming>
+        <bpmn:escalationEventDefinition id="EscalationDef_A17_EE2" escalationRef="Escalation_FEHLER_MIETWAGEN" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A17_S_Start_A17_T0" sourceRef="A17_S_Start" targetRef="A17_T0" />
+      <bpmn:sequenceFlow id="Flow_A17_TB0_A17_EE0" sourceRef="A17_TB0" targetRef="A17_EE0" />
+      <bpmn:sequenceFlow id="Flow_A17_T0_A17_T1" sourceRef="A17_T0" targetRef="A17_T1" />
+      <bpmn:sequenceFlow id="Flow_A17_TB1_A17_EE1" sourceRef="A17_TB1" targetRef="A17_EE1" />
+      <bpmn:sequenceFlow id="Flow_A17_T1_A17_T2" sourceRef="A17_T1" targetRef="A17_T2" />
+      <bpmn:sequenceFlow id="Flow_A17_TB2_A17_EE2" sourceRef="A17_TB2" targetRef="A17_EE2" />
+      <bpmn:sequenceFlow id="Flow_A17_T2_A17_S_End" sourceRef="A17_T2" targetRef="A17_S_End" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="A17_SB0" name="Erroneous Flight Booking" attachedToRef="A17_Sub">
+      <bpmn:outgoing>Flow_A17_SB0_A17_H0</bpmn:outgoing>
+      <bpmn:escalationEventDefinition id="EscalationDef_A17_SB0" escalationRef="Escalation_FEHLER_FLUG" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A17_H0" name="Error Handling Book Flight" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A17_SB0_A17_H0</bpmn:incoming>
+      <bpmn:outgoing>Flow_A17_H0_A17_HE0</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A17_HE0">
+      <bpmn:incoming>Flow_A17_H0_A17_HE0</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="A17_SB1" name="Erroneous Hotel Booking" attachedToRef="A17_Sub">
+      <bpmn:outgoing>Flow_A17_SB1_A17_H1</bpmn:outgoing>
+      <bpmn:escalationEventDefinition id="EscalationDef_A17_SB1" escalationRef="Escalation_FEHLER_HOTEL" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A17_H1" name="Error Handling Book Hotel" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A17_SB1_A17_H1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A17_H1_A17_HE1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A17_HE1">
+      <bpmn:incoming>Flow_A17_H1_A17_HE1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="A17_SB2" name="Erroneous Rental Car Booking" attachedToRef="A17_Sub">
+      <bpmn:outgoing>Flow_A17_SB2_A17_H2</bpmn:outgoing>
+      <bpmn:escalationEventDefinition id="EscalationDef_A17_SB2" escalationRef="Escalation_FEHLER_MIETWAGEN" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A17_H2" name="Error Handling Book Rental Car" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A17_SB2_A17_H2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A17_H2_A17_HE2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A17_HE2">
+      <bpmn:incoming>Flow_A17_H2_A17_HE2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="A17_End">
+      <bpmn:incoming>Flow_A17_Sub_A17_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A17_SB0_A17_H0" sourceRef="A17_SB0" targetRef="A17_H0" />
+    <bpmn:sequenceFlow id="Flow_A17_H0_A17_HE0" sourceRef="A17_H0" targetRef="A17_HE0" />
+    <bpmn:sequenceFlow id="Flow_A17_SB1_A17_H1" sourceRef="A17_SB1" targetRef="A17_H1" />
+    <bpmn:sequenceFlow id="Flow_A17_H1_A17_HE1" sourceRef="A17_H1" targetRef="A17_HE1" />
+    <bpmn:sequenceFlow id="Flow_A17_SB2_A17_H2" sourceRef="A17_SB2" targetRef="A17_H2" />
+    <bpmn:sequenceFlow id="Flow_A17_H2_A17_HE2" sourceRef="A17_H2" targetRef="A17_HE2" />
+    <bpmn:sequenceFlow id="Flow_A17_Start_A17_Sub" sourceRef="A17_Start" targetRef="A17_Sub" />
+    <bpmn:sequenceFlow id="Flow_A17_Sub_A17_End" sourceRef="A17_Sub" targetRef="A17_End" />
+  </bpmn:process>
+  <bpmn:escalation id="Escalation_NICHT_BUCHBAR" name="NICHT_BUCHBAR" escalationCode="NICHT_BUCHBAR" />
+  <bpmn:escalation id="Escalation_FEHLER_FLUG" name="FEHLER_FLUG" escalationCode="FEHLER_FLUG" />
+  <bpmn:escalation id="Escalation_FEHLER_HOTEL" name="FEHLER_HOTEL" escalationCode="FEHLER_HOTEL" />
+  <bpmn:escalation id="Escalation_FEHLER_MIETWAGEN" name="FEHLER_MIETWAGEN" escalationCode="FEHLER_MIETWAGEN" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A17_Eskalation">
+    <bpmndi:BPMNPlane id="BPMNPlane_A17_Eskalation" bpmnElement="Collaboration_A17_Eskalation">
+      <bpmndi:BPMNShape id="P_A17_di" bpmnElement="P_A17" isHorizontal="true"><dc:Bounds x="140" y="40" width="900" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_Sub_di" bpmnElement="A17_Sub" isExpanded="true"><dc:Bounds x="240" y="80" width="560" height="210" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_Start_di" bpmnElement="A17_Start"><dc:Bounds x="172" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_S_Start_di" bpmnElement="A17_S_Start"><dc:Bounds x="257" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_S_End_di" bpmnElement="A17_S_End"><dc:Bounds x="742" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_T0_di" bpmnElement="A17_T0"><dc:Bounds x="310" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_TB0_di" bpmnElement="A17_TB0"><dc:Bounds x="307" y="162" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_EE0_di" bpmnElement="A17_EE0"><dc:Bounds x="382" y="212" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="330" y="252" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_T1_di" bpmnElement="A17_T1"><dc:Bounds x="460" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_TB1_di" bpmnElement="A17_TB1"><dc:Bounds x="457" y="162" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_EE1_di" bpmnElement="A17_EE1"><dc:Bounds x="532" y="212" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="480" y="252" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_T2_di" bpmnElement="A17_T2"><dc:Bounds x="610" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_TB2_di" bpmnElement="A17_TB2"><dc:Bounds x="607" y="162" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_EE2_di" bpmnElement="A17_EE2"><dc:Bounds x="682" y="212" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="630" y="252" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_SB0_di" bpmnElement="A17_SB0"><dc:Bounds x="278" y="272" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="226" y="312" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_H0_di" bpmnElement="A17_H0"><dc:Bounds x="340" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_HE0_di" bpmnElement="A17_HE0"><dc:Bounds x="372" y="452" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_SB1_di" bpmnElement="A17_SB1"><dc:Bounds x="446" y="272" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="394" y="312" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_H1_di" bpmnElement="A17_H1"><dc:Bounds x="490" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_HE1_di" bpmnElement="A17_HE1"><dc:Bounds x="522" y="452" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_SB2_di" bpmnElement="A17_SB2"><dc:Bounds x="614" y="272" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="562" y="312" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_H2_di" bpmnElement="A17_H2"><dc:Bounds x="640" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_HE2_di" bpmnElement="A17_HE2"><dc:Bounds x="672" y="452" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A17_End_di" bpmnElement="A17_End"><dc:Bounds x="882" y="167" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A17_S_Start_A17_T0_di" bpmnElement="Flow_A17_S_Start_A17_T0"><di:waypoint x="293" y="140" /><di:waypoint x="310" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_TB0_A17_EE0_di" bpmnElement="Flow_A17_TB0_A17_EE0"><di:waypoint x="325" y="198" /><di:waypoint x="325" y="230" /><di:waypoint x="382" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_SB0_A17_H0_di" bpmnElement="Flow_A17_SB0_A17_H0"><di:waypoint x="296" y="308" /><di:waypoint x="296" y="380" /><di:waypoint x="340" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_H0_A17_HE0_di" bpmnElement="Flow_A17_H0_A17_HE0"><di:waypoint x="390" y="420" /><di:waypoint x="390" y="452" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_T0_A17_T1_di" bpmnElement="Flow_A17_T0_A17_T1"><di:waypoint x="410" y="140" /><di:waypoint x="460" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_TB1_A17_EE1_di" bpmnElement="Flow_A17_TB1_A17_EE1"><di:waypoint x="475" y="198" /><di:waypoint x="475" y="230" /><di:waypoint x="532" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_SB1_A17_H1_di" bpmnElement="Flow_A17_SB1_A17_H1"><di:waypoint x="464" y="308" /><di:waypoint x="464" y="380" /><di:waypoint x="490" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_H1_A17_HE1_di" bpmnElement="Flow_A17_H1_A17_HE1"><di:waypoint x="540" y="420" /><di:waypoint x="540" y="452" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_T1_A17_T2_di" bpmnElement="Flow_A17_T1_A17_T2"><di:waypoint x="560" y="140" /><di:waypoint x="610" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_TB2_A17_EE2_di" bpmnElement="Flow_A17_TB2_A17_EE2"><di:waypoint x="625" y="198" /><di:waypoint x="625" y="230" /><di:waypoint x="682" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_SB2_A17_H2_di" bpmnElement="Flow_A17_SB2_A17_H2"><di:waypoint x="632" y="308" /><di:waypoint x="632" y="380" /><di:waypoint x="640" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_H2_A17_HE2_di" bpmnElement="Flow_A17_H2_A17_HE2"><di:waypoint x="690" y="420" /><di:waypoint x="690" y="452" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_T2_A17_S_End_di" bpmnElement="Flow_A17_T2_A17_S_End"><di:waypoint x="710" y="140" /><di:waypoint x="742" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_Start_A17_Sub_di" bpmnElement="Flow_A17_Start_A17_Sub"><di:waypoint x="208" y="140" /><di:waypoint x="240" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A17_Sub_A17_End_di" bpmnElement="Flow_A17_Sub_A17_End"><di:waypoint x="800" y="185" /><di:waypoint x="882" y="185" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

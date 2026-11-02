@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E26_Schleifen" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E26_Schleifen">
+    <bpmn:participant id="P_E26_A" name="A: Schleife mit Prüfung VORHER (XOR)" processRef="E26_A_PruefungVorher" />
+    <bpmn:participant id="P_E26_B" name="B: Schleife mit Prüfung NACHHER (XOR)" processRef="E26_B_PruefungNachher" />
+    <bpmn:participant id="P_E26_C" name="C: Standard-Schleifenmarker (nur Ansicht, in Camunda 7 nicht ausführbar)" processRef="E26_C_StandardLoop" />
+    <bpmn:participant id="P_E26_D" name="D: Mehrfachinstanz SEQUENZIELL (≡)" processRef="E26_D_Mehrfachinstanz" />
+    <bpmn:participant id="P_E26_E" name="E: Mehrfachinstanz PARALLEL (|||)" processRef="E26_E_Mehrfachinstanz" />
+  </bpmn:collaboration>
+  <bpmn:process id="E26_A_PruefungVorher" name="A: Schleife mit Prüfung VORHER (XOR)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 26 oben links: Das Gateway prüft VOR der Aufgabe. Ist 'fertig' schon beim Start true, wird 'Do Something' nie ausgeführt.</bpmn:documentation>
+    <bpmn:startEvent id="E26A_Start">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="fertig" label="Schon fertig? (Prüfung vorher)" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_E26A_Start_E26A_Gw</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="E26A_Gw" name="End loop?">
+      <bpmn:incoming>Flow_E26A_Start_E26A_Gw</bpmn:incoming>
+      <bpmn:incoming>Flow_E26A_Do_E26A_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_E26A_Gw_E26A_Do</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E26A_Gw_E26A_End</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="E26A_Do" name="Do Something" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="fertig" label="Fertig? (dann Schleife beenden)" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E26A_Gw_E26A_Do</bpmn:incoming>
+      <bpmn:outgoing>Flow_E26A_Do_E26A_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E26A_End">
+      <bpmn:incoming>Flow_E26A_Gw_E26A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E26A_Start_E26A_Gw" sourceRef="E26A_Start" targetRef="E26A_Gw" />
+    <bpmn:sequenceFlow id="Flow_E26A_Gw_E26A_Do" name="No" sourceRef="E26A_Gw" targetRef="E26A_Do">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!fertig}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E26A_Do_E26A_Gw" sourceRef="E26A_Do" targetRef="E26A_Gw" />
+    <bpmn:sequenceFlow id="Flow_E26A_Gw_E26A_End" name="Yes" sourceRef="E26A_Gw" targetRef="E26A_End">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${fertig}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:process id="E26_B_PruefungNachher" name="B: Schleife mit Prüfung NACHHER (XOR)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 26 oben rechts: Die Aufgabe läuft mindestens einmal, erst danach wird geprüft.</bpmn:documentation>
+    <bpmn:startEvent id="E26B_Start">
+      <bpmn:outgoing>Flow_E26B_Start_E26B_Do</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E26B_Do" name="Do Something" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="fertig" label="Fertig? (dann Schleife beenden)" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E26B_Start_E26B_Do</bpmn:incoming>
+      <bpmn:incoming>Flow_E26B_Gw_E26B_Do</bpmn:incoming>
+      <bpmn:outgoing>Flow_E26B_Do_E26B_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E26B_Gw" name="End loop?">
+      <bpmn:incoming>Flow_E26B_Do_E26B_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_E26B_Gw_E26B_Do</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E26B_Gw_E26B_End</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E26B_End">
+      <bpmn:incoming>Flow_E26B_Gw_E26B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E26B_Start_E26B_Do" sourceRef="E26B_Start" targetRef="E26B_Do" />
+    <bpmn:sequenceFlow id="Flow_E26B_Do_E26B_Gw" sourceRef="E26B_Do" targetRef="E26B_Gw" />
+    <bpmn:sequenceFlow id="Flow_E26B_Gw_E26B_Do" name="No" sourceRef="E26B_Gw" targetRef="E26B_Do">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!fertig}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E26B_Gw_E26B_End" name="Yes" sourceRef="E26B_Gw" targetRef="E26B_End">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${fertig}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:process id="E26_C_StandardLoop" name="C: Standard-Schleifenmarker (nur Ansicht, in Camunda 7 nicht ausführbar)" isExecutable="false">
+    <bpmn:documentation>Folie 26 Mitte links: Schleifenmarker an der Aktivität. Camunda 7 / CIB seven führen den Standard-Loop NICHT aus – deshalb hier nicht ausführbar. In der Praxis: Variante A oder B verwenden.</bpmn:documentation>
+    <bpmn:startEvent id="E26C_Start">
+      <bpmn:outgoing>Flow_E26C_Start_E26C_Do</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="E26C_Do" name="Do Something">
+      <bpmn:incoming>Flow_E26C_Start_E26C_Do</bpmn:incoming>
+      <bpmn:outgoing>Flow_E26C_Do_E26C_End</bpmn:outgoing>
+      <bpmn:standardLoopCharacteristics testBefore="false">
+        <bpmn:loopCondition xsi:type="bpmn:tFormalExpression">${xyz == 'end'}</bpmn:loopCondition>
+      </bpmn:standardLoopCharacteristics>
+    </bpmn:task>
+    <bpmn:endEvent id="E26C_End">
+      <bpmn:incoming>Flow_E26C_Do_E26C_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E26C_Start_E26C_Do" sourceRef="E26C_Start" targetRef="E26C_Do" />
+    <bpmn:sequenceFlow id="Flow_E26C_Do_E26C_End" sourceRef="E26C_Do" targetRef="E26C_End" />
+    <bpmn:textAnnotation id="E26C_Ann"><bpmn:text>End criteria: Variable xyz = "end"; Test before = true/false</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_E26C_Do_E26C_Ann" sourceRef="E26C_Do" targetRef="E26C_Ann" />
+  </bpmn:process>
+  <bpmn:process id="E26_D_Mehrfachinstanz" name="D: Mehrfachinstanz SEQUENZIELL (≡)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 26: Die Aufgabe wird für jedes Element einer Liste ausgeführt – nacheinander (Instanz 2 erscheint erst nach Abschluss von Instanz 1). Vereinfachung: Statt einer echten Liste wird hier fest 3x ausgeführt (loopCardinality).</bpmn:documentation>
+    <bpmn:dataObjectReference id="E26D_DO" name="List Data Object" dataObjectRef="DO_E26D_DO" />
+    <bpmn:dataObject id="DO_E26D_DO" isCollection="true" />
+    <bpmn:startEvent id="E26D_Start">
+      <bpmn:outgoing>Flow_E26D_Start_E26D_Do</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E26D_Do" name="Do Something" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E26D_Start_E26D_Do</bpmn:incoming>
+      <bpmn:outgoing>Flow_E26D_Do_E26D_End</bpmn:outgoing>
+      <bpmn:property id="Prop_E26D_Do_E26D_DO" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DIA_E26D_Do_E26D_DO"><bpmn:sourceRef>E26D_DO</bpmn:sourceRef><bpmn:targetRef>Prop_E26D_Do_E26D_DO</bpmn:targetRef></bpmn:dataInputAssociation>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true">
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">3</bpmn:loopCardinality>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E26D_End">
+      <bpmn:incoming>Flow_E26D_Do_E26D_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E26D_Start_E26D_Do" sourceRef="E26D_Start" targetRef="E26D_Do" />
+    <bpmn:sequenceFlow id="Flow_E26D_Do_E26D_End" sourceRef="E26D_Do" targetRef="E26D_End" />
+  </bpmn:process>
+  <bpmn:process id="E26_E_Mehrfachinstanz" name="E: Mehrfachinstanz PARALLEL (|||)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 26: Die Aufgabe wird für jedes Element einer Liste ausgeführt – gleichzeitig (alle 3 Aufgaben stehen sofort in der Tasklist). Vereinfachung: Statt einer echten Liste wird hier fest 3x ausgeführt (loopCardinality).</bpmn:documentation>
+    <bpmn:dataObjectReference id="E26E_DO" name="List Data Object" dataObjectRef="DO_E26E_DO" />
+    <bpmn:dataObject id="DO_E26E_DO" isCollection="true" />
+    <bpmn:startEvent id="E26E_Start">
+      <bpmn:outgoing>Flow_E26E_Start_E26E_Do</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E26E_Do" name="Do Something" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E26E_Start_E26E_Do</bpmn:incoming>
+      <bpmn:outgoing>Flow_E26E_Do_E26E_End</bpmn:outgoing>
+      <bpmn:property id="Prop_E26E_Do_E26E_DO" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DIA_E26E_Do_E26E_DO"><bpmn:sourceRef>E26E_DO</bpmn:sourceRef><bpmn:targetRef>Prop_E26E_Do_E26E_DO</bpmn:targetRef></bpmn:dataInputAssociation>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">3</bpmn:loopCardinality>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E26E_End">
+      <bpmn:incoming>Flow_E26E_Do_E26E_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E26E_Start_E26E_Do" sourceRef="E26E_Start" targetRef="E26E_Do" />
+    <bpmn:sequenceFlow id="Flow_E26E_Do_E26E_End" sourceRef="E26E_Do" targetRef="E26E_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E26_Schleifen">
+    <bpmndi:BPMNPlane id="BPMNPlane_E26_Schleifen" bpmnElement="Collaboration_E26_Schleifen">
+      <bpmndi:BPMNShape id="P_E26_A_di" bpmnElement="P_E26_A" isHorizontal="true"><dc:Bounds x="160" y="40" width="560" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E26_B_di" bpmnElement="P_E26_B" isHorizontal="true"><dc:Bounds x="760" y="40" width="560" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E26_C_di" bpmnElement="P_E26_C" isHorizontal="true"><dc:Bounds x="160" y="300" width="560" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E26_D_di" bpmnElement="P_E26_D" isHorizontal="true"><dc:Bounds x="760" y="300" width="560" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E26_E_di" bpmnElement="P_E26_E" isHorizontal="true"><dc:Bounds x="160" y="560" width="560" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26A_Start_di" bpmnElement="E26A_Start"><dc:Bounds x="202" y="92" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26A_Gw_di" bpmnElement="E26A_Gw" isMarkerVisible="true"><dc:Bounds x="285" y="85" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="278" y="139" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26A_Do_di" bpmnElement="E26A_Do"><dc:Bounds x="420" y="70" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26A_End_di" bpmnElement="E26A_End"><dc:Bounds x="452" y="192" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26B_Start_di" bpmnElement="E26B_Start"><dc:Bounds x="802" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26B_Do_di" bpmnElement="E26B_Do"><dc:Bounds x="890" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26B_Gw_di" bpmnElement="E26B_Gw" isMarkerVisible="true"><dc:Bounds x="1055" y="95" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1109" y="113" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26B_End_di" bpmnElement="E26B_End"><dc:Bounds x="1162" y="192" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26C_Start_di" bpmnElement="E26C_Start"><dc:Bounds x="202" y="362" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26C_Do_di" bpmnElement="E26C_Do"><dc:Bounds x="280" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26C_End_di" bpmnElement="E26C_End"><dc:Bounds x="422" y="362" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26C_Ann_di" bpmnElement="E26C_Ann"><dc:Bounds x="360" y="442" width="220" height="45" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26D_DO_di" bpmnElement="E26D_DO"><dc:Bounds x="1012" y="325" width="36" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="974" y="379" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26D_Start_di" bpmnElement="E26D_Start"><dc:Bounds x="892" y="442" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26D_Do_di" bpmnElement="E26D_Do"><dc:Bounds x="980" y="420" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26D_End_di" bpmnElement="E26D_End"><dc:Bounds x="1142" y="442" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26E_DO_di" bpmnElement="E26E_DO"><dc:Bounds x="412" y="585" width="36" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="374" y="639" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26E_Start_di" bpmnElement="E26E_Start"><dc:Bounds x="292" y="702" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26E_Do_di" bpmnElement="E26E_Do"><dc:Bounds x="380" y="680" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E26E_End_di" bpmnElement="E26E_End"><dc:Bounds x="542" y="702" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E26A_Start_E26A_Gw_di" bpmnElement="Flow_E26A_Start_E26A_Gw"><di:waypoint x="238" y="110" /><di:waypoint x="285" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26A_Gw_E26A_Do_di" bpmnElement="Flow_E26A_Gw_E26A_Do"><di:waypoint x="335" y="110" /><di:waypoint x="420" y="110" /><bpmndi:BPMNLabel><dc:Bounds x="350" y="92" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26A_Do_E26A_Gw_di" bpmnElement="Flow_E26A_Do_E26A_Gw"><di:waypoint x="470" y="70" /><di:waypoint x="470" y="55" /><di:waypoint x="310" y="55" /><di:waypoint x="310" y="85" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26A_Gw_E26A_End_di" bpmnElement="Flow_E26A_Gw_E26A_End"><di:waypoint x="310" y="135" /><di:waypoint x="310" y="210" /><di:waypoint x="452" y="210" /><bpmndi:BPMNLabel><dc:Bounds x="325" y="192" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26B_Start_E26B_Do_di" bpmnElement="Flow_E26B_Start_E26B_Do"><di:waypoint x="838" y="120" /><di:waypoint x="890" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26B_Do_E26B_Gw_di" bpmnElement="Flow_E26B_Do_E26B_Gw"><di:waypoint x="990" y="120" /><di:waypoint x="1055" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26B_Gw_E26B_Do_di" bpmnElement="Flow_E26B_Gw_E26B_Do"><di:waypoint x="1080" y="95" /><di:waypoint x="1080" y="60" /><di:waypoint x="870" y="60" /><di:waypoint x="870" y="120" /><di:waypoint x="890" y="120" /><bpmndi:BPMNLabel><dc:Bounds x="885" y="42" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26B_Gw_E26B_End_di" bpmnElement="Flow_E26B_Gw_E26B_End"><di:waypoint x="1080" y="145" /><di:waypoint x="1080" y="210" /><di:waypoint x="1162" y="210" /><bpmndi:BPMNLabel><dc:Bounds x="1095" y="192" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26C_Start_E26C_Do_di" bpmnElement="Flow_E26C_Start_E26C_Do"><di:waypoint x="238" y="380" /><di:waypoint x="280" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26C_Do_E26C_End_di" bpmnElement="Flow_E26C_Do_E26C_End"><di:waypoint x="380" y="380" /><di:waypoint x="422" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26D_Start_E26D_Do_di" bpmnElement="Flow_E26D_Start_E26D_Do"><di:waypoint x="928" y="460" /><di:waypoint x="980" y="460" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26D_Do_E26D_End_di" bpmnElement="Flow_E26D_Do_E26D_End"><di:waypoint x="1080" y="460" /><di:waypoint x="1142" y="460" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26E_Start_E26E_Do_di" bpmnElement="Flow_E26E_Start_E26E_Do"><di:waypoint x="328" y="720" /><di:waypoint x="380" y="720" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E26E_Do_E26E_End_di" bpmnElement="Flow_E26E_Do_E26E_End"><di:waypoint x="480" y="720" /><di:waypoint x="542" y="720" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_E26C_Do_E26C_Ann_di" bpmnElement="Assoc_E26C_Do_E26C_Ann"><di:waypoint x="345" y="420" /><di:waypoint x="360" y="465" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DIA_E26D_Do_E26D_DO_di" bpmnElement="DIA_E26D_Do_E26D_DO"><di:waypoint x="1030" y="375" /><di:waypoint x="1015" y="420" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DIA_E26E_Do_E26E_DO_di" bpmnElement="DIA_E26E_Do_E26E_DO"><di:waypoint x="430" y="635" /><di:waypoint x="415" y="680" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

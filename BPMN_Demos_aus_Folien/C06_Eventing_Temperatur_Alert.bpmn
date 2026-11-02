@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_C06_Eventing_Temperatur_Alert" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_C06_Eventing_Temperatur_Alert">
+    <bpmn:participant id="P_C06_Sensor" name="Sensor" />
+    <bpmn:participant id="P_C06" name="Temperature Alert Process" processRef="C06_TemperatureAlertProcess" />
+    <bpmn:messageFlow id="MsgFlow_P_C06_Sensor_C06_Start" sourceRef="P_C06_Sensor" targetRef="C06_Start" />
+  </bpmn:collaboration>
+  <bpmn:process id="C06_TemperatureAlertProcess" name="Temperature Alert Process" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>10 Entwicklung PDA mit Eventing, Folien 31–39. Esper erkennt eine kritische Temperatur, schreibt einen Alert in eine Queue, Camel liest ihn und startet diesen Prozess per REST mit der Nachricht tempAlertMsg und den Variablen temp1–temp4 (Folie 38). 'Decide on criticality' ist eine Business Rule Task, die die DMN-Tabelle C06_Temperatur_Kritikalitaet.dmn aufruft: Temperature &gt;= 400 -&gt; isCritical = true. Ohne Esper/Camel testen: ./dpe-demo.sh msg tempAlertMsg '' '{"temp1":{"value":380,"type":"Long"},"temp2":{"value":395,"type":"Long"},"temp3":{"value":410,"type":"Long"},"temp4":{"value":420,"type":"Long"}}'</bpmn:documentation>
+    <bpmn:startEvent id="C06_Start" name="Temperature Alert received">
+      <bpmn:outgoing>Flow_C06_Start_C06_Decide</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_C06_Start" messageRef="Message_tempAlertMsg" />
+    </bpmn:startEvent>
+    <bpmn:businessRuleTask id="C06_Decide" name="Decide on criticality" camunda:decisionRef="temperatureCriticality" camunda:resultVariable="isCritical" camunda:mapDecisionResult="singleEntry">
+      <bpmn:incoming>Flow_C06_Start_C06_Decide</bpmn:incoming>
+      <bpmn:outgoing>Flow_C06_Decide_C06_Gw</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="C06_Gw" name="Critical?">
+      <bpmn:incoming>Flow_C06_Decide_C06_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_C06_Gw_C06_Urgent</bpmn:outgoing>
+      <bpmn:outgoing>Flow_C06_Gw_C06_Normal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="C06_Urgent" name="Work on problem urgently" camunda:assignee="demo">
+      <bpmn:incoming>Flow_C06_Gw_C06_Urgent</bpmn:incoming>
+      <bpmn:outgoing>Flow_C06_Urgent_C06_EndC</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="C06_Normal" name="Work on problem" camunda:assignee="demo">
+      <bpmn:incoming>Flow_C06_Gw_C06_Normal</bpmn:incoming>
+      <bpmn:outgoing>Flow_C06_Normal_C06_EndN</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="C06_EndC" name="Critical problem">
+      <bpmn:incoming>Flow_C06_Urgent_C06_EndC</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="C06_EndN" name="Non-critical problem">
+      <bpmn:incoming>Flow_C06_Normal_C06_EndN</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C06_Start_C06_Decide" sourceRef="C06_Start" targetRef="C06_Decide" />
+    <bpmn:sequenceFlow id="Flow_C06_Decide_C06_Gw" sourceRef="C06_Decide" targetRef="C06_Gw" />
+    <bpmn:sequenceFlow id="Flow_C06_Gw_C06_Urgent" name="Yes" sourceRef="C06_Gw" targetRef="C06_Urgent">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isCritical}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_C06_Gw_C06_Normal" name="No" sourceRef="C06_Gw" targetRef="C06_Normal">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!isCritical}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_C06_Urgent_C06_EndC" sourceRef="C06_Urgent" targetRef="C06_EndC" />
+    <bpmn:sequenceFlow id="Flow_C06_Normal_C06_EndN" sourceRef="C06_Normal" targetRef="C06_EndN" />
+  </bpmn:process>
+  <bpmn:message id="Message_tempAlertMsg" name="tempAlertMsg" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_C06_Eventing_Temperatur_Alert">
+    <bpmndi:BPMNPlane id="BPMNPlane_C06_Eventing_Temperatur_Alert" bpmnElement="Collaboration_C06_Eventing_Temperatur_Alert">
+      <bpmndi:BPMNShape id="P_C06_Sensor_di" bpmnElement="P_C06_Sensor" isHorizontal="true"><dc:Bounds x="140" y="40" width="760" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_C06_di" bpmnElement="P_C06" isHorizontal="true"><dc:Bounds x="140" y="130" width="760" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C06_Start_di" bpmnElement="C06_Start"><dc:Bounds x="212" y="312" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="160" y="352" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C06_Decide_di" bpmnElement="C06_Decide"><dc:Bounds x="300" y="290" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C06_Gw_di" bpmnElement="C06_Gw" isMarkerVisible="true"><dc:Bounds x="455" y="305" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="448" y="359" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C06_Urgent_di" bpmnElement="C06_Urgent"><dc:Bounds x="560" y="290" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C06_Normal_di" bpmnElement="C06_Normal"><dc:Bounds x="560" y="160" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C06_EndC_di" bpmnElement="C06_EndC"><dc:Bounds x="742" y="312" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="704" y="352" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C06_EndN_di" bpmnElement="C06_EndN"><dc:Bounds x="742" y="182" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="690" y="222" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_C06_Start_C06_Decide_di" bpmnElement="Flow_C06_Start_C06_Decide"><di:waypoint x="248" y="330" /><di:waypoint x="300" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C06_Decide_C06_Gw_di" bpmnElement="Flow_C06_Decide_C06_Gw"><di:waypoint x="400" y="330" /><di:waypoint x="455" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C06_Gw_C06_Urgent_di" bpmnElement="Flow_C06_Gw_C06_Urgent"><di:waypoint x="505" y="330" /><di:waypoint x="560" y="330" /><bpmndi:BPMNLabel><dc:Bounds x="520" y="312" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C06_Gw_C06_Normal_di" bpmnElement="Flow_C06_Gw_C06_Normal"><di:waypoint x="480" y="305" /><di:waypoint x="480" y="200" /><di:waypoint x="560" y="200" /><bpmndi:BPMNLabel><dc:Bounds x="495" y="182" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C06_Urgent_C06_EndC_di" bpmnElement="Flow_C06_Urgent_C06_EndC"><di:waypoint x="660" y="330" /><di:waypoint x="742" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C06_Normal_C06_EndN_di" bpmnElement="Flow_C06_Normal_C06_EndN"><di:waypoint x="660" y="200" /><di:waypoint x="742" y="200" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_C06_Sensor_C06_Start_di" bpmnElement="MsgFlow_P_C06_Sensor_C06_Start"><di:waypoint x="230" y="100" /><di:waypoint x="230" y="312" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

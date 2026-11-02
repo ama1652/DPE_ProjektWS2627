@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A10_A11_Parallelitaet_Deadlock" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A10_A11_Parallelitaet_Deadlock">
+    <bpmn:participant id="P_A10" name="A: Folie 10 – parallele Verarbeitung" processRef="A10_Parallel" />
+    <bpmn:participant id="P_A11_B" name="B: Folie 11 oben – DEADLOCK mit parallelem Join" processRef="A11_B_Deadlock" />
+    <bpmn:participant id="P_A11_C" name="C: Folie 11 unten – Lösung mit inklusivem Join" processRef="A11_C_Inklusiv" />
+  </bpmn:collaboration>
+  <bpmn:process id="A10_Parallel" name="A: Folie 10 – parallele Verarbeitung" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 10: Keine Abhängigkeiten zwischen den Aktivitäten -&gt; paralleles Gateway. Immer paarweise: AND aufteilen, AND zusammenführen. Hier als Benutzeraufgaben, damit du die 3 parallelen Aufgaben gleichzeitig in der Tasklist siehst.</bpmn:documentation>
+    <bpmn:startEvent id="A10_Start">
+      <bpmn:outgoing>Flow_A10_Start_A10_Split</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="A10_Split">
+      <bpmn:incoming>Flow_A10_Start_A10_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_A10_Split_A10_S1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A10_Split_A10_S2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A10_Split_A10_S3</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:parallelGateway id="A10_Join">
+      <bpmn:incoming>Flow_A10_S1_A10_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A10_S2_A10_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A10_S3_A10_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_A10_Join_A10_End</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:endEvent id="A10_End">
+      <bpmn:incoming>Flow_A10_Join_A10_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A10_S1" name="System 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A10_Split_A10_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A10_S1_A10_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A10_S2" name="System 2" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A10_Split_A10_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A10_S2_A10_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A10_S3" name="System 3" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A10_Split_A10_S3</bpmn:incoming>
+      <bpmn:outgoing>Flow_A10_S3_A10_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_A10_Split_A10_S1" sourceRef="A10_Split" targetRef="A10_S1" />
+    <bpmn:sequenceFlow id="Flow_A10_S1_A10_Join" sourceRef="A10_S1" targetRef="A10_Join" />
+    <bpmn:sequenceFlow id="Flow_A10_Split_A10_S2" sourceRef="A10_Split" targetRef="A10_S2" />
+    <bpmn:sequenceFlow id="Flow_A10_S2_A10_Join" sourceRef="A10_S2" targetRef="A10_Join" />
+    <bpmn:sequenceFlow id="Flow_A10_Split_A10_S3" sourceRef="A10_Split" targetRef="A10_S3" />
+    <bpmn:sequenceFlow id="Flow_A10_S3_A10_Join" sourceRef="A10_S3" targetRef="A10_Join" />
+    <bpmn:sequenceFlow id="Flow_A10_Start_A10_Split" sourceRef="A10_Start" targetRef="A10_Split" />
+    <bpmn:sequenceFlow id="Flow_A10_Join_A10_End" sourceRef="A10_Join" targetRef="A10_End" />
+  </bpmn:process>
+  <bpmn:process id="A11_B_Deadlock" name="B: Folie 11 oben – DEADLOCK mit parallelem Join" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 11 oben: Wählst du 'Compliance ok', kommen nur 2 von 3 Token am parallelen Join an -&gt; Deadlock, die Instanz hängt.</bpmn:documentation>
+    <bpmn:startEvent id="A11B_Start">
+      <bpmn:outgoing>Flow_A11B_Start_A11B_Draft</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="A11B_Draft" name="Draft Contract" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11B_Start_A11B_Draft</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Draft_A11B_Split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="A11B_Split">
+      <bpmn:incoming>Flow_A11B_Draft_A11B_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Split_A11B_Legal</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A11B_Split_A11B_Fin</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="A11B_Legal" name="Perform legal review" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="complianceOk" label="Compliance ok?" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A11B_Split_A11B_Legal</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Legal_A11B_Xor</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A11B_Fin" name="Perform financial review" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11B_Split_A11B_Fin</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Fin_A11B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A11B_Xor">
+      <bpmn:incoming>Flow_A11B_Legal_A11B_Xor</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Xor_A11B_Modify</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A11B_Xor_A11B_Join</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="A11B_Modify" name="Modify contract for compliance" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11B_Xor_A11B_Modify</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Modify_A11B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="A11B_Join">
+      <bpmn:incoming>Flow_A11B_Xor_A11B_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A11B_Modify_A11B_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A11B_Fin_A11B_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Join_A11B_Final</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="A11B_Final" name="Finalize contract" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11B_Join_A11B_Final</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11B_Final_A11B_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A11B_End">
+      <bpmn:incoming>Flow_A11B_Final_A11B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A11B_Start_A11B_Draft" sourceRef="A11B_Start" targetRef="A11B_Draft" />
+    <bpmn:sequenceFlow id="Flow_A11B_Draft_A11B_Split" sourceRef="A11B_Draft" targetRef="A11B_Split" />
+    <bpmn:sequenceFlow id="Flow_A11B_Split_A11B_Legal" sourceRef="A11B_Split" targetRef="A11B_Legal" />
+    <bpmn:sequenceFlow id="Flow_A11B_Split_A11B_Fin" sourceRef="A11B_Split" targetRef="A11B_Fin" />
+    <bpmn:sequenceFlow id="Flow_A11B_Legal_A11B_Xor" sourceRef="A11B_Legal" targetRef="A11B_Xor" />
+    <bpmn:sequenceFlow id="Flow_A11B_Xor_A11B_Modify" name="Compliance issues" sourceRef="A11B_Xor" targetRef="A11B_Modify">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!complianceOk}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A11B_Xor_A11B_Join" name="Compliance ok" sourceRef="A11B_Xor" targetRef="A11B_Join">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${complianceOk}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A11B_Modify_A11B_Join" sourceRef="A11B_Modify" targetRef="A11B_Join" />
+    <bpmn:sequenceFlow id="Flow_A11B_Fin_A11B_Join" sourceRef="A11B_Fin" targetRef="A11B_Join" />
+    <bpmn:sequenceFlow id="Flow_A11B_Join_A11B_Final" sourceRef="A11B_Join" targetRef="A11B_Final" />
+    <bpmn:sequenceFlow id="Flow_A11B_Final_A11B_End" sourceRef="A11B_Final" targetRef="A11B_End" />
+  </bpmn:process>
+  <bpmn:process id="A11_C_Inklusiv" name="C: Folie 11 unten – Lösung mit inklusivem Join" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 11 unten: Das inklusive Gateway erkennt, dass von 'Modify contract' kein Token mehr kommen kann, und läuft weiter.</bpmn:documentation>
+    <bpmn:startEvent id="A11C_Start">
+      <bpmn:outgoing>Flow_A11C_Start_A11C_Draft</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="A11C_Draft" name="Draft Contract" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11C_Start_A11C_Draft</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Draft_A11C_Split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="A11C_Split">
+      <bpmn:incoming>Flow_A11C_Draft_A11C_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Split_A11C_Legal</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A11C_Split_A11C_Fin</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="A11C_Legal" name="Perform legal review" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="complianceOk" label="Compliance ok?" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A11C_Split_A11C_Legal</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Legal_A11C_Xor</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A11C_Fin" name="Perform financial review" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11C_Split_A11C_Fin</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Fin_A11C_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A11C_Xor">
+      <bpmn:incoming>Flow_A11C_Legal_A11C_Xor</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Xor_A11C_Modify</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A11C_Xor_A11C_Join</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="A11C_Modify" name="Modify contract for compliance" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11C_Xor_A11C_Modify</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Modify_A11C_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="A11C_Join">
+      <bpmn:incoming>Flow_A11C_Xor_A11C_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A11C_Modify_A11C_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A11C_Fin_A11C_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Join_A11C_Final</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="A11C_Final" name="Finalize contract" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A11C_Join_A11C_Final</bpmn:incoming>
+      <bpmn:outgoing>Flow_A11C_Final_A11C_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A11C_End">
+      <bpmn:incoming>Flow_A11C_Final_A11C_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A11C_Start_A11C_Draft" sourceRef="A11C_Start" targetRef="A11C_Draft" />
+    <bpmn:sequenceFlow id="Flow_A11C_Draft_A11C_Split" sourceRef="A11C_Draft" targetRef="A11C_Split" />
+    <bpmn:sequenceFlow id="Flow_A11C_Split_A11C_Legal" sourceRef="A11C_Split" targetRef="A11C_Legal" />
+    <bpmn:sequenceFlow id="Flow_A11C_Split_A11C_Fin" sourceRef="A11C_Split" targetRef="A11C_Fin" />
+    <bpmn:sequenceFlow id="Flow_A11C_Legal_A11C_Xor" sourceRef="A11C_Legal" targetRef="A11C_Xor" />
+    <bpmn:sequenceFlow id="Flow_A11C_Xor_A11C_Modify" name="Compliance issues" sourceRef="A11C_Xor" targetRef="A11C_Modify">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!complianceOk}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A11C_Xor_A11C_Join" name="Compliance ok" sourceRef="A11C_Xor" targetRef="A11C_Join">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${complianceOk}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A11C_Modify_A11C_Join" sourceRef="A11C_Modify" targetRef="A11C_Join" />
+    <bpmn:sequenceFlow id="Flow_A11C_Fin_A11C_Join" sourceRef="A11C_Fin" targetRef="A11C_Join" />
+    <bpmn:sequenceFlow id="Flow_A11C_Join_A11C_Final" sourceRef="A11C_Join" targetRef="A11C_Final" />
+    <bpmn:sequenceFlow id="Flow_A11C_Final_A11C_End" sourceRef="A11C_Final" targetRef="A11C_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A10_A11_Parallelitaet_Deadlock">
+    <bpmndi:BPMNPlane id="BPMNPlane_A10_A11_Parallelitaet_Deadlock" bpmnElement="Collaboration_A10_A11_Parallelitaet_Deadlock">
+      <bpmndi:BPMNShape id="P_A10_di" bpmnElement="P_A10" isHorizontal="true"><dc:Bounds x="140" y="40" width="560" height="330" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A11_B_di" bpmnElement="P_A11_B" isHorizontal="true"><dc:Bounds x="140" y="410" width="1000" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A11_C_di" bpmnElement="P_A11_C" isHorizontal="true"><dc:Bounds x="140" y="700" width="1000" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A10_Start_di" bpmnElement="A10_Start"><dc:Bounds x="182" y="187" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A10_Split_di" bpmnElement="A10_Split"><dc:Bounds x="255" y="180" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A10_Join_di" bpmnElement="A10_Join"><dc:Bounds x="515" y="180" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A10_End_di" bpmnElement="A10_End"><dc:Bounds x="612" y="187" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A10_S1_di" bpmnElement="A10_S1"><dc:Bounds x="360" y="55" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A10_S2_di" bpmnElement="A10_S2"><dc:Bounds x="360" y="165" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A10_S3_di" bpmnElement="A10_S3"><dc:Bounds x="360" y="275" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Start_di" bpmnElement="A11B_Start"><dc:Bounds x="182" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Draft_di" bpmnElement="A11B_Draft"><dc:Bounds x="240" y="480" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Split_di" bpmnElement="A11B_Split"><dc:Bounds x="375" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Legal_di" bpmnElement="A11B_Legal"><dc:Bounds x="460" y="430" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Fin_di" bpmnElement="A11B_Fin"><dc:Bounds x="460" y="570" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Xor_di" bpmnElement="A11B_Xor" isMarkerVisible="true"><dc:Bounds x="605" y="445" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Modify_di" bpmnElement="A11B_Modify"><dc:Bounds x="730" y="430" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Join_di" bpmnElement="A11B_Join"><dc:Bounds x="875" y="515" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_Final_di" bpmnElement="A11B_Final"><dc:Bounds x="960" y="500" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11B_End_di" bpmnElement="A11B_End"><dc:Bounds x="1082" y="522" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Start_di" bpmnElement="A11C_Start"><dc:Bounds x="182" y="792" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Draft_di" bpmnElement="A11C_Draft"><dc:Bounds x="240" y="770" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Split_di" bpmnElement="A11C_Split"><dc:Bounds x="375" y="785" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Legal_di" bpmnElement="A11C_Legal"><dc:Bounds x="460" y="720" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Fin_di" bpmnElement="A11C_Fin"><dc:Bounds x="460" y="860" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Xor_di" bpmnElement="A11C_Xor" isMarkerVisible="true"><dc:Bounds x="605" y="735" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Modify_di" bpmnElement="A11C_Modify"><dc:Bounds x="730" y="720" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Join_di" bpmnElement="A11C_Join"><dc:Bounds x="875" y="805" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_Final_di" bpmnElement="A11C_Final"><dc:Bounds x="960" y="790" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A11C_End_di" bpmnElement="A11C_End"><dc:Bounds x="1082" y="812" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A10_Split_A10_S1_di" bpmnElement="Flow_A10_Split_A10_S1"><di:waypoint x="280" y="180" /><di:waypoint x="280" y="95" /><di:waypoint x="360" y="95" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A10_S1_A10_Join_di" bpmnElement="Flow_A10_S1_A10_Join"><di:waypoint x="460" y="95" /><di:waypoint x="540" y="95" /><di:waypoint x="540" y="180" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A10_Split_A10_S2_di" bpmnElement="Flow_A10_Split_A10_S2"><di:waypoint x="305" y="205" /><di:waypoint x="360" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A10_S2_A10_Join_di" bpmnElement="Flow_A10_S2_A10_Join"><di:waypoint x="460" y="205" /><di:waypoint x="515" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A10_Split_A10_S3_di" bpmnElement="Flow_A10_Split_A10_S3"><di:waypoint x="280" y="230" /><di:waypoint x="280" y="315" /><di:waypoint x="360" y="315" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A10_S3_A10_Join_di" bpmnElement="Flow_A10_S3_A10_Join"><di:waypoint x="460" y="315" /><di:waypoint x="540" y="315" /><di:waypoint x="540" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A10_Start_A10_Split_di" bpmnElement="Flow_A10_Start_A10_Split"><di:waypoint x="218" y="205" /><di:waypoint x="255" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A10_Join_A10_End_di" bpmnElement="Flow_A10_Join_A10_End"><di:waypoint x="565" y="205" /><di:waypoint x="612" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Start_A11B_Draft_di" bpmnElement="Flow_A11B_Start_A11B_Draft"><di:waypoint x="218" y="520" /><di:waypoint x="240" y="520" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Draft_A11B_Split_di" bpmnElement="Flow_A11B_Draft_A11B_Split"><di:waypoint x="340" y="520" /><di:waypoint x="375" y="520" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Split_A11B_Legal_di" bpmnElement="Flow_A11B_Split_A11B_Legal"><di:waypoint x="400" y="495" /><di:waypoint x="400" y="470" /><di:waypoint x="460" y="470" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Split_A11B_Fin_di" bpmnElement="Flow_A11B_Split_A11B_Fin"><di:waypoint x="400" y="545" /><di:waypoint x="400" y="610" /><di:waypoint x="460" y="610" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Legal_A11B_Xor_di" bpmnElement="Flow_A11B_Legal_A11B_Xor"><di:waypoint x="560" y="470" /><di:waypoint x="605" y="470" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Xor_A11B_Modify_di" bpmnElement="Flow_A11B_Xor_A11B_Modify"><di:waypoint x="655" y="470" /><di:waypoint x="730" y="470" /><bpmndi:BPMNLabel><dc:Bounds x="670" y="452" width="102" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Xor_A11B_Join_di" bpmnElement="Flow_A11B_Xor_A11B_Join"><di:waypoint x="630" y="495" /><di:waypoint x="630" y="540" /><di:waypoint x="875" y="540" /><bpmndi:BPMNLabel><dc:Bounds x="645" y="522" width="78" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Modify_A11B_Join_di" bpmnElement="Flow_A11B_Modify_A11B_Join"><di:waypoint x="830" y="470" /><di:waypoint x="900" y="470" /><di:waypoint x="900" y="515" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Fin_A11B_Join_di" bpmnElement="Flow_A11B_Fin_A11B_Join"><di:waypoint x="560" y="610" /><di:waypoint x="900" y="610" /><di:waypoint x="900" y="565" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Join_A11B_Final_di" bpmnElement="Flow_A11B_Join_A11B_Final"><di:waypoint x="925" y="540" /><di:waypoint x="960" y="540" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11B_Final_A11B_End_di" bpmnElement="Flow_A11B_Final_A11B_End"><di:waypoint x="1060" y="540" /><di:waypoint x="1082" y="540" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Start_A11C_Draft_di" bpmnElement="Flow_A11C_Start_A11C_Draft"><di:waypoint x="218" y="810" /><di:waypoint x="240" y="810" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Draft_A11C_Split_di" bpmnElement="Flow_A11C_Draft_A11C_Split"><di:waypoint x="340" y="810" /><di:waypoint x="375" y="810" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Split_A11C_Legal_di" bpmnElement="Flow_A11C_Split_A11C_Legal"><di:waypoint x="400" y="785" /><di:waypoint x="400" y="760" /><di:waypoint x="460" y="760" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Split_A11C_Fin_di" bpmnElement="Flow_A11C_Split_A11C_Fin"><di:waypoint x="400" y="835" /><di:waypoint x="400" y="900" /><di:waypoint x="460" y="900" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Legal_A11C_Xor_di" bpmnElement="Flow_A11C_Legal_A11C_Xor"><di:waypoint x="560" y="760" /><di:waypoint x="605" y="760" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Xor_A11C_Modify_di" bpmnElement="Flow_A11C_Xor_A11C_Modify"><di:waypoint x="655" y="760" /><di:waypoint x="730" y="760" /><bpmndi:BPMNLabel><dc:Bounds x="670" y="742" width="102" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Xor_A11C_Join_di" bpmnElement="Flow_A11C_Xor_A11C_Join"><di:waypoint x="630" y="785" /><di:waypoint x="630" y="830" /><di:waypoint x="875" y="830" /><bpmndi:BPMNLabel><dc:Bounds x="645" y="812" width="78" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Modify_A11C_Join_di" bpmnElement="Flow_A11C_Modify_A11C_Join"><di:waypoint x="830" y="760" /><di:waypoint x="900" y="760" /><di:waypoint x="900" y="805" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Fin_A11C_Join_di" bpmnElement="Flow_A11C_Fin_A11C_Join"><di:waypoint x="560" y="900" /><di:waypoint x="900" y="900" /><di:waypoint x="900" y="855" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Join_A11C_Final_di" bpmnElement="Flow_A11C_Join_A11C_Final"><di:waypoint x="925" y="830" /><di:waypoint x="960" y="830" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A11C_Final_A11C_End_di" bpmnElement="Flow_A11C_Final_A11C_End"><di:waypoint x="1060" y="830" /><di:waypoint x="1082" y="830" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

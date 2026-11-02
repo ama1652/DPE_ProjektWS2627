@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A22_Timeout_Ereignis_Teilprozesse" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A22_Timeout_Ereignis_Teilprozesse">
+    <bpmn:participant id="P_A22_PDA" name="Process Driven Application" />
+    <bpmn:participant id="P_A22_SCIL" name="Service Contract Implementation Layer" processRef="A22_ServiceContract" />
+    <bpmn:participant id="P_A22_SP" name="Service Provider" />
+    <bpmn:messageFlow id="MsgFlow_P_A22_PDA_A22_Start" sourceRef="P_A22_PDA" targetRef="A22_Start" />
+    <bpmn:messageFlow id="MsgFlow_A22_S_Send_P_A22_SP" sourceRef="A22_S_Send" targetRef="P_A22_SP" />
+    <bpmn:messageFlow id="MsgFlow_P_A22_SP_A22_S_Rec" sourceRef="P_A22_SP" targetRef="A22_S_Rec" />
+    <bpmn:messageFlow id="MsgFlow_A22_EndOk_P_A22_PDA" sourceRef="A22_EndOk" targetRef="P_A22_PDA" />
+    <bpmn:messageFlow id="MsgFlow_A22_EndErr_P_A22_PDA" sourceRef="A22_EndErr" targetRef="P_A22_PDA" />
+  </bpmn:collaboration>
+  <bpmn:process id="A22_ServiceContract" name="Service Contract Implementation Layer" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 22: Drei Ereignis-Teilprozesse überwachen den Teilprozess zeitlich: nach 1 und 2 Min (statt 5/10) nicht unterbrechend 'Analyze Delay', nach 3 Min (statt 15) unterbrechend ein Fehler-Endereignis -&gt; außen Fehlermeldung. Antwort: ./dpe-demo.sh msg A22_Antwort &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A22_Start" name="Service-Request">
+      <bpmn:outgoing>Flow_A22_Start_A22_Sub</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A22_Start" messageRef="Message_A22_ServiceRequest" />
+    </bpmn:startEvent>
+    <bpmn:subProcess id="A22_Sub" name="Sub-Process">
+      <bpmn:incoming>Flow_A22_Start_A22_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A22_Sub_A22_EndOk</bpmn:outgoing>
+      <bpmn:subProcess id="A22_ES1" name="Event Sub-Process 1" triggeredByEvent="true">
+        <bpmn:startEvent id="A22_ES1_Start" name="After 1 Min (Folie: 5 Min)" isInterrupting="false">
+          <bpmn:outgoing>Flow_A22_ES1_Start_A22_ES1_Task</bpmn:outgoing>
+          <bpmn:timerEventDefinition id="TimerDef_A22_ES1_Start">
+            <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:startEvent>
+        <bpmn:userTask id="A22_ES1_Task" name="Analyze Delay" camunda:assignee="demo">
+          <bpmn:incoming>Flow_A22_ES1_Start_A22_ES1_Task</bpmn:incoming>
+          <bpmn:outgoing>Flow_A22_ES1_Task_A22_ES1_End</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:endEvent id="A22_ES1_End">
+          <bpmn:incoming>Flow_A22_ES1_Task_A22_ES1_End</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_A22_ES1_Start_A22_ES1_Task" sourceRef="A22_ES1_Start" targetRef="A22_ES1_Task" />
+        <bpmn:sequenceFlow id="Flow_A22_ES1_Task_A22_ES1_End" sourceRef="A22_ES1_Task" targetRef="A22_ES1_End" />
+      </bpmn:subProcess>
+      <bpmn:subProcess id="A22_ES2" name="Event Sub-Process 2" triggeredByEvent="true">
+        <bpmn:startEvent id="A22_ES2_Start" name="After 2 Min (Folie: 10 Min)" isInterrupting="false">
+          <bpmn:outgoing>Flow_A22_ES2_Start_A22_ES2_Task</bpmn:outgoing>
+          <bpmn:timerEventDefinition id="TimerDef_A22_ES2_Start">
+            <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:startEvent>
+        <bpmn:userTask id="A22_ES2_Task" name="Analyze Delay" camunda:assignee="demo">
+          <bpmn:incoming>Flow_A22_ES2_Start_A22_ES2_Task</bpmn:incoming>
+          <bpmn:outgoing>Flow_A22_ES2_Task_A22_ES2_End</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:endEvent id="A22_ES2_End">
+          <bpmn:incoming>Flow_A22_ES2_Task_A22_ES2_End</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_A22_ES2_Start_A22_ES2_Task" sourceRef="A22_ES2_Start" targetRef="A22_ES2_Task" />
+        <bpmn:sequenceFlow id="Flow_A22_ES2_Task_A22_ES2_End" sourceRef="A22_ES2_Task" targetRef="A22_ES2_End" />
+      </bpmn:subProcess>
+      <bpmn:subProcess id="A22_ES3" name="Event Sub-Process 3" triggeredByEvent="true">
+        <bpmn:startEvent id="A22_ES3_Start" name="After 3 Min (Folie: 15 Min)">
+          <bpmn:outgoing>Flow_A22_ES3_Start_A22_ES3_End</bpmn:outgoing>
+          <bpmn:timerEventDefinition id="TimerDef_A22_ES3_Start">
+            <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT3M</bpmn:timeDuration>
+          </bpmn:timerEventDefinition>
+        </bpmn:startEvent>
+        <bpmn:endEvent id="A22_ES3_End" name="Timeout-Fehler">
+          <bpmn:incoming>Flow_A22_ES3_Start_A22_ES3_End</bpmn:incoming>
+          <bpmn:errorEventDefinition id="ErrorDef_A22_ES3_End" errorRef="Error_TIMEOUT" />
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_A22_ES3_Start_A22_ES3_End" sourceRef="A22_ES3_Start" targetRef="A22_ES3_End" />
+      </bpmn:subProcess>
+      <bpmn:startEvent id="A22_S_Start">
+        <bpmn:outgoing>Flow_A22_S_Start_A22_S_Send</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sendTask id="A22_S_Send" name="Send Request to Service Provider" camunda:expression="${execution.setVariable('letzteNachricht', 'Anfrage an Service Provider')}">
+        <bpmn:incoming>Flow_A22_S_Start_A22_S_Send</bpmn:incoming>
+        <bpmn:outgoing>Flow_A22_S_Send_A22_S_Rec</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:receiveTask id="A22_S_Rec" name="Wait for Message from Service Provider" messageRef="Message_A22_Antwort">
+        <bpmn:incoming>Flow_A22_S_Send_A22_S_Rec</bpmn:incoming>
+        <bpmn:outgoing>Flow_A22_S_Rec_A22_S_End</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:endEvent id="A22_S_End">
+        <bpmn:incoming>Flow_A22_S_Rec_A22_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A22_S_Start_A22_S_Send" sourceRef="A22_S_Start" targetRef="A22_S_Send" />
+      <bpmn:sequenceFlow id="Flow_A22_S_Send_A22_S_Rec" sourceRef="A22_S_Send" targetRef="A22_S_Rec" />
+      <bpmn:sequenceFlow id="Flow_A22_S_Rec_A22_S_End" sourceRef="A22_S_Rec" targetRef="A22_S_End" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="A22_BErr" attachedToRef="A22_Sub">
+      <bpmn:outgoing>Flow_A22_BErr_A22_EndErr</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorDef_A22_BErr" errorRef="Error_TIMEOUT" />
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="A22_EndOk" name="Service-Response">
+      <bpmn:incoming>Flow_A22_Sub_A22_EndOk</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A22_EndOk" messageRef="Message_A22_Response" camunda:expression="${execution.setVariable('letzteNachricht', 'Antwort an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="A22_EndErr" name="Error Message">
+      <bpmn:incoming>Flow_A22_BErr_A22_EndErr</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A22_EndErr" messageRef="Message_A22_Error" camunda:expression="${execution.setVariable('letzteNachricht', 'Fehlermeldung an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A22_Start_A22_Sub" sourceRef="A22_Start" targetRef="A22_Sub" />
+    <bpmn:sequenceFlow id="Flow_A22_Sub_A22_EndOk" sourceRef="A22_Sub" targetRef="A22_EndOk" />
+    <bpmn:sequenceFlow id="Flow_A22_BErr_A22_EndErr" sourceRef="A22_BErr" targetRef="A22_EndErr" />
+  </bpmn:process>
+  <bpmn:message id="Message_A22_ServiceRequest" name="A22_ServiceRequest" />
+  <bpmn:message id="Message_A22_Antwort" name="A22_Antwort" />
+  <bpmn:message id="Message_A22_Response" name="A22_Response" />
+  <bpmn:message id="Message_A22_Error" name="A22_Error" />
+  <bpmn:error id="Error_TIMEOUT" name="TIMEOUT" errorCode="TIMEOUT" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A22_Timeout_Ereignis_Teilprozesse">
+    <bpmndi:BPMNPlane id="BPMNPlane_A22_Timeout_Ereignis_Teilprozesse" bpmnElement="Collaboration_A22_Timeout_Ereignis_Teilprozesse">
+      <bpmndi:BPMNShape id="P_A22_PDA_di" bpmnElement="P_A22_PDA" isHorizontal="true"><dc:Bounds x="140" y="40" width="900" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A22_SCIL_di" bpmnElement="P_A22_SCIL" isHorizontal="true"><dc:Bounds x="140" y="140" width="900" height="560" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A22_SP_di" bpmnElement="P_A22_SP" isHorizontal="true"><dc:Bounds x="140" y="740" width="900" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_Sub_di" bpmnElement="A22_Sub" isExpanded="true"><dc:Bounds x="250" y="160" width="560" height="520" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES1_di" bpmnElement="A22_ES1" isExpanded="true"><dc:Bounds x="280" y="190" width="380" height="105" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES2_di" bpmnElement="A22_ES2" isExpanded="true"><dc:Bounds x="280" y="315" width="380" height="105" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES3_di" bpmnElement="A22_ES3" isExpanded="true"><dc:Bounds x="280" y="440" width="380" height="105" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_Start_di" bpmnElement="A22_Start"><dc:Bounds x="182" y="402" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="148" y="442" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES1_Start_di" bpmnElement="A22_ES1_Start"><dc:Bounds x="302" y="232" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="250" y="272" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES1_Task_di" bpmnElement="A22_ES1_Task"><dc:Bounds x="420" y="215" width="100" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES1_End_di" bpmnElement="A22_ES1_End"><dc:Bounds x="592" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES2_Start_di" bpmnElement="A22_ES2_Start"><dc:Bounds x="302" y="357" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="250" y="397" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES2_Task_di" bpmnElement="A22_ES2_Task"><dc:Bounds x="420" y="340" width="100" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES2_End_di" bpmnElement="A22_ES2_End"><dc:Bounds x="592" y="357" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES3_Start_di" bpmnElement="A22_ES3_Start"><dc:Bounds x="302" y="482" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="250" y="522" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_ES3_End_di" bpmnElement="A22_ES3_End"><dc:Bounds x="592" y="482" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="561" y="522" width="98" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_S_Start_di" bpmnElement="A22_S_Start"><dc:Bounds x="282" y="602" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_S_Send_di" bpmnElement="A22_S_Send"><dc:Bounds x="370" y="580" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_S_Rec_di" bpmnElement="A22_S_Rec"><dc:Bounds x="530" y="580" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_S_End_di" bpmnElement="A22_S_End"><dc:Bounds x="702" y="602" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_BErr_di" bpmnElement="A22_BErr"><dc:Bounds x="792" y="542" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_EndOk_di" bpmnElement="A22_EndOk"><dc:Bounds x="882" y="282" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="844" y="322" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A22_EndErr_di" bpmnElement="A22_EndErr"><dc:Bounds x="922" y="542" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="894" y="582" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A22_ES1_Start_A22_ES1_Task_di" bpmnElement="Flow_A22_ES1_Start_A22_ES1_Task"><di:waypoint x="338" y="250" /><di:waypoint x="420" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_ES1_Task_A22_ES1_End_di" bpmnElement="Flow_A22_ES1_Task_A22_ES1_End"><di:waypoint x="520" y="250" /><di:waypoint x="592" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_ES2_Start_A22_ES2_Task_di" bpmnElement="Flow_A22_ES2_Start_A22_ES2_Task"><di:waypoint x="338" y="375" /><di:waypoint x="420" y="375" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_ES2_Task_A22_ES2_End_di" bpmnElement="Flow_A22_ES2_Task_A22_ES2_End"><di:waypoint x="520" y="375" /><di:waypoint x="592" y="375" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_ES3_Start_A22_ES3_End_di" bpmnElement="Flow_A22_ES3_Start_A22_ES3_End"><di:waypoint x="338" y="500" /><di:waypoint x="592" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_S_Start_A22_S_Send_di" bpmnElement="Flow_A22_S_Start_A22_S_Send"><di:waypoint x="318" y="620" /><di:waypoint x="370" y="620" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_S_Send_A22_S_Rec_di" bpmnElement="Flow_A22_S_Send_A22_S_Rec"><di:waypoint x="470" y="620" /><di:waypoint x="530" y="620" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_S_Rec_A22_S_End_di" bpmnElement="Flow_A22_S_Rec_A22_S_End"><di:waypoint x="630" y="620" /><di:waypoint x="702" y="620" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_Start_A22_Sub_di" bpmnElement="Flow_A22_Start_A22_Sub"><di:waypoint x="218" y="420" /><di:waypoint x="250" y="420" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_Sub_A22_EndOk_di" bpmnElement="Flow_A22_Sub_A22_EndOk"><di:waypoint x="810" y="300" /><di:waypoint x="882" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A22_BErr_A22_EndErr_di" bpmnElement="Flow_A22_BErr_A22_EndErr"><di:waypoint x="828" y="560" /><di:waypoint x="922" y="560" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A22_PDA_A22_Start_di" bpmnElement="MsgFlow_P_A22_PDA_A22_Start"><di:waypoint x="200" y="100" /><di:waypoint x="200" y="402" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A22_S_Send_P_A22_SP_di" bpmnElement="MsgFlow_A22_S_Send_P_A22_SP"><di:waypoint x="420" y="660" /><di:waypoint x="420" y="740" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A22_SP_A22_S_Rec_di" bpmnElement="MsgFlow_P_A22_SP_A22_S_Rec"><di:waypoint x="580" y="740" /><di:waypoint x="580" y="660" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A22_EndOk_P_A22_PDA_di" bpmnElement="MsgFlow_A22_EndOk_P_A22_PDA"><di:waypoint x="900" y="282" /><di:waypoint x="900" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A22_EndErr_P_A22_PDA_di" bpmnElement="MsgFlow_A22_EndErr_P_A22_PDA"><di:waypoint x="940" y="542" /><di:waypoint x="940" y="100" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

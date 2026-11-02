@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A12_Inklusives_Gateway_Default" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A12_Inklusives_Gateway_Default">
+    <bpmn:participant id="P_A12_A" name="A: Pfad ohne Bedingung = IMMER" processRef="A12_A_Immer" />
+    <bpmn:participant id="P_A12_B" name="B: Default-Pfad = nur wenn nichts anderes passt" processRef="A12_B_Default" />
+  </bpmn:collaboration>
+  <bpmn:process id="A12_A_Immer" name="A: Pfad ohne Bedingung = IMMER" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 12 links: Ein Pfad ohne Bedingung wird beim inklusiven Gateway IMMER genommen -&gt; System 2 läuft immer.</bpmn:documentation>
+    <bpmn:startEvent id="A12A_Start">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="kundenId" label="Customer ID" type="long" defaultValue="123456" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_A12A_Start_A12A_Split</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:inclusiveGateway id="A12A_Split">
+      <bpmn:incoming>Flow_A12A_Start_A12A_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12A_Split_A12A_S1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A12A_Split_A12A_S2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A12A_Split_A12A_S3</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:inclusiveGateway id="A12A_Join">
+      <bpmn:incoming>Flow_A12A_S1_A12A_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A12A_S2_A12A_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A12A_S3_A12A_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12A_Join_A12A_End</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:endEvent id="A12A_End">
+      <bpmn:incoming>Flow_A12A_Join_A12A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A12A_S1" name="System 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A12A_Split_A12A_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12A_S1_A12A_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A12A_S2" name="System 2" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A12A_Split_A12A_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12A_S2_A12A_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A12A_S3" name="System 3" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A12A_Split_A12A_S3</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12A_S3_A12A_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_A12A_Start_A12A_Split" sourceRef="A12A_Start" targetRef="A12A_Split" />
+    <bpmn:sequenceFlow id="Flow_A12A_Split_A12A_S1" name="Customer ID 000000-499999" sourceRef="A12A_Split" targetRef="A12A_S1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kundenId &gt;= 0 &amp;&amp; kundenId &lt;= 499999}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A12A_S1_A12A_Join" sourceRef="A12A_S1" targetRef="A12A_Join" />
+    <bpmn:sequenceFlow id="Flow_A12A_Split_A12A_S2" name="Always" sourceRef="A12A_Split" targetRef="A12A_S2" />
+    <bpmn:sequenceFlow id="Flow_A12A_S2_A12A_Join" sourceRef="A12A_S2" targetRef="A12A_Join" />
+    <bpmn:sequenceFlow id="Flow_A12A_Split_A12A_S3" name="Customer ID 500000-999999" sourceRef="A12A_Split" targetRef="A12A_S3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kundenId &gt;= 500000 &amp;&amp; kundenId &lt;= 999999}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A12A_S3_A12A_Join" sourceRef="A12A_S3" targetRef="A12A_Join" />
+    <bpmn:sequenceFlow id="Flow_A12A_Join_A12A_End" sourceRef="A12A_Join" targetRef="A12A_End" />
+  </bpmn:process>
+  <bpmn:process id="A12_B_Default" name="B: Default-Pfad = nur wenn nichts anderes passt" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 12 rechts: Der Default-Pfad (Schrägstrich) wird nur genommen, wenn KEINE andere Bedingung zutrifft (z. B. Kunden-ID 1000000).</bpmn:documentation>
+    <bpmn:startEvent id="A12B_Start">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="kundenId" label="Customer ID" type="long" defaultValue="123456" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_A12B_Start_A12B_Split</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:inclusiveGateway id="A12B_Split" default="Flow_A12B_Split_A12B_S2">
+      <bpmn:incoming>Flow_A12B_Start_A12B_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12B_Split_A12B_S1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A12B_Split_A12B_S2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A12B_Split_A12B_S3</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:inclusiveGateway id="A12B_Join">
+      <bpmn:incoming>Flow_A12B_S1_A12B_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A12B_S2_A12B_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A12B_S3_A12B_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12B_Join_A12B_End</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:endEvent id="A12B_End">
+      <bpmn:incoming>Flow_A12B_Join_A12B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A12B_S1" name="System 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A12B_Split_A12B_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12B_S1_A12B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A12B_S2" name="System 2" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A12B_Split_A12B_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12B_S2_A12B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A12B_S3" name="System 3" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A12B_Split_A12B_S3</bpmn:incoming>
+      <bpmn:outgoing>Flow_A12B_S3_A12B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_A12B_Start_A12B_Split" sourceRef="A12B_Start" targetRef="A12B_Split" />
+    <bpmn:sequenceFlow id="Flow_A12B_Split_A12B_S1" name="Customer ID 000000-499999" sourceRef="A12B_Split" targetRef="A12B_S1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kundenId &gt;= 0 &amp;&amp; kundenId &lt;= 499999}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A12B_S1_A12B_Join" sourceRef="A12B_S1" targetRef="A12B_Join" />
+    <bpmn:sequenceFlow id="Flow_A12B_Split_A12B_S2" name="Default" sourceRef="A12B_Split" targetRef="A12B_S2" />
+    <bpmn:sequenceFlow id="Flow_A12B_S2_A12B_Join" sourceRef="A12B_S2" targetRef="A12B_Join" />
+    <bpmn:sequenceFlow id="Flow_A12B_Split_A12B_S3" name="Customer ID 500000-999999" sourceRef="A12B_Split" targetRef="A12B_S3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${kundenId &gt;= 500000 &amp;&amp; kundenId &lt;= 999999}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A12B_S3_A12B_Join" sourceRef="A12B_S3" targetRef="A12B_Join" />
+    <bpmn:sequenceFlow id="Flow_A12B_Join_A12B_End" sourceRef="A12B_Join" targetRef="A12B_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A12_Inklusives_Gateway_Default">
+    <bpmndi:BPMNPlane id="BPMNPlane_A12_Inklusives_Gateway_Default" bpmnElement="Collaboration_A12_Inklusives_Gateway_Default">
+      <bpmndi:BPMNShape id="P_A12_A_di" bpmnElement="P_A12_A" isHorizontal="true"><dc:Bounds x="140" y="40" width="500" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A12_B_di" bpmnElement="P_A12_B" isHorizontal="true"><dc:Bounds x="680" y="40" width="500" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12A_Start_di" bpmnElement="A12A_Start"><dc:Bounds x="182" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12A_Split_di" bpmnElement="A12A_Split"><dc:Bounds x="255" y="195" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12A_Join_di" bpmnElement="A12A_Join"><dc:Bounds x="515" y="195" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12A_End_di" bpmnElement="A12A_End"><dc:Bounds x="592" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12A_S1_di" bpmnElement="A12A_S1"><dc:Bounds x="370" y="70" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12A_S2_di" bpmnElement="A12A_S2"><dc:Bounds x="370" y="180" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12A_S3_di" bpmnElement="A12A_S3"><dc:Bounds x="370" y="290" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12B_Start_di" bpmnElement="A12B_Start"><dc:Bounds x="722" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12B_Split_di" bpmnElement="A12B_Split"><dc:Bounds x="795" y="195" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12B_Join_di" bpmnElement="A12B_Join"><dc:Bounds x="1055" y="195" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12B_End_di" bpmnElement="A12B_End"><dc:Bounds x="1132" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12B_S1_di" bpmnElement="A12B_S1"><dc:Bounds x="910" y="70" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12B_S2_di" bpmnElement="A12B_S2"><dc:Bounds x="910" y="180" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A12B_S3_di" bpmnElement="A12B_S3"><dc:Bounds x="910" y="290" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A12A_Start_A12A_Split_di" bpmnElement="Flow_A12A_Start_A12A_Split"><di:waypoint x="218" y="220" /><di:waypoint x="255" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12A_Split_A12A_S1_di" bpmnElement="Flow_A12A_Split_A12A_S1"><di:waypoint x="280" y="195" /><di:waypoint x="280" y="110" /><di:waypoint x="370" y="110" /><bpmndi:BPMNLabel><dc:Bounds x="295" y="92" width="150" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12A_S1_A12A_Join_di" bpmnElement="Flow_A12A_S1_A12A_Join"><di:waypoint x="470" y="110" /><di:waypoint x="540" y="110" /><di:waypoint x="540" y="195" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12A_Split_A12A_S2_di" bpmnElement="Flow_A12A_Split_A12A_S2"><di:waypoint x="305" y="220" /><di:waypoint x="370" y="220" /><bpmndi:BPMNLabel><dc:Bounds x="320" y="202" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12A_S2_A12A_Join_di" bpmnElement="Flow_A12A_S2_A12A_Join"><di:waypoint x="470" y="220" /><di:waypoint x="515" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12A_Split_A12A_S3_di" bpmnElement="Flow_A12A_Split_A12A_S3"><di:waypoint x="280" y="245" /><di:waypoint x="280" y="330" /><di:waypoint x="370" y="330" /><bpmndi:BPMNLabel><dc:Bounds x="295" y="312" width="150" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12A_S3_A12A_Join_di" bpmnElement="Flow_A12A_S3_A12A_Join"><di:waypoint x="470" y="330" /><di:waypoint x="540" y="330" /><di:waypoint x="540" y="245" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12A_Join_A12A_End_di" bpmnElement="Flow_A12A_Join_A12A_End"><di:waypoint x="565" y="220" /><di:waypoint x="592" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_Start_A12B_Split_di" bpmnElement="Flow_A12B_Start_A12B_Split"><di:waypoint x="758" y="220" /><di:waypoint x="795" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_Split_A12B_S1_di" bpmnElement="Flow_A12B_Split_A12B_S1"><di:waypoint x="820" y="195" /><di:waypoint x="820" y="110" /><di:waypoint x="910" y="110" /><bpmndi:BPMNLabel><dc:Bounds x="835" y="92" width="150" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_S1_A12B_Join_di" bpmnElement="Flow_A12B_S1_A12B_Join"><di:waypoint x="1010" y="110" /><di:waypoint x="1080" y="110" /><di:waypoint x="1080" y="195" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_Split_A12B_S2_di" bpmnElement="Flow_A12B_Split_A12B_S2"><di:waypoint x="845" y="220" /><di:waypoint x="910" y="220" /><bpmndi:BPMNLabel><dc:Bounds x="860" y="202" width="42" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_S2_A12B_Join_di" bpmnElement="Flow_A12B_S2_A12B_Join"><di:waypoint x="1010" y="220" /><di:waypoint x="1055" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_Split_A12B_S3_di" bpmnElement="Flow_A12B_Split_A12B_S3"><di:waypoint x="820" y="245" /><di:waypoint x="820" y="330" /><di:waypoint x="910" y="330" /><bpmndi:BPMNLabel><dc:Bounds x="835" y="312" width="150" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_S3_A12B_Join_di" bpmnElement="Flow_A12B_S3_A12B_Join"><di:waypoint x="1010" y="330" /><di:waypoint x="1080" y="330" /><di:waypoint x="1080" y="245" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A12B_Join_A12B_End_di" bpmnElement="Flow_A12B_Join_A12B_End"><di:waypoint x="1105" y="220" /><di:waypoint x="1132" y="220" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

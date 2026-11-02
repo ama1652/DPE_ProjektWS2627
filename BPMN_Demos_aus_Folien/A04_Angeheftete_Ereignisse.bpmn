@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A04_Angeheftete_Ereignisse" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A04_Angeheftete_Ereignisse">
+    <bpmn:participant id="P_A04" name="Travel Booking – Boundary Events" processRef="A04_BoundaryEvents" />
+  </bpmn:collaboration>
+  <bpmn:process id="A04_BoundaryEvents" name="Travel Booking – Boundary Events" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 4: Angeheftete Ereignisse sind nur aktiv, solange ein Token auf der Aufgabe liegt. Timer (gestrichelt = NICHT unterbrechend, Demo: 1 Minute statt 1 Tag) erzeugt zusätzlich 'Check delay'. Eskalation 'Not available' (durchgezogen = unterbrechend) bricht die Buchung ab -&gt; 'Inform customer'. Auslösen: ./dpe-demo.sh escalate &lt;taskId&gt; NOT_AVAILABLE</bpmn:documentation>
+    <bpmn:startEvent id="A04_Start">
+      <bpmn:outgoing>Flow_A04_Start_A04_Flight</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="A04_Flight" name="Book Flight (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A04_Start_A04_Flight</bpmn:incoming>
+      <bpmn:outgoing>Flow_A04_Flight_A04_Hotel</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A04_Hotel" name="Book Hotel (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A04_Flight_A04_Hotel</bpmn:incoming>
+      <bpmn:outgoing>Flow_A04_Hotel_A04_Car</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A04_Car" name="Book Rental Car (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A04_Hotel_A04_Car</bpmn:incoming>
+      <bpmn:outgoing>Flow_A04_Car_A04_EndOk</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A04_EndOk" name="Successful booking">
+      <bpmn:incoming>Flow_A04_Car_A04_EndOk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A04_Inform" name="Inform customer" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A04_BEscHotel_A04_Inform</bpmn:incoming>
+      <bpmn:incoming>Flow_A04_BEscCar_A04_Inform</bpmn:incoming>
+      <bpmn:outgoing>Flow_A04_Inform_A04_EndFail</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A04_EndFail" name="Failure: Not available">
+      <bpmn:incoming>Flow_A04_Inform_A04_EndFail</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="A04_Check" name="Check delay" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A04_BTimer_A04_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_A04_Check_A04_EndDelay</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A04_EndDelay" name="Delay">
+      <bpmn:incoming>Flow_A04_Check_A04_EndDelay</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="A04_BTimer" name="1 Day (Demo: 1 Min)" attachedToRef="A04_Flight" cancelActivity="false">
+      <bpmn:outgoing>Flow_A04_BTimer_A04_Check</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A04_BTimer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="A04_BEscHotel" name="Not available" attachedToRef="A04_Hotel">
+      <bpmn:outgoing>Flow_A04_BEscHotel_A04_Inform</bpmn:outgoing>
+      <bpmn:escalationEventDefinition id="EscalationDef_A04_BEscHotel" escalationRef="Escalation_NOT_AVAILABLE" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="A04_BEscCar" name="Not available" attachedToRef="A04_Car">
+      <bpmn:outgoing>Flow_A04_BEscCar_A04_Inform</bpmn:outgoing>
+      <bpmn:escalationEventDefinition id="EscalationDef_A04_BEscCar" escalationRef="Escalation_NOT_AVAILABLE" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_A04_Start_A04_Flight" sourceRef="A04_Start" targetRef="A04_Flight" />
+    <bpmn:sequenceFlow id="Flow_A04_Flight_A04_Hotel" sourceRef="A04_Flight" targetRef="A04_Hotel" />
+    <bpmn:sequenceFlow id="Flow_A04_Hotel_A04_Car" sourceRef="A04_Hotel" targetRef="A04_Car" />
+    <bpmn:sequenceFlow id="Flow_A04_Car_A04_EndOk" sourceRef="A04_Car" targetRef="A04_EndOk" />
+    <bpmn:sequenceFlow id="Flow_A04_Inform_A04_EndFail" sourceRef="A04_Inform" targetRef="A04_EndFail" />
+    <bpmn:sequenceFlow id="Flow_A04_Check_A04_EndDelay" sourceRef="A04_Check" targetRef="A04_EndDelay" />
+    <bpmn:sequenceFlow id="Flow_A04_BEscHotel_A04_Inform" sourceRef="A04_BEscHotel" targetRef="A04_Inform" />
+    <bpmn:sequenceFlow id="Flow_A04_BEscCar_A04_Inform" sourceRef="A04_BEscCar" targetRef="A04_Inform" />
+    <bpmn:sequenceFlow id="Flow_A04_BTimer_A04_Check" sourceRef="A04_BTimer" targetRef="A04_Check" />
+  </bpmn:process>
+  <bpmn:escalation id="Escalation_NOT_AVAILABLE" name="NOT_AVAILABLE" escalationCode="NOT_AVAILABLE" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A04_Angeheftete_Ereignisse">
+    <bpmndi:BPMNPlane id="BPMNPlane_A04_Angeheftete_Ereignisse" bpmnElement="Collaboration_A04_Angeheftete_Ereignisse">
+      <bpmndi:BPMNShape id="P_A04_di" bpmnElement="P_A04" isHorizontal="true"><dc:Bounds x="140" y="40" width="860" height="380" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_Start_di" bpmnElement="A04_Start"><dc:Bounds x="182" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_Flight_di" bpmnElement="A04_Flight"><dc:Bounds x="250" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_Hotel_di" bpmnElement="A04_Hotel"><dc:Bounds x="390" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_Car_di" bpmnElement="A04_Car"><dc:Bounds x="530" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_EndOk_di" bpmnElement="A04_EndOk"><dc:Bounds x="882" y="102" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="837" y="142" width="126" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_Inform_di" bpmnElement="A04_Inform"><dc:Bounds x="710" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_EndFail_di" bpmnElement="A04_EndFail"><dc:Bounds x="882" y="232" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="830" y="272" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_Check_di" bpmnElement="A04_Check"><dc:Bounds x="710" y="320" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_EndDelay_di" bpmnElement="A04_EndDelay"><dc:Bounds x="882" y="342" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="870" y="382" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_BTimer_di" bpmnElement="A04_BTimer"><dc:Bounds x="247" y="142" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="198" y="182" width="133" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_BEscHotel_di" bpmnElement="A04_BEscHotel"><dc:Bounds x="452" y="142" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="424" y="182" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A04_BEscCar_di" bpmnElement="A04_BEscCar"><dc:Bounds x="592" y="142" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="564" y="182" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A04_Start_A04_Flight_di" bpmnElement="Flow_A04_Start_A04_Flight"><di:waypoint x="218" y="120" /><di:waypoint x="250" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_Flight_A04_Hotel_di" bpmnElement="Flow_A04_Flight_A04_Hotel"><di:waypoint x="350" y="120" /><di:waypoint x="390" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_Hotel_A04_Car_di" bpmnElement="Flow_A04_Hotel_A04_Car"><di:waypoint x="490" y="120" /><di:waypoint x="530" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_Car_A04_EndOk_di" bpmnElement="Flow_A04_Car_A04_EndOk"><di:waypoint x="630" y="120" /><di:waypoint x="882" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_Inform_A04_EndFail_di" bpmnElement="Flow_A04_Inform_A04_EndFail"><di:waypoint x="810" y="250" /><di:waypoint x="882" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_Check_A04_EndDelay_di" bpmnElement="Flow_A04_Check_A04_EndDelay"><di:waypoint x="810" y="360" /><di:waypoint x="882" y="360" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_BEscHotel_A04_Inform_di" bpmnElement="Flow_A04_BEscHotel_A04_Inform"><di:waypoint x="470" y="178" /><di:waypoint x="470" y="250" /><di:waypoint x="710" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_BEscCar_A04_Inform_di" bpmnElement="Flow_A04_BEscCar_A04_Inform"><di:waypoint x="610" y="178" /><di:waypoint x="610" y="250" /><di:waypoint x="710" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A04_BTimer_A04_Check_di" bpmnElement="Flow_A04_BTimer_A04_Check"><di:waypoint x="265" y="178" /><di:waypoint x="265" y="360" /><di:waypoint x="710" y="360" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

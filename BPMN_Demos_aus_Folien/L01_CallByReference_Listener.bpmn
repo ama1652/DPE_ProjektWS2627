@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_L01_CallByReference_Listener" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_L01_CallByReference_Listener">
+    <bpmn:participant id="P_L01" name="Var Sichtbarkeit Prozess 1" processRef="L01_VarSichtbarkeitProzess1" />
+  </bpmn:collaboration>
+  <bpmn:process id="L01_VarSichtbarkeitProzess1" name="Var Sichtbarkeit Prozess 1" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>03 Call by Ref/Value, Folien 6–19. Eingebetteter Teilprozess = Call by Reference: Er greift direkt auf Feld1 des Hauptprozesses zu. Drei Wege, LOKALE Teilprozess-Variablen anzulegen: (1) Input Mapping am Teilprozess (lokaleSubprozessVar1 = ${Feld1}), (2) Execution Listener 'start' am Startereignis des Teilprozesses (lokaleSubprozessVar2), (3) Task Listener 'create' an der Benutzeraufgabe (lokaleSubprozessVar3). Ausprobieren: In 'Eingabe in Subprozess 1' alle Felder ändern. Danach in 'Ausgabe Prozess 1' bzw. im Cockpit: Feld1 ist im Hauptprozess GEÄNDERT (by reference), die drei lokalen Variablen sind nach Ende des Teilprozesses weg.</bpmn:documentation>
+    <bpmn:startEvent id="L01_Start">
+      <bpmn:outgoing>Flow_L01_Start_L01_In1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="L01_In1" name="Eingabe Prozess 1" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Feld1" label="Feld 1" type="string" defaultValue="Feld 1 Eingabe" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L01_Start_L01_In1</bpmn:incoming>
+      <bpmn:outgoing>Flow_L01_In1_L01_Sub</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="L01_Sub" name="Var Sichtbarkeit Unterprozess 1">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="lokaleSubprozessVar1">${Feld1}</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L01_In1_L01_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_L01_Sub_L01_Out1</bpmn:outgoing>
+      <bpmn:startEvent id="L01_S_Start" name="Listener start">
+        <bpmn:extensionElements>
+          <camunda:executionListener expression='${execution.setVariableLocal("lokaleSubprozessVar2", "Default-Wert über Listener am Startereignis")}' event="start" />
+        </bpmn:extensionElements>
+        <bpmn:outgoing>Flow_L01_S_Start_L01_S_In</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="L01_S_In" name="Eingabe in Subprozess 1" camunda:assignee="demo">
+        <bpmn:extensionElements>
+          <camunda:formData>
+            <camunda:formField id="Feld1" label="Feld 1 im Subprozess belegt aus globaler Variablen (by reference)" type="string" />
+            <camunda:formField id="lokaleSubprozessVar1" label="Subprozessvariable 1 belegt aus Übergabe" type="string" />
+            <camunda:formField id="lokaleSubprozessVar2" label="Subprozessvariable 2 belegt aus Listener Startereignis" type="string" />
+            <camunda:formField id="lokaleSubprozessVar3" label="Subprozessvariable 3 belegt aus Listener Benutzeraufgabe" type="string" />
+          </camunda:formData>
+          <camunda:taskListener expression='${execution.setVariableLocal("lokaleSubprozessVar3", "Default-Wert über Listener an Benutzeraufgabe")}' event="create" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_L01_S_Start_L01_S_In</bpmn:incoming>
+        <bpmn:outgoing>Flow_L01_S_In_L01_S_Out</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="L01_S_Out" name="Ausgabe in Subprozess 1" camunda:assignee="demo">
+        <bpmn:documentation>Ohne Formular: Die Tasklist zeigt ein generisches Formular – dort 'Load Variables' bzw. 'Variablen laden' klicken.</bpmn:documentation>
+        <bpmn:incoming>Flow_L01_S_In_L01_S_Out</bpmn:incoming>
+        <bpmn:outgoing>Flow_L01_S_Out_L01_S_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="L01_S_End">
+        <bpmn:incoming>Flow_L01_S_Out_L01_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_L01_S_Start_L01_S_In" sourceRef="L01_S_Start" targetRef="L01_S_In" />
+      <bpmn:sequenceFlow id="Flow_L01_S_In_L01_S_Out" sourceRef="L01_S_In" targetRef="L01_S_Out" />
+      <bpmn:sequenceFlow id="Flow_L01_S_Out_L01_S_End" sourceRef="L01_S_Out" targetRef="L01_S_End" />
+    </bpmn:subProcess>
+    <bpmn:userTask id="L01_Out1" name="Ausgabe Prozess 1" camunda:assignee="demo">
+      <bpmn:documentation>Generisches Formular: Variablen laden – Feld1 zeigt den im Teilprozess geänderten Wert.</bpmn:documentation>
+      <bpmn:incoming>Flow_L01_Sub_L01_Out1</bpmn:incoming>
+      <bpmn:outgoing>Flow_L01_Out1_L01_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L01_End">
+      <bpmn:incoming>Flow_L01_Out1_L01_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L01_Start_L01_In1" sourceRef="L01_Start" targetRef="L01_In1" />
+    <bpmn:sequenceFlow id="Flow_L01_In1_L01_Sub" sourceRef="L01_In1" targetRef="L01_Sub" />
+    <bpmn:sequenceFlow id="Flow_L01_Sub_L01_Out1" sourceRef="L01_Sub" targetRef="L01_Out1" />
+    <bpmn:sequenceFlow id="Flow_L01_Out1_L01_End" sourceRef="L01_Out1" targetRef="L01_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_L01_CallByReference_Listener">
+    <bpmndi:BPMNPlane id="BPMNPlane_L01_CallByReference_Listener" bpmnElement="Collaboration_L01_CallByReference_Listener">
+      <bpmndi:BPMNShape id="P_L01_di" bpmnElement="P_L01" isHorizontal="true"><dc:Bounds x="140" y="40" width="1060" height="330" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_Sub_di" bpmnElement="L01_Sub" isExpanded="true"><dc:Bounds x="380" y="100" width="470" height="210" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_Start_di" bpmnElement="L01_Start"><dc:Bounds x="182" y="187" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_In1_di" bpmnElement="L01_In1"><dc:Bounds x="250" y="165" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_S_Start_di" bpmnElement="L01_S_Start"><dc:Bounds x="402" y="187" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="371" y="227" width="98" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_S_In_di" bpmnElement="L01_S_In"><dc:Bounds x="480" y="165" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_S_Out_di" bpmnElement="L01_S_Out"><dc:Bounds x="640" y="165" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_S_End_di" bpmnElement="L01_S_End"><dc:Bounds x="787" y="187" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_Out1_di" bpmnElement="L01_Out1"><dc:Bounds x="910" y="165" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L01_End_di" bpmnElement="L01_End"><dc:Bounds x="1082" y="187" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_L01_S_Start_L01_S_In_di" bpmnElement="Flow_L01_S_Start_L01_S_In"><di:waypoint x="438" y="205" /><di:waypoint x="480" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L01_S_In_L01_S_Out_di" bpmnElement="Flow_L01_S_In_L01_S_Out"><di:waypoint x="580" y="205" /><di:waypoint x="640" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L01_S_Out_L01_S_End_di" bpmnElement="Flow_L01_S_Out_L01_S_End"><di:waypoint x="740" y="205" /><di:waypoint x="787" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L01_Start_L01_In1_di" bpmnElement="Flow_L01_Start_L01_In1"><di:waypoint x="218" y="205" /><di:waypoint x="250" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L01_In1_L01_Sub_di" bpmnElement="Flow_L01_In1_L01_Sub"><di:waypoint x="350" y="205" /><di:waypoint x="380" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L01_Sub_L01_Out1_di" bpmnElement="Flow_L01_Sub_L01_Out1"><di:waypoint x="850" y="205" /><di:waypoint x="910" y="205" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L01_Out1_L01_End_di" bpmnElement="Flow_L01_Out1_L01_End"><di:waypoint x="1010" y="205" /><di:waypoint x="1082" y="205" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

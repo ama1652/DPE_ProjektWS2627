@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A19_Timeout_unterbrechend" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A19_Timeout_unterbrechend">
+    <bpmn:participant id="P_A19_PDA" name="Process Driven Application" />
+    <bpmn:participant id="P_A19_SCIL" name="Service Contract Implementation Layer" processRef="A19_ServiceContract" />
+    <bpmn:participant id="P_A19_SP" name="Service Provider" />
+    <bpmn:messageFlow id="MsgFlow_A19_EndErr_P_A19_PDA" sourceRef="A19_EndErr" targetRef="P_A19_PDA" />
+    <bpmn:messageFlow id="MsgFlow_P_A19_PDA_A19_Start" sourceRef="P_A19_PDA" targetRef="A19_Start" />
+    <bpmn:messageFlow id="MsgFlow_A19_Send_P_A19_SP" sourceRef="A19_Send" targetRef="P_A19_SP" />
+    <bpmn:messageFlow id="MsgFlow_P_A19_SP_A19_Rec" sourceRef="P_A19_SP" targetRef="A19_Rec" />
+    <bpmn:messageFlow id="MsgFlow_A19_EndOk_P_A19_PDA" sourceRef="A19_EndOk" targetRef="P_A19_PDA" />
+  </bpmn:collaboration>
+  <bpmn:process id="A19_ServiceContract" name="Service Contract Implementation Layer" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 19: Unterbrechender Timer – nach 15 s wird das Warten abgebrochen und eine Fehlermeldung geschickt. Starten: ./dpe-demo.sh start A19_ServiceContract; Antwort: ./dpe-demo.sh msg A19_Antwort &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A19_Start" name="Service-Request">
+      <bpmn:outgoing>Flow_A19_Start_A19_Send</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A19_Start" messageRef="Message_A19_ServiceRequest" />
+    </bpmn:startEvent>
+    <bpmn:sendTask id="A19_Send" name="Send Request to Service Provider" camunda:expression="${execution.setVariable('letzteNachricht', 'Anfrage an Service Provider')}">
+      <bpmn:incoming>Flow_A19_Start_A19_Send</bpmn:incoming>
+      <bpmn:outgoing>Flow_A19_Send_A19_Rec</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="A19_Rec" name="Wait for Response from Service Provider" messageRef="Message_A19_Antwort">
+      <bpmn:incoming>Flow_A19_Send_A19_Rec</bpmn:incoming>
+      <bpmn:outgoing>Flow_A19_Rec_A19_EndOk</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:endEvent id="A19_EndOk" name="Service-Response">
+      <bpmn:incoming>Flow_A19_Rec_A19_EndOk</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A19_EndOk" messageRef="Message_A19_Response" camunda:expression="${execution.setVariable('letzteNachricht', 'Antwort an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="A19_BT" name="max. 15 sec Waiting Time" attachedToRef="A19_Rec">
+      <bpmn:outgoing>Flow_A19_BT_A19_EndErr</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A19_BT">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="A19_EndErr" name="Error Message">
+      <bpmn:incoming>Flow_A19_BT_A19_EndErr</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A19_EndErr" messageRef="Message_A19_Error" camunda:expression="${execution.setVariable('letzteNachricht', 'Fehlermeldung an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A19_Start_A19_Send" sourceRef="A19_Start" targetRef="A19_Send" />
+    <bpmn:sequenceFlow id="Flow_A19_Send_A19_Rec" sourceRef="A19_Send" targetRef="A19_Rec" />
+    <bpmn:sequenceFlow id="Flow_A19_Rec_A19_EndOk" sourceRef="A19_Rec" targetRef="A19_EndOk" />
+    <bpmn:sequenceFlow id="Flow_A19_BT_A19_EndErr" sourceRef="A19_BT" targetRef="A19_EndErr" />
+  </bpmn:process>
+  <bpmn:message id="Message_A19_ServiceRequest" name="A19_ServiceRequest" />
+  <bpmn:message id="Message_A19_Antwort" name="A19_Antwort" />
+  <bpmn:message id="Message_A19_Response" name="A19_Response" />
+  <bpmn:message id="Message_A19_Error" name="A19_Error" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A19_Timeout_unterbrechend">
+    <bpmndi:BPMNPlane id="BPMNPlane_A19_Timeout_unterbrechend" bpmnElement="Collaboration_A19_Timeout_unterbrechend">
+      <bpmndi:BPMNShape id="P_A19_PDA_di" bpmnElement="P_A19_PDA" isHorizontal="true"><dc:Bounds x="140" y="40" width="860" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A19_SCIL_di" bpmnElement="P_A19_SCIL" isHorizontal="true"><dc:Bounds x="140" y="140" width="860" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A19_SP_di" bpmnElement="P_A19_SP" isHorizontal="true"><dc:Bounds x="140" y="440" width="860" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A19_Start_di" bpmnElement="A19_Start"><dc:Bounds x="222" y="212" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="188" y="252" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A19_Send_di" bpmnElement="A19_Send"><dc:Bounds x="300" y="190" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A19_Rec_di" bpmnElement="A19_Rec"><dc:Bounds x="450" y="190" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A19_EndOk_di" bpmnElement="A19_EndOk"><dc:Bounds x="622" y="212" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="584" y="252" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A19_BT_di" bpmnElement="A19_BT"><dc:Bounds x="517" y="252" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="465" y="292" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A19_EndErr_di" bpmnElement="A19_EndErr"><dc:Bounds x="742" y="312" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="714" y="352" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A19_Start_A19_Send_di" bpmnElement="Flow_A19_Start_A19_Send"><di:waypoint x="258" y="230" /><di:waypoint x="300" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A19_Send_A19_Rec_di" bpmnElement="Flow_A19_Send_A19_Rec"><di:waypoint x="400" y="230" /><di:waypoint x="450" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A19_Rec_A19_EndOk_di" bpmnElement="Flow_A19_Rec_A19_EndOk"><di:waypoint x="550" y="230" /><di:waypoint x="622" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A19_BT_A19_EndErr_di" bpmnElement="Flow_A19_BT_A19_EndErr"><di:waypoint x="535" y="288" /><di:waypoint x="535" y="330" /><di:waypoint x="742" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A19_EndErr_P_A19_PDA_di" bpmnElement="MsgFlow_A19_EndErr_P_A19_PDA"><di:waypoint x="760" y="312" /><di:waypoint x="760" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A19_PDA_A19_Start_di" bpmnElement="MsgFlow_P_A19_PDA_A19_Start"><di:waypoint x="240" y="100" /><di:waypoint x="240" y="212" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A19_Send_P_A19_SP_di" bpmnElement="MsgFlow_A19_Send_P_A19_SP"><di:waypoint x="350" y="270" /><di:waypoint x="350" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A19_SP_A19_Rec_di" bpmnElement="MsgFlow_P_A19_SP_A19_Rec"><di:waypoint x="480" y="440" /><di:waypoint x="480" y="270" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A19_EndOk_P_A19_PDA_di" bpmnElement="MsgFlow_A19_EndOk_P_A19_PDA"><di:waypoint x="640" y="212" /><di:waypoint x="640" y="100" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

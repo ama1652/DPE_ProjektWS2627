@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A15_Zusammenfuehren_mit_ODER" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A15_Zusammenfuehren_mit_ODER">
+    <bpmn:participant id="P_A15" name="Travel Booking – Zusammenführen mit ODER-Gateway" processRef="A15_OderMerge" />
+  </bpmn:collaboration>
+  <bpmn:process id="A15_OderMerge" name="Travel Booking – Zusammenführen mit ODER-Gateway" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 15: Bei NICHT unterbrechenden Ereignissen den Ausnahmepfad mit einem inklusiven (ODER-)Gateway zurückführen. Kommt keine Nachricht, läuft es direkt weiter; kommt eine, wartet das ODER-Gateway auch auf diesen Pfad. Auslösen: ./dpe-demo.sh msg A15_Kreditkarte &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A15_Start">
+      <bpmn:outgoing>Flow_A15_Start_A15_Sub</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="A15_Sub" name="Travel Booking">
+      <bpmn:incoming>Flow_A15_Start_A15_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A15_Sub_A15_Join</bpmn:outgoing>
+      <bpmn:startEvent id="A15_S_Start">
+        <bpmn:outgoing>Flow_A15_S_Start_A15_T0</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="A15_T0" name="Book Flight (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A15_S_Start_A15_T0</bpmn:incoming>
+        <bpmn:outgoing>Flow_A15_T0_A15_T1</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="A15_T1" name="Book Hotel (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A15_T0_A15_T1</bpmn:incoming>
+        <bpmn:outgoing>Flow_A15_T1_A15_T2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="A15_T2" name="Book Rental Car (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A15_T1_A15_T2</bpmn:incoming>
+        <bpmn:outgoing>Flow_A15_T2_A15_S_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="A15_S_End">
+        <bpmn:incoming>Flow_A15_T2_A15_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A15_S_Start_A15_T0" sourceRef="A15_S_Start" targetRef="A15_T0" />
+      <bpmn:sequenceFlow id="Flow_A15_T0_A15_T1" sourceRef="A15_T0" targetRef="A15_T1" />
+      <bpmn:sequenceFlow id="Flow_A15_T1_A15_T2" sourceRef="A15_T1" targetRef="A15_T2" />
+      <bpmn:sequenceFlow id="Flow_A15_T2_A15_S_End" sourceRef="A15_T2" targetRef="A15_S_End" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="A15_B" attachedToRef="A15_Sub" cancelActivity="false">
+      <bpmn:outgoing>Flow_A15_B_A15_Upd</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A15_B" messageRef="Message_A15_Kreditkarte" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A15_Upd" name="Update Credit Card Data" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A15_B_A15_Upd</bpmn:incoming>
+      <bpmn:outgoing>Flow_A15_Upd_A15_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="A15_Join">
+      <bpmn:incoming>Flow_A15_Sub_A15_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_A15_Upd_A15_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_A15_Join_A15_Charge</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:serviceTask id="A15_Charge" name="Charge Credit Card" camunda:expression="${execution.setVariable('kreditkarteBelastet', true)}">
+      <bpmn:incoming>Flow_A15_Join_A15_Charge</bpmn:incoming>
+      <bpmn:outgoing>Flow_A15_Charge_A15_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="A15_End">
+      <bpmn:incoming>Flow_A15_Charge_A15_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A15_Start_A15_Sub" sourceRef="A15_Start" targetRef="A15_Sub" />
+    <bpmn:sequenceFlow id="Flow_A15_Sub_A15_Join" sourceRef="A15_Sub" targetRef="A15_Join" />
+    <bpmn:sequenceFlow id="Flow_A15_B_A15_Upd" sourceRef="A15_B" targetRef="A15_Upd" />
+    <bpmn:sequenceFlow id="Flow_A15_Upd_A15_Join" sourceRef="A15_Upd" targetRef="A15_Join" />
+    <bpmn:sequenceFlow id="Flow_A15_Join_A15_Charge" sourceRef="A15_Join" targetRef="A15_Charge" />
+    <bpmn:sequenceFlow id="Flow_A15_Charge_A15_End" sourceRef="A15_Charge" targetRef="A15_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_A15_Kreditkarte" name="A15_Kreditkarte" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A15_Zusammenfuehren_mit_ODER">
+    <bpmndi:BPMNPlane id="BPMNPlane_A15_Zusammenfuehren_mit_ODER" bpmnElement="Collaboration_A15_Zusammenfuehren_mit_ODER">
+      <bpmndi:BPMNShape id="P_A15_di" bpmnElement="P_A15" isHorizontal="true"><dc:Bounds x="140" y="40" width="900" height="330" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_Sub_di" bpmnElement="A15_Sub" isExpanded="true"><dc:Bounds x="240" y="80" width="480" height="130" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_Start_di" bpmnElement="A15_Start"><dc:Bounds x="172" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_S_Start_di" bpmnElement="A15_S_Start"><dc:Bounds x="252" y="132" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_T0_di" bpmnElement="A15_T0"><dc:Bounds x="310" y="110" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_T1_di" bpmnElement="A15_T1"><dc:Bounds x="430" y="110" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_T2_di" bpmnElement="A15_T2"><dc:Bounds x="550" y="110" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_S_End_di" bpmnElement="A15_S_End"><dc:Bounds x="667" y="132" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_B_di" bpmnElement="A15_B"><dc:Bounds x="644" y="192" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_Upd_di" bpmnElement="A15_Upd"><dc:Bounds x="612" y="250" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_Join_di" bpmnElement="A15_Join"><dc:Bounds x="775" y="120" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_Charge_di" bpmnElement="A15_Charge"><dc:Bounds x="850" y="105" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A15_End_di" bpmnElement="A15_End"><dc:Bounds x="982" y="127" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A15_S_Start_A15_T0_di" bpmnElement="Flow_A15_S_Start_A15_T0"><di:waypoint x="288" y="150" /><di:waypoint x="310" y="150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_T0_A15_T1_di" bpmnElement="Flow_A15_T0_A15_T1"><di:waypoint x="410" y="150" /><di:waypoint x="430" y="150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_T1_A15_T2_di" bpmnElement="Flow_A15_T1_A15_T2"><di:waypoint x="530" y="150" /><di:waypoint x="550" y="150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_T2_A15_S_End_di" bpmnElement="Flow_A15_T2_A15_S_End"><di:waypoint x="650" y="150" /><di:waypoint x="667" y="150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_Start_A15_Sub_di" bpmnElement="Flow_A15_Start_A15_Sub"><di:waypoint x="208" y="140" /><di:waypoint x="240" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_Sub_A15_Join_di" bpmnElement="Flow_A15_Sub_A15_Join"><di:waypoint x="720" y="145" /><di:waypoint x="775" y="145" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_B_A15_Upd_di" bpmnElement="Flow_A15_B_A15_Upd"><di:waypoint x="662" y="228" /><di:waypoint x="662" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_Upd_A15_Join_di" bpmnElement="Flow_A15_Upd_A15_Join"><di:waypoint x="712" y="290" /><di:waypoint x="800" y="290" /><di:waypoint x="800" y="170" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_Join_A15_Charge_di" bpmnElement="Flow_A15_Join_A15_Charge"><di:waypoint x="825" y="145" /><di:waypoint x="850" y="145" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A15_Charge_A15_End_di" bpmnElement="Flow_A15_Charge_A15_End"><di:waypoint x="950" y="145" /><di:waypoint x="982" y="145" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

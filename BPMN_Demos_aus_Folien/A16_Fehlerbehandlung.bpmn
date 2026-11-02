@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A16_Fehlerbehandlung" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A16_Fehlerbehandlung">
+    <bpmn:participant id="P_A16" name="Travel Booking – Error Handling" processRef="A16_ErrorHandling" />
+  </bpmn:collaboration>
+  <bpmn:process id="A16_ErrorHandling" name="Travel Booking – Error Handling" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 16: An einen Teilprozess können beliebig viele Ereignisse angeheftet werden. Zeitüberschreitung (Demo 2 Min) oder technischer Fehler -&gt; IT-Expert; fachliche Eskalation -&gt; Business Expert. Auslösen, während 'Send Booking Data' offen ist: ./dpe-demo.sh error &lt;taskId&gt; TECH_FEHLER bzw. ./dpe-demo.sh escalate &lt;taskId&gt; FACHPROBLEM. Bestätigung: ./dpe-demo.sh msg A16_Bestaetigung &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A16_Start">
+      <bpmn:outgoing>Flow_A16_Start_A16_Sub</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="A16_Sub" name="Travel Booking">
+      <bpmn:incoming>Flow_A16_Start_A16_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A16_Sub_A16_End</bpmn:outgoing>
+      <bpmn:startEvent id="A16_S_Start">
+        <bpmn:outgoing>Flow_A16_S_Start_A16_S_Send</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="A16_S_Send" name="Send Booking Data (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A16_S_Start_A16_S_Send</bpmn:incoming>
+        <bpmn:outgoing>Flow_A16_S_Send_A16_S_Rec</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:receiveTask id="A16_S_Rec" name="Receive Booking Confirmation" messageRef="Message_A16_Bestaetigung">
+        <bpmn:incoming>Flow_A16_S_Send_A16_S_Rec</bpmn:incoming>
+        <bpmn:outgoing>Flow_A16_S_Rec_A16_S_End</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:endEvent id="A16_S_End">
+        <bpmn:incoming>Flow_A16_S_Rec_A16_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A16_S_Start_A16_S_Send" sourceRef="A16_S_Start" targetRef="A16_S_Send" />
+      <bpmn:sequenceFlow id="Flow_A16_S_Send_A16_S_Rec" sourceRef="A16_S_Send" targetRef="A16_S_Rec" />
+      <bpmn:sequenceFlow id="Flow_A16_S_Rec_A16_S_End" sourceRef="A16_S_Rec" targetRef="A16_S_End" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="A16_BTimer" name="max. 2 Min" attachedToRef="A16_Sub">
+      <bpmn:outgoing>Flow_A16_BTimer_A16_IT</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A16_BTimer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="A16_BErr" name="TECH_FEHLER" attachedToRef="A16_Sub">
+      <bpmn:outgoing>Flow_A16_BErr_A16_IT</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorDef_A16_BErr" errorRef="Error_TECH_FEHLER" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="A16_BEsc" name="FACHPROBLEM" attachedToRef="A16_Sub">
+      <bpmn:outgoing>Flow_A16_BEsc_A16_Biz</bpmn:outgoing>
+      <bpmn:escalationEventDefinition id="EscalationDef_A16_BEsc" escalationRef="Escalation_FACHPROBLEM" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A16_Biz" name="Analyze Error (Business Expert)" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A16_BEsc_A16_Biz</bpmn:incoming>
+      <bpmn:outgoing>Flow_A16_Biz_A16_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A16_IT" name="Analyze Error (IT-Expert)" camunda:assignee="demo">
+      <bpmn:incoming>Flow_A16_BTimer_A16_IT</bpmn:incoming>
+      <bpmn:incoming>Flow_A16_BErr_A16_IT</bpmn:incoming>
+      <bpmn:outgoing>Flow_A16_IT_A16_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A16_End">
+      <bpmn:incoming>Flow_A16_Sub_A16_End</bpmn:incoming>
+      <bpmn:incoming>Flow_A16_Biz_A16_End</bpmn:incoming>
+      <bpmn:incoming>Flow_A16_IT_A16_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A16_Start_A16_Sub" sourceRef="A16_Start" targetRef="A16_Sub" />
+    <bpmn:sequenceFlow id="Flow_A16_Sub_A16_End" sourceRef="A16_Sub" targetRef="A16_End" />
+    <bpmn:sequenceFlow id="Flow_A16_BEsc_A16_Biz" sourceRef="A16_BEsc" targetRef="A16_Biz" />
+    <bpmn:sequenceFlow id="Flow_A16_BTimer_A16_IT" sourceRef="A16_BTimer" targetRef="A16_IT" />
+    <bpmn:sequenceFlow id="Flow_A16_BErr_A16_IT" sourceRef="A16_BErr" targetRef="A16_IT" />
+    <bpmn:sequenceFlow id="Flow_A16_Biz_A16_End" sourceRef="A16_Biz" targetRef="A16_End" />
+    <bpmn:sequenceFlow id="Flow_A16_IT_A16_End" sourceRef="A16_IT" targetRef="A16_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_A16_Bestaetigung" name="A16_Bestaetigung" />
+  <bpmn:error id="Error_TECH_FEHLER" name="TECH_FEHLER" errorCode="TECH_FEHLER" />
+  <bpmn:escalation id="Escalation_FACHPROBLEM" name="FACHPROBLEM" escalationCode="FACHPROBLEM" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A16_Fehlerbehandlung">
+    <bpmndi:BPMNPlane id="BPMNPlane_A16_Fehlerbehandlung" bpmnElement="Collaboration_A16_Fehlerbehandlung">
+      <bpmndi:BPMNShape id="P_A16_di" bpmnElement="P_A16" isHorizontal="true"><dc:Bounds x="140" y="40" width="860" height="400" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_Sub_di" bpmnElement="A16_Sub" isExpanded="true"><dc:Bounds x="250" y="80" width="400" height="130" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_Start_di" bpmnElement="A16_Start"><dc:Bounds x="182" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_S_Start_di" bpmnElement="A16_S_Start"><dc:Bounds x="267" y="127" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_S_Send_di" bpmnElement="A16_S_Send"><dc:Bounds x="340" y="105" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_S_Rec_di" bpmnElement="A16_S_Rec"><dc:Bounds x="470" y="105" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_S_End_di" bpmnElement="A16_S_End"><dc:Bounds x="597" y="127" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_BTimer_di" bpmnElement="A16_BTimer"><dc:Bounds x="352" y="192" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="335" y="232" width="70" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_BErr_di" bpmnElement="A16_BErr"><dc:Bounds x="472" y="192" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="452" y="232" width="77" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_BEsc_di" bpmnElement="A16_BEsc"><dc:Bounds x="592" y="192" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="572" y="232" width="77" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_Biz_di" bpmnElement="A16_Biz"><dc:Bounds x="710" y="240" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_IT_di" bpmnElement="A16_IT"><dc:Bounds x="710" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A16_End_di" bpmnElement="A16_End"><dc:Bounds x="882" y="127" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A16_S_Start_A16_S_Send_di" bpmnElement="Flow_A16_S_Start_A16_S_Send"><di:waypoint x="303" y="145" /><di:waypoint x="340" y="145" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_S_Send_A16_S_Rec_di" bpmnElement="Flow_A16_S_Send_A16_S_Rec"><di:waypoint x="440" y="145" /><di:waypoint x="470" y="145" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_S_Rec_A16_S_End_di" bpmnElement="Flow_A16_S_Rec_A16_S_End"><di:waypoint x="570" y="145" /><di:waypoint x="597" y="145" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_Start_A16_Sub_di" bpmnElement="Flow_A16_Start_A16_Sub"><di:waypoint x="218" y="140" /><di:waypoint x="250" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_Sub_A16_End_di" bpmnElement="Flow_A16_Sub_A16_End"><di:waypoint x="650" y="145" /><di:waypoint x="882" y="145" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_BEsc_A16_Biz_di" bpmnElement="Flow_A16_BEsc_A16_Biz"><di:waypoint x="610" y="228" /><di:waypoint x="610" y="280" /><di:waypoint x="710" y="280" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_BTimer_A16_IT_di" bpmnElement="Flow_A16_BTimer_A16_IT"><di:waypoint x="370" y="228" /><di:waypoint x="370" y="380" /><di:waypoint x="710" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_BErr_A16_IT_di" bpmnElement="Flow_A16_BErr_A16_IT"><di:waypoint x="490" y="228" /><di:waypoint x="490" y="380" /><di:waypoint x="710" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_Biz_A16_End_di" bpmnElement="Flow_A16_Biz_A16_End"><di:waypoint x="810" y="280" /><di:waypoint x="900" y="280" /><di:waypoint x="900" y="163" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A16_IT_A16_End_di" bpmnElement="Flow_A16_IT_A16_End"><di:waypoint x="810" y="380" /><di:waypoint x="940" y="380" /><di:waypoint x="940" y="145" /><di:waypoint x="918" y="145" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

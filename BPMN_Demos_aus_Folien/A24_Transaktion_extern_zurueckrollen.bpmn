@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A24_Transaktion_extern_zurueckrollen" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A24_Transaktion_extern_zurueckrollen">
+    <bpmn:participant id="P_A24_PDA" name="Process Driven Application" />
+    <bpmn:participant id="P_A24_SCIL" name="Service Contract Implementation Layer" processRef="A24_ServiceContract" />
+    <bpmn:participant id="P_A24_SP" name="Service Provider" />
+    <bpmn:messageFlow id="MsgFlow_P_A24_PDA_A24_Start" sourceRef="P_A24_PDA" targetRef="A24_Start" />
+    <bpmn:messageFlow id="MsgFlow_A24_EndOk_P_A24_PDA" sourceRef="A24_EndOk" targetRef="P_A24_PDA" />
+    <bpmn:messageFlow id="MsgFlow_A24_EndErr_P_A24_PDA" sourceRef="A24_EndErr" targetRef="P_A24_PDA" />
+  </bpmn:collaboration>
+  <bpmn:process id="A24_ServiceContract" name="Service Contract Implementation Layer" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 24: Nachträgliches Kompensieren. Die Transaktion ist schon erfolgreich beendet; erst 'Check Result' entscheidet, dass das Ergebnis nicht passt (Result ok? = Nein). Das Kompensations-Zwischenereignis rollt die ABGESCHLOSSENE Transaktion zurück – die Engine bewahrt dafür ihr Logbuch auf.</bpmn:documentation>
+    <bpmn:startEvent id="A24_Start" name="Service-Request">
+      <bpmn:outgoing>Flow_A24_Start_A24_Tx</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A24_Start" messageRef="Message_A24_ServiceRequest" />
+    </bpmn:startEvent>
+    <bpmn:transaction id="A24_Tx" name="Transaction">
+      <bpmn:incoming>Flow_A24_Start_A24_Tx</bpmn:incoming>
+      <bpmn:outgoing>Flow_A24_Tx_A24_Check</bpmn:outgoing>
+      <bpmn:startEvent id="A24_T_Start">
+        <bpmn:outgoing>Flow_A24_T_Start_A24_B0</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="A24_B0" name="Service 1 (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). Fehler auslösen: ./dpe-demo.sh error &lt;taskId&gt; BUCHUNG_FEHLGESCHLAGEN</bpmn:documentation>
+        <bpmn:incoming>Flow_A24_T_Start_A24_B0</bpmn:incoming>
+        <bpmn:outgoing>Flow_A24_B0_A24_B1</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A24_CB0" attachedToRef="A24_B0">
+        <bpmn:compensateEventDefinition id="CompensateDef_A24_CB0" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A24_CH0" name="Compensation Service 1" camunda:assignee="demo" isForCompensation="true">
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A24_EB0" attachedToRef="A24_B0">
+        <bpmn:outgoing>Flow_A24_EB0_A24_T_Cancel</bpmn:outgoing>
+        <bpmn:errorEventDefinition id="ErrorDef_A24_EB0" errorRef="Error_BUCHUNG_FEHLGESCHLAGEN" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A24_B1" name="Service 2 (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). Fehler auslösen: ./dpe-demo.sh error &lt;taskId&gt; BUCHUNG_FEHLGESCHLAGEN</bpmn:documentation>
+        <bpmn:incoming>Flow_A24_B0_A24_B1</bpmn:incoming>
+        <bpmn:outgoing>Flow_A24_B1_A24_B2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A24_CB1" attachedToRef="A24_B1">
+        <bpmn:compensateEventDefinition id="CompensateDef_A24_CB1" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A24_CH1" name="Compensation Service 2" camunda:assignee="demo" isForCompensation="true">
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A24_EB1" attachedToRef="A24_B1">
+        <bpmn:outgoing>Flow_A24_EB1_A24_T_Cancel</bpmn:outgoing>
+        <bpmn:errorEventDefinition id="ErrorDef_A24_EB1" errorRef="Error_BUCHUNG_FEHLGESCHLAGEN" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A24_B2" name="Service 3 (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). Fehler auslösen: ./dpe-demo.sh error &lt;taskId&gt; BUCHUNG_FEHLGESCHLAGEN</bpmn:documentation>
+        <bpmn:incoming>Flow_A24_B1_A24_B2</bpmn:incoming>
+        <bpmn:outgoing>Flow_A24_B2_A24_T_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A24_CB2" attachedToRef="A24_B2">
+        <bpmn:compensateEventDefinition id="CompensateDef_A24_CB2" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A24_CH2" name="Compensation Service 3" camunda:assignee="demo" isForCompensation="true">
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A24_EB2" attachedToRef="A24_B2">
+        <bpmn:outgoing>Flow_A24_EB2_A24_T_Cancel</bpmn:outgoing>
+        <bpmn:errorEventDefinition id="ErrorDef_A24_EB2" errorRef="Error_BUCHUNG_FEHLGESCHLAGEN" />
+      </bpmn:boundaryEvent>
+      <bpmn:endEvent id="A24_T_End">
+        <bpmn:incoming>Flow_A24_B2_A24_T_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="A24_T_Cancel" name="Cancel End Event">
+        <bpmn:incoming>Flow_A24_EB0_A24_T_Cancel</bpmn:incoming>
+        <bpmn:incoming>Flow_A24_EB1_A24_T_Cancel</bpmn:incoming>
+        <bpmn:incoming>Flow_A24_EB2_A24_T_Cancel</bpmn:incoming>
+        <bpmn:cancelEventDefinition id="CancelDef_A24_T_Cancel" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A24_T_Start_A24_B0" sourceRef="A24_T_Start" targetRef="A24_B0" />
+      <bpmn:sequenceFlow id="Flow_A24_B0_A24_B1" sourceRef="A24_B0" targetRef="A24_B1" />
+      <bpmn:sequenceFlow id="Flow_A24_B1_A24_B2" sourceRef="A24_B1" targetRef="A24_B2" />
+      <bpmn:sequenceFlow id="Flow_A24_B2_A24_T_End" sourceRef="A24_B2" targetRef="A24_T_End" />
+      <bpmn:sequenceFlow id="Flow_A24_EB0_A24_T_Cancel" sourceRef="A24_EB0" targetRef="A24_T_Cancel" />
+      <bpmn:sequenceFlow id="Flow_A24_EB1_A24_T_Cancel" sourceRef="A24_EB1" targetRef="A24_T_Cancel" />
+      <bpmn:sequenceFlow id="Flow_A24_EB2_A24_T_Cancel" sourceRef="A24_EB2" targetRef="A24_T_Cancel" />
+      <bpmn:association id="Assoc_A24_CB0_A24_CH0" associationDirection="One" sourceRef="A24_CB0" targetRef="A24_CH0" />
+      <bpmn:association id="Assoc_A24_CB1_A24_CH1" associationDirection="One" sourceRef="A24_CB1" targetRef="A24_CH1" />
+      <bpmn:association id="Assoc_A24_CB2_A24_CH2" associationDirection="One" sourceRef="A24_CB2" targetRef="A24_CH2" />
+    </bpmn:transaction>
+    <bpmn:boundaryEvent id="A24_BCancel" attachedToRef="A24_Tx">
+      <bpmn:outgoing>Flow_A24_BCancel_A24_Merge</bpmn:outgoing>
+      <bpmn:cancelEventDefinition id="CancelDef_A24_BCancel" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A24_Check" name="Check Result" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="resultOk" label="Result ok?" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_A24_Tx_A24_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_A24_Check_A24_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="A24_Gw" name="Result ok?">
+      <bpmn:incoming>Flow_A24_Check_A24_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_A24_Gw_A24_EndOk</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A24_Gw_A24_Comp</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="A24_EndOk" name="Service-Response">
+      <bpmn:incoming>Flow_A24_Gw_A24_EndOk</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A24_EndOk" messageRef="Message_A24_Response" camunda:expression="${execution.setVariable('letzteNachricht', 'Ergebnis bestätigt')}" />
+    </bpmn:endEvent>
+    <bpmn:intermediateThrowEvent id="A24_Comp" name="Transaction zurückrollen">
+      <bpmn:incoming>Flow_A24_Gw_A24_Comp</bpmn:incoming>
+      <bpmn:outgoing>Flow_A24_Comp_A24_Merge</bpmn:outgoing>
+      <bpmn:compensateEventDefinition id="CompensateDef_A24_Comp" activityRef="A24_Tx" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:exclusiveGateway id="A24_Merge">
+      <bpmn:incoming>Flow_A24_Comp_A24_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_A24_BCancel_A24_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_A24_Merge_A24_EndErr</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="A24_EndErr" name="Error Message">
+      <bpmn:incoming>Flow_A24_Merge_A24_EndErr</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A24_EndErr" messageRef="Message_A24_Error" camunda:expression="${execution.setVariable('letzteNachricht', 'Vorgang zurückgerollt')}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A24_Start_A24_Tx" sourceRef="A24_Start" targetRef="A24_Tx" />
+    <bpmn:sequenceFlow id="Flow_A24_Tx_A24_Check" sourceRef="A24_Tx" targetRef="A24_Check" />
+    <bpmn:sequenceFlow id="Flow_A24_Check_A24_Gw" sourceRef="A24_Check" targetRef="A24_Gw" />
+    <bpmn:sequenceFlow id="Flow_A24_Gw_A24_EndOk" name="Yes" sourceRef="A24_Gw" targetRef="A24_EndOk">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${resultOk}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A24_Gw_A24_Comp" name="No" sourceRef="A24_Gw" targetRef="A24_Comp">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!resultOk}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_A24_Comp_A24_Merge" sourceRef="A24_Comp" targetRef="A24_Merge" />
+    <bpmn:sequenceFlow id="Flow_A24_BCancel_A24_Merge" sourceRef="A24_BCancel" targetRef="A24_Merge" />
+    <bpmn:sequenceFlow id="Flow_A24_Merge_A24_EndErr" sourceRef="A24_Merge" targetRef="A24_EndErr" />
+  </bpmn:process>
+  <bpmn:message id="Message_A24_ServiceRequest" name="A24_ServiceRequest" />
+  <bpmn:message id="Message_A24_Response" name="A24_Response" />
+  <bpmn:message id="Message_A24_Error" name="A24_Error" />
+  <bpmn:error id="Error_BUCHUNG_FEHLGESCHLAGEN" name="BUCHUNG_FEHLGESCHLAGEN" errorCode="BUCHUNG_FEHLGESCHLAGEN" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A24_Transaktion_extern_zurueckrollen">
+    <bpmndi:BPMNPlane id="BPMNPlane_A24_Transaktion_extern_zurueckrollen" bpmnElement="Collaboration_A24_Transaktion_extern_zurueckrollen">
+      <bpmndi:BPMNShape id="P_A24_PDA_di" bpmnElement="P_A24_PDA" isHorizontal="true"><dc:Bounds x="140" y="40" width="1100" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A24_SCIL_di" bpmnElement="P_A24_SCIL" isHorizontal="true"><dc:Bounds x="140" y="140" width="1100" height="330" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A24_SP_di" bpmnElement="P_A24_SP" isHorizontal="true"><dc:Bounds x="140" y="510" width="1100" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_Tx_di" bpmnElement="A24_Tx" isExpanded="true"><dc:Bounds x="260" y="180" width="560" height="250" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_Start_di" bpmnElement="A24_Start"><dc:Bounds x="182" y="232" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="148" y="272" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_T_Start_di" bpmnElement="A24_T_Start"><dc:Bounds x="282" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_B0_di" bpmnElement="A24_B0"><dc:Bounds x="350" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_CB0_di" bpmnElement="A24_CB0"><dc:Bounds x="352" y="272" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_CH0_di" bpmnElement="A24_CH0"><dc:Bounds x="380" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_EB0_di" bpmnElement="A24_EB0"><dc:Bounds x="412" y="272" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_B1_di" bpmnElement="A24_B1"><dc:Bounds x="500" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_CB1_di" bpmnElement="A24_CB1"><dc:Bounds x="502" y="272" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_CH1_di" bpmnElement="A24_CH1"><dc:Bounds x="530" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_EB1_di" bpmnElement="A24_EB1"><dc:Bounds x="562" y="272" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_B2_di" bpmnElement="A24_B2"><dc:Bounds x="650" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_CB2_di" bpmnElement="A24_CB2"><dc:Bounds x="652" y="272" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_CH2_di" bpmnElement="A24_CH2"><dc:Bounds x="680" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_EB2_di" bpmnElement="A24_EB2"><dc:Bounds x="712" y="272" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_T_End_di" bpmnElement="A24_T_End"><dc:Bounds x="762" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_T_Cancel_di" bpmnElement="A24_T_Cancel"><dc:Bounds x="762" y="302" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="802" y="313" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_BCancel_di" bpmnElement="A24_BCancel"><dc:Bounds x="757" y="412" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_Check_di" bpmnElement="A24_Check"><dc:Bounds x="850" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_Gw_di" bpmnElement="A24_Gw" isMarkerVisible="true"><dc:Bounds x="995" y="225" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="985" y="195" width="70" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_EndOk_di" bpmnElement="A24_EndOk"><dc:Bounds x="1132" y="232" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1094" y="272" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_Comp_di" bpmnElement="A24_Comp"><dc:Bounds x="1002" y="322" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1042" y="333" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_Merge_di" bpmnElement="A24_Merge" isMarkerVisible="true"><dc:Bounds x="995" y="415" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A24_EndErr_di" bpmnElement="A24_EndErr"><dc:Bounds x="1132" y="422" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1104" y="462" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A24_T_Start_A24_B0_di" bpmnElement="Flow_A24_T_Start_A24_B0"><di:waypoint x="318" y="250" /><di:waypoint x="350" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_B0_A24_B1_di" bpmnElement="Flow_A24_B0_A24_B1"><di:waypoint x="450" y="250" /><di:waypoint x="500" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_B1_A24_B2_di" bpmnElement="Flow_A24_B1_A24_B2"><di:waypoint x="600" y="250" /><di:waypoint x="650" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_B2_A24_T_End_di" bpmnElement="Flow_A24_B2_A24_T_End"><di:waypoint x="750" y="250" /><di:waypoint x="762" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_EB0_A24_T_Cancel_di" bpmnElement="Flow_A24_EB0_A24_T_Cancel"><di:waypoint x="430" y="308" /><di:waypoint x="430" y="320" /><di:waypoint x="762" y="320" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_EB1_A24_T_Cancel_di" bpmnElement="Flow_A24_EB1_A24_T_Cancel"><di:waypoint x="580" y="308" /><di:waypoint x="580" y="320" /><di:waypoint x="762" y="320" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_EB2_A24_T_Cancel_di" bpmnElement="Flow_A24_EB2_A24_T_Cancel"><di:waypoint x="730" y="308" /><di:waypoint x="730" y="320" /><di:waypoint x="762" y="320" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_Start_A24_Tx_di" bpmnElement="Flow_A24_Start_A24_Tx"><di:waypoint x="218" y="250" /><di:waypoint x="260" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_Tx_A24_Check_di" bpmnElement="Flow_A24_Tx_A24_Check"><di:waypoint x="820" y="250" /><di:waypoint x="850" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_Check_A24_Gw_di" bpmnElement="Flow_A24_Check_A24_Gw"><di:waypoint x="950" y="250" /><di:waypoint x="995" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_Gw_A24_EndOk_di" bpmnElement="Flow_A24_Gw_A24_EndOk"><di:waypoint x="1045" y="250" /><di:waypoint x="1132" y="250" /><bpmndi:BPMNLabel><dc:Bounds x="1060" y="232" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_Gw_A24_Comp_di" bpmnElement="Flow_A24_Gw_A24_Comp"><di:waypoint x="1020" y="275" /><di:waypoint x="1020" y="322" /><bpmndi:BPMNLabel><dc:Bounds x="1025" y="292" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_Comp_A24_Merge_di" bpmnElement="Flow_A24_Comp_A24_Merge"><di:waypoint x="1020" y="358" /><di:waypoint x="1020" y="415" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_BCancel_A24_Merge_di" bpmnElement="Flow_A24_BCancel_A24_Merge"><di:waypoint x="775" y="448" /><di:waypoint x="775" y="440" /><di:waypoint x="995" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A24_Merge_A24_EndErr_di" bpmnElement="Flow_A24_Merge_A24_EndErr"><di:waypoint x="1045" y="440" /><di:waypoint x="1132" y="440" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A24_PDA_A24_Start_di" bpmnElement="MsgFlow_P_A24_PDA_A24_Start"><di:waypoint x="200" y="100" /><di:waypoint x="200" y="232" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A24_EndOk_P_A24_PDA_di" bpmnElement="MsgFlow_A24_EndOk_P_A24_PDA"><di:waypoint x="1150" y="232" /><di:waypoint x="1150" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A24_EndErr_P_A24_PDA_di" bpmnElement="MsgFlow_A24_EndErr_P_A24_PDA"><di:waypoint x="1150" y="422" /><di:waypoint x="1150" y="380" /><di:waypoint x="1210" y="380" /><di:waypoint x="1210" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_A24_CB0_A24_CH0_di" bpmnElement="Assoc_A24_CB0_A24_CH0"><di:waypoint x="370" y="308" /><di:waypoint x="370" y="380" /><di:waypoint x="380" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_A24_CB1_A24_CH1_di" bpmnElement="Assoc_A24_CB1_A24_CH1"><di:waypoint x="520" y="308" /><di:waypoint x="520" y="380" /><di:waypoint x="530" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_A24_CB2_A24_CH2_di" bpmnElement="Assoc_A24_CB2_A24_CH2"><di:waypoint x="670" y="308" /><di:waypoint x="670" y="380" /><di:waypoint x="680" y="380" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_C05_Messaging_ActiveMQ" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_C05_Messaging_ActiveMQ">
+    <bpmn:participant id="P_C05" name="Send to Target Systems" processRef="C05_SendToTargetSystems" />
+  </bpmn:collaboration>
+  <bpmn:process id="C05_SendToTargetSystems" name="Send to Target Systems" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>09 Entwicklung PDA mit Integration, Folien 19–22. Der Send Task nutzt den HTTP-Connector, um eine JSON-Nachricht über die REST-Schnittstelle von ActiveMQ Classic in die Queue PDA_OrderQueue zu legen: POST http://host.docker.internal:8161/api/message/PDA_OrderQueue?type=queue, Header Content-Type und Authorization 'Basic YWRtaW46YWRtaW4=' (= Base64 von admin:admin). Auf der Folie ist das der Schritt NACH der Aggregation (siehe L05); hier vereinfacht als eigener Prozess mit einer eingegebenen Bestellliste. VORAUSSETZUNG: ActiveMQ Classic läuft (Weboberfläche http://localhost:8161, admin/admin).</bpmn:documentation>
+    <bpmn:startEvent id="C05_Start">
+      <bpmn:outgoing>Flow_C05_Start_C05_Input</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="C05_Input" name="Bestellliste erfassen" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="orderList" label="Bestellliste als JSON" type="string" defaultValue='[{"product":"Fahrrad","quantity":1},{"product":"Fahrrad","quantity":2}]' />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C05_Start_C05_Input</bpmn:incoming>
+      <bpmn:outgoing>Flow_C05_Input_C05_Send</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="C05_Send" name="Send to Target Systems">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">http://host.docker.internal:8161/api/message/PDA_OrderQueue?type=queue</camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers"><camunda:map><camunda:entry key="Content-Type">application/json</camunda:entry><camunda:entry key="Authorization">Basic YWRtaW46YWRtaW4=</camunda:entry></camunda:map></camunda:inputParameter>
+            <camunda:inputParameter name="payload"><camunda:script scriptFormat="JavaScript">var orderList = JSON.parse(execution.getVariable("orderList").toString());
+JSON.stringify({
+    items: orderList
+});</camunda:script></camunda:inputParameter>
+            <camunda:outputParameter name="antwortActiveMQ">${response}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C05_Input_C05_Send</bpmn:incoming>
+      <bpmn:outgoing>Flow_C05_Send_C05_Check</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="C05_Check" name="Antwort prüfen" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="antwortActiveMQ" label="Antwort von ActiveMQ" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C05_Send_C05_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_C05_Check_C05_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="C05_End">
+      <bpmn:incoming>Flow_C05_Check_C05_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C05_Start_C05_Input" sourceRef="C05_Start" targetRef="C05_Input" />
+    <bpmn:sequenceFlow id="Flow_C05_Input_C05_Send" sourceRef="C05_Input" targetRef="C05_Send" />
+    <bpmn:sequenceFlow id="Flow_C05_Send_C05_Check" sourceRef="C05_Send" targetRef="C05_Check" />
+    <bpmn:sequenceFlow id="Flow_C05_Check_C05_End" sourceRef="C05_Check" targetRef="C05_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_C05_Messaging_ActiveMQ">
+    <bpmndi:BPMNPlane id="BPMNPlane_C05_Messaging_ActiveMQ" bpmnElement="Collaboration_C05_Messaging_ActiveMQ">
+      <bpmndi:BPMNShape id="P_C05_di" bpmnElement="P_C05" isHorizontal="true"><dc:Bounds x="140" y="40" width="720" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C05_Start_di" bpmnElement="C05_Start"><dc:Bounds x="182" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C05_Input_di" bpmnElement="C05_Input"><dc:Bounds x="270" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C05_Send_di" bpmnElement="C05_Send"><dc:Bounds x="440" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C05_Check_di" bpmnElement="C05_Check"><dc:Bounds x="600" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C05_End_di" bpmnElement="C05_End"><dc:Bounds x="762" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_C05_Start_C05_Input_di" bpmnElement="Flow_C05_Start_C05_Input"><di:waypoint x="218" y="140" /><di:waypoint x="270" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C05_Input_C05_Send_di" bpmnElement="Flow_C05_Input_C05_Send"><di:waypoint x="370" y="140" /><di:waypoint x="440" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C05_Send_C05_Check_di" bpmnElement="Flow_C05_Send_C05_Check"><di:waypoint x="540" y="140" /><di:waypoint x="600" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C05_Check_C05_End_di" bpmnElement="Flow_C05_Check_C05_End"><di:waypoint x="700" y="140" /><di:waypoint x="762" y="140" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

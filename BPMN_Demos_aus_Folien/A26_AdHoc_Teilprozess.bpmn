@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A26_AdHoc_Teilprozess" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A26_AdHoc_Teilprozess">
+    <bpmn:participant id="P_A26" name="Ad-hoc Subprocess (nur Ansicht)" processRef="A26_AdHoc" />
+  </bpmn:collaboration>
+  <bpmn:process id="A26_AdHoc" name="Ad-hoc Subprocess (nur Ansicht)" isExecutable="false">
+    <bpmn:documentation>Folie 26: Ad-hoc-Teilprozess (Tilde-Marker). Reihenfolge nicht vorab festgelegt; Aktivitäten ohne eingehenden Fluss sind sofort verfügbar. Attribute: ordering (Sequential/Parallel), completionCondition, cancelRemainingInstances. Camunda 7 / CIB seven führen Ad-hoc-Teilprozesse NICHT aus – nur zur Ansicht.</bpmn:documentation>
+    <bpmn:startEvent id="A26_Start">
+      <bpmn:outgoing>Flow_A26_Start_A26_Sub</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:adHocSubProcess id="A26_Sub" name="Ad-hoc Subprocess" ordering="Parallel">
+      <bpmn:incoming>Flow_A26_Start_A26_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A26_Sub_A26_End</bpmn:outgoing>
+      <bpmn:userTask id="A26_T1" name="Task 1" camunda:assignee="demo">
+        <bpmn:outgoing>Flow_A26_T1_A26_T2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="A26_T2" name="Task 2" camunda:assignee="demo">
+        <bpmn:incoming>Flow_A26_T1_A26_T2</bpmn:incoming>
+      </bpmn:userTask>
+      <bpmn:userTask id="A26_T3" name="Task 3" camunda:assignee="demo">
+      </bpmn:userTask>
+      <bpmn:userTask id="A26_T4" name="Task 4" camunda:assignee="demo">
+      </bpmn:userTask>
+      <bpmn:userTask id="A26_T5" name="Task 5" camunda:assignee="demo">
+      </bpmn:userTask>
+      <bpmn:sequenceFlow id="Flow_A26_T1_A26_T2" sourceRef="A26_T1" targetRef="A26_T2" />
+      <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${zielErreicht}</bpmn:completionCondition>
+    </bpmn:adHocSubProcess>
+    <bpmn:endEvent id="A26_End">
+      <bpmn:incoming>Flow_A26_Sub_A26_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A26_Start_A26_Sub" sourceRef="A26_Start" targetRef="A26_Sub" />
+    <bpmn:sequenceFlow id="Flow_A26_Sub_A26_End" sourceRef="A26_Sub" targetRef="A26_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A26_AdHoc_Teilprozess">
+    <bpmndi:BPMNPlane id="BPMNPlane_A26_AdHoc_Teilprozess" bpmnElement="Collaboration_A26_AdHoc_Teilprozess">
+      <bpmndi:BPMNShape id="P_A26_di" bpmnElement="P_A26" isHorizontal="true"><dc:Bounds x="140" y="40" width="760" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_Sub_di" bpmnElement="A26_Sub" isExpanded="true"><dc:Bounds x="260" y="80" width="520" height="290" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_Start_di" bpmnElement="A26_Start"><dc:Bounds x="182" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_T1_di" bpmnElement="A26_T1"><dc:Bounds x="310" y="110" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_T2_di" bpmnElement="A26_T2"><dc:Bounds x="510" y="110" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_T3_di" bpmnElement="A26_T3"><dc:Bounds x="310" y="250" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_T4_di" bpmnElement="A26_T4"><dc:Bounds x="470" y="250" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_T5_di" bpmnElement="A26_T5"><dc:Bounds x="630" y="250" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A26_End_di" bpmnElement="A26_End"><dc:Bounds x="822" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A26_T1_A26_T2_di" bpmnElement="Flow_A26_T1_A26_T2"><di:waypoint x="410" y="150" /><di:waypoint x="510" y="150" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A26_Start_A26_Sub_di" bpmnElement="Flow_A26_Start_A26_Sub"><di:waypoint x="218" y="220" /><di:waypoint x="260" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A26_Sub_A26_End_di" bpmnElement="Flow_A26_Sub_A26_End"><di:waypoint x="780" y="220" /><di:waypoint x="822" y="220" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

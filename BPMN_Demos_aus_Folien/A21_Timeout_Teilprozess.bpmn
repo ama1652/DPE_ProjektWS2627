@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A21_Timeout_Teilprozess" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A21_Timeout_Teilprozess">
+    <bpmn:participant id="P_A21_PDA" name="Process Driven Application" />
+    <bpmn:participant id="P_A21_SCIL" name="Service Contract Implementation Layer" processRef="A21_ServiceContract" />
+    <bpmn:participant id="P_A21_SP" name="Service Provider" />
+    <bpmn:messageFlow id="MsgFlow_P_A21_PDA_A21_Start" sourceRef="P_A21_PDA" targetRef="A21_Start" />
+    <bpmn:messageFlow id="MsgFlow_A21_S_Send_P_A21_SP" sourceRef="A21_S_Send" targetRef="P_A21_SP" />
+    <bpmn:messageFlow id="MsgFlow_P_A21_SP_A21_S_Rec" sourceRef="P_A21_SP" targetRef="A21_S_Rec" />
+    <bpmn:messageFlow id="MsgFlow_A21_EndOk_P_A21_PDA" sourceRef="A21_EndOk" targetRef="P_A21_PDA" />
+    <bpmn:messageFlow id="MsgFlow_A21_EndErr_P_A21_PDA" sourceRef="A21_EndErr" targetRef="P_A21_PDA" />
+  </bpmn:collaboration>
+  <bpmn:process id="A21_ServiceContract" name="Service Contract Implementation Layer" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 21: Zwei Zeitüberwachungen: innen 15 s nicht unterbrechend (-&gt; Analyze Delay), außen am Teilprozess max. 5 Minuten (Demo: 2 Min) unterbrechend -&gt; Fehlermeldung. Der äußere Timer überwacht den GANZEN Teilprozess. Antwort: ./dpe-demo.sh msg A21_Antwort &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A21_Start" name="Service-Request">
+      <bpmn:outgoing>Flow_A21_Start_A21_Sub</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A21_Start" messageRef="Message_A21_ServiceRequest" />
+    </bpmn:startEvent>
+    <bpmn:subProcess id="A21_Sub" name="Sub-Process">
+      <bpmn:incoming>Flow_A21_Start_A21_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A21_Sub_A21_EndOk</bpmn:outgoing>
+      <bpmn:startEvent id="A21_S_Start">
+        <bpmn:outgoing>Flow_A21_S_Start_A21_S_Send</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sendTask id="A21_S_Send" name="Send Request to Service Provider" camunda:expression="${execution.setVariable('letzteNachricht', 'Anfrage an Service Provider')}">
+        <bpmn:incoming>Flow_A21_S_Start_A21_S_Send</bpmn:incoming>
+        <bpmn:outgoing>Flow_A21_S_Send_A21_S_Rec</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:receiveTask id="A21_S_Rec" name="Wait for Response from Service Provider" messageRef="Message_A21_Antwort">
+        <bpmn:incoming>Flow_A21_S_Send_A21_S_Rec</bpmn:incoming>
+        <bpmn:outgoing>Flow_A21_S_Rec_A21_S_End</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:endEvent id="A21_S_End">
+        <bpmn:incoming>Flow_A21_S_Rec_A21_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:userTask id="A21_S_Analyze" name="Analyze Delay" camunda:assignee="demo">
+        <bpmn:incoming>Flow_A21_S_BT_A21_S_Analyze</bpmn:incoming>
+        <bpmn:outgoing>Flow_A21_S_Analyze_A21_S_End2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="A21_S_End2">
+        <bpmn:incoming>Flow_A21_S_Analyze_A21_S_End2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:boundaryEvent id="A21_S_BT" name="max. 15 sec." attachedToRef="A21_S_Rec" cancelActivity="false">
+        <bpmn:outgoing>Flow_A21_S_BT_A21_S_Analyze</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="TimerDef_A21_S_BT">
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15S</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:sequenceFlow id="Flow_A21_S_Start_A21_S_Send" sourceRef="A21_S_Start" targetRef="A21_S_Send" />
+      <bpmn:sequenceFlow id="Flow_A21_S_Send_A21_S_Rec" sourceRef="A21_S_Send" targetRef="A21_S_Rec" />
+      <bpmn:sequenceFlow id="Flow_A21_S_Rec_A21_S_End" sourceRef="A21_S_Rec" targetRef="A21_S_End" />
+      <bpmn:sequenceFlow id="Flow_A21_S_BT_A21_S_Analyze" sourceRef="A21_S_BT" targetRef="A21_S_Analyze" />
+      <bpmn:sequenceFlow id="Flow_A21_S_Analyze_A21_S_End2" sourceRef="A21_S_Analyze" targetRef="A21_S_End2" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="A21_BT" name="max. 5 Minutes (Demo: 2 Min)" attachedToRef="A21_Sub">
+      <bpmn:outgoing>Flow_A21_BT_A21_EndErr</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A21_BT">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="A21_EndOk" name="Service-Response">
+      <bpmn:incoming>Flow_A21_Sub_A21_EndOk</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A21_EndOk" messageRef="Message_A21_Response" camunda:expression="${execution.setVariable('letzteNachricht', 'Antwort an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="A21_EndErr" name="Error Message">
+      <bpmn:incoming>Flow_A21_BT_A21_EndErr</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A21_EndErr" messageRef="Message_A21_Error" camunda:expression="${execution.setVariable('letzteNachricht', 'Fehlermeldung an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A21_Start_A21_Sub" sourceRef="A21_Start" targetRef="A21_Sub" />
+    <bpmn:sequenceFlow id="Flow_A21_Sub_A21_EndOk" sourceRef="A21_Sub" targetRef="A21_EndOk" />
+    <bpmn:sequenceFlow id="Flow_A21_BT_A21_EndErr" sourceRef="A21_BT" targetRef="A21_EndErr" />
+  </bpmn:process>
+  <bpmn:message id="Message_A21_ServiceRequest" name="A21_ServiceRequest" />
+  <bpmn:message id="Message_A21_Antwort" name="A21_Antwort" />
+  <bpmn:message id="Message_A21_Response" name="A21_Response" />
+  <bpmn:message id="Message_A21_Error" name="A21_Error" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A21_Timeout_Teilprozess">
+    <bpmndi:BPMNPlane id="BPMNPlane_A21_Timeout_Teilprozess" bpmnElement="Collaboration_A21_Timeout_Teilprozess">
+      <bpmndi:BPMNShape id="P_A21_PDA_di" bpmnElement="P_A21_PDA" isHorizontal="true"><dc:Bounds x="140" y="40" width="900" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A21_SCIL_di" bpmnElement="P_A21_SCIL" isHorizontal="true"><dc:Bounds x="140" y="140" width="900" height="320" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A21_SP_di" bpmnElement="P_A21_SP" isHorizontal="true"><dc:Bounds x="140" y="500" width="900" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_Sub_di" bpmnElement="A21_Sub" isExpanded="true"><dc:Bounds x="250" y="170" width="560" height="230" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_Start_di" bpmnElement="A21_Start"><dc:Bounds x="182" y="262" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="148" y="302" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_S_Start_di" bpmnElement="A21_S_Start"><dc:Bounds x="267" y="212" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_S_Send_di" bpmnElement="A21_S_Send"><dc:Bounds x="330" y="190" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_S_Rec_di" bpmnElement="A21_S_Rec"><dc:Bounds x="470" y="190" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_S_End_di" bpmnElement="A21_S_End"><dc:Bounds x="742" y="212" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_S_Analyze_di" bpmnElement="A21_S_Analyze"><dc:Bounds x="610" y="290" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_S_End2_di" bpmnElement="A21_S_End2"><dc:Bounds x="742" y="312" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_S_BT_di" bpmnElement="A21_S_BT"><dc:Bounds x="537" y="252" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="513" y="292" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_BT_di" bpmnElement="A21_BT"><dc:Bounds x="540" y="382" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="488" y="422" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_EndOk_di" bpmnElement="A21_EndOk"><dc:Bounds x="862" y="262" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="824" y="302" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A21_EndErr_di" bpmnElement="A21_EndErr"><dc:Bounds x="942" y="412" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="914" y="452" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A21_S_Start_A21_S_Send_di" bpmnElement="Flow_A21_S_Start_A21_S_Send"><di:waypoint x="303" y="230" /><di:waypoint x="330" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A21_S_Send_A21_S_Rec_di" bpmnElement="Flow_A21_S_Send_A21_S_Rec"><di:waypoint x="430" y="230" /><di:waypoint x="470" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A21_S_Rec_A21_S_End_di" bpmnElement="Flow_A21_S_Rec_A21_S_End"><di:waypoint x="570" y="230" /><di:waypoint x="742" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A21_S_BT_A21_S_Analyze_di" bpmnElement="Flow_A21_S_BT_A21_S_Analyze"><di:waypoint x="555" y="288" /><di:waypoint x="555" y="330" /><di:waypoint x="610" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A21_S_Analyze_A21_S_End2_di" bpmnElement="Flow_A21_S_Analyze_A21_S_End2"><di:waypoint x="710" y="330" /><di:waypoint x="742" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A21_Start_A21_Sub_di" bpmnElement="Flow_A21_Start_A21_Sub"><di:waypoint x="218" y="280" /><di:waypoint x="250" y="280" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A21_Sub_A21_EndOk_di" bpmnElement="Flow_A21_Sub_A21_EndOk"><di:waypoint x="810" y="280" /><di:waypoint x="862" y="280" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A21_BT_A21_EndErr_di" bpmnElement="Flow_A21_BT_A21_EndErr"><di:waypoint x="558" y="418" /><di:waypoint x="558" y="430" /><di:waypoint x="942" y="430" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A21_PDA_A21_Start_di" bpmnElement="MsgFlow_P_A21_PDA_A21_Start"><di:waypoint x="200" y="100" /><di:waypoint x="200" y="262" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A21_S_Send_P_A21_SP_di" bpmnElement="MsgFlow_A21_S_Send_P_A21_SP"><di:waypoint x="380" y="270" /><di:waypoint x="380" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A21_SP_A21_S_Rec_di" bpmnElement="MsgFlow_P_A21_SP_A21_S_Rec"><di:waypoint x="500" y="500" /><di:waypoint x="500" y="270" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A21_EndOk_P_A21_PDA_di" bpmnElement="MsgFlow_A21_EndOk_P_A21_PDA"><di:waypoint x="880" y="262" /><di:waypoint x="880" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A21_EndErr_P_A21_PDA_di" bpmnElement="MsgFlow_A21_EndErr_P_A21_PDA"><di:waypoint x="960" y="412" /><di:waypoint x="960" y="100" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

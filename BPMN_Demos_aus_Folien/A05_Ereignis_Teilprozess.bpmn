@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A05_Ereignis_Teilprozess" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A05_Ereignis_Teilprozess">
+    <bpmn:participant id="P_A05" name="Travel Booking – Event Subprocesses" processRef="A05_EventSubprocess" />
+  </bpmn:collaboration>
+  <bpmn:process id="A05_EventSubprocess" name="Travel Booking – Event Subprocesses" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 5: Ereignis-Teilprozesse (gepunkteter Rand) sind während der GESAMTEN Laufzeit ihres Prozesses aktiv – nicht nur während einer Aufgabe wie in Folie 4. 'Delay Subprocess' startet nicht unterbrechend nach 2 Min (statt 5 Tagen). 'Not available Subprocess' startet unterbrechend bei Eskalation NOT_AVAILABLE (./dpe-demo.sh escalate &lt;taskId&gt; NOT_AVAILABLE).</bpmn:documentation>
+    <bpmn:startEvent id="A05_Start">
+      <bpmn:outgoing>Flow_A05_Start_A05_Flight</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="A05_Flight" name="Book Flight (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A05_Start_A05_Flight</bpmn:incoming>
+      <bpmn:outgoing>Flow_A05_Flight_A05_Hotel</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A05_Hotel" name="Book Hotel (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A05_Flight_A05_Hotel</bpmn:incoming>
+      <bpmn:outgoing>Flow_A05_Hotel_A05_Car</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="A05_Car" name="Book Rental Car (System-Simulation)" camunda:assignee="demo">
+      <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+      <bpmn:incoming>Flow_A05_Hotel_A05_Car</bpmn:incoming>
+      <bpmn:outgoing>Flow_A05_Car_A05_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A05_End" name="Successful booking">
+      <bpmn:incoming>Flow_A05_Car_A05_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="A05_Sub_NA" name="Not available Subprocess" triggeredByEvent="true">
+      <bpmn:startEvent id="A05_NA_Start" name="Not available">
+        <bpmn:outgoing>Flow_A05_NA_Start_A05_NA_Inform</bpmn:outgoing>
+        <bpmn:escalationEventDefinition id="EscalationDef_A05_NA_Start" escalationRef="Escalation_NOT_AVAILABLE" />
+      </bpmn:startEvent>
+      <bpmn:userTask id="A05_NA_Inform" name="Inform customer" camunda:assignee="demo">
+        <bpmn:incoming>Flow_A05_NA_Start_A05_NA_Inform</bpmn:incoming>
+        <bpmn:outgoing>Flow_A05_NA_Inform_A05_NA_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="A05_NA_End" name="Failure: Not available">
+        <bpmn:incoming>Flow_A05_NA_Inform_A05_NA_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A05_NA_Start_A05_NA_Inform" sourceRef="A05_NA_Start" targetRef="A05_NA_Inform" />
+      <bpmn:sequenceFlow id="Flow_A05_NA_Inform_A05_NA_End" sourceRef="A05_NA_Inform" targetRef="A05_NA_End" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="A05_Sub_Delay" name="Delay Subprocess" triggeredByEvent="true">
+      <bpmn:startEvent id="A05_D_Start" name="5 Days (Demo: 2 Min)" isInterrupting="false">
+        <bpmn:outgoing>Flow_A05_D_Start_A05_D_Check</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="TimerDef_A05_D_Start">
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:startEvent>
+      <bpmn:userTask id="A05_D_Check" name="Check delay" camunda:assignee="demo">
+        <bpmn:incoming>Flow_A05_D_Start_A05_D_Check</bpmn:incoming>
+        <bpmn:outgoing>Flow_A05_D_Check_A05_D_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="A05_D_End" name="Delay">
+        <bpmn:incoming>Flow_A05_D_Check_A05_D_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_A05_D_Start_A05_D_Check" sourceRef="A05_D_Start" targetRef="A05_D_Check" />
+      <bpmn:sequenceFlow id="Flow_A05_D_Check_A05_D_End" sourceRef="A05_D_Check" targetRef="A05_D_End" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_A05_Start_A05_Flight" sourceRef="A05_Start" targetRef="A05_Flight" />
+    <bpmn:sequenceFlow id="Flow_A05_Flight_A05_Hotel" sourceRef="A05_Flight" targetRef="A05_Hotel" />
+    <bpmn:sequenceFlow id="Flow_A05_Hotel_A05_Car" sourceRef="A05_Hotel" targetRef="A05_Car" />
+    <bpmn:sequenceFlow id="Flow_A05_Car_A05_End" sourceRef="A05_Car" targetRef="A05_End" />
+  </bpmn:process>
+  <bpmn:escalation id="Escalation_NOT_AVAILABLE" name="NOT_AVAILABLE" escalationCode="NOT_AVAILABLE" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A05_Ereignis_Teilprozess">
+    <bpmndi:BPMNPlane id="BPMNPlane_A05_Ereignis_Teilprozess" bpmnElement="Collaboration_A05_Ereignis_Teilprozess">
+      <bpmndi:BPMNShape id="P_A05_di" bpmnElement="P_A05" isHorizontal="true"><dc:Bounds x="140" y="40" width="860" height="520" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_Sub_NA_di" bpmnElement="A05_Sub_NA" isExpanded="true"><dc:Bounds x="290" y="210" width="320" height="140" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_Sub_Delay_di" bpmnElement="A05_Sub_Delay" isExpanded="true"><dc:Bounds x="290" y="390" width="320" height="140" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_Start_di" bpmnElement="A05_Start"><dc:Bounds x="222" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_Flight_di" bpmnElement="A05_Flight"><dc:Bounds x="300" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_Hotel_di" bpmnElement="A05_Hotel"><dc:Bounds x="440" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_Car_di" bpmnElement="A05_Car"><dc:Bounds x="580" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_End_di" bpmnElement="A05_End"><dc:Bounds x="742" y="102" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="697" y="142" width="126" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_NA_Start_di" bpmnElement="A05_NA_Start"><dc:Bounds x="322" y="272" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="294" y="312" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_NA_Inform_di" bpmnElement="A05_NA_Inform"><dc:Bounds x="400" y="250" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_NA_End_di" bpmnElement="A05_NA_End"><dc:Bounds x="542" y="272" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="490" y="312" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_D_Start_di" bpmnElement="A05_D_Start"><dc:Bounds x="322" y="452" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="270" y="492" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_D_Check_di" bpmnElement="A05_D_Check"><dc:Bounds x="400" y="430" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A05_D_End_di" bpmnElement="A05_D_End"><dc:Bounds x="542" y="452" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="530" y="492" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A05_Start_A05_Flight_di" bpmnElement="Flow_A05_Start_A05_Flight"><di:waypoint x="258" y="120" /><di:waypoint x="300" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A05_Flight_A05_Hotel_di" bpmnElement="Flow_A05_Flight_A05_Hotel"><di:waypoint x="400" y="120" /><di:waypoint x="440" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A05_Hotel_A05_Car_di" bpmnElement="Flow_A05_Hotel_A05_Car"><di:waypoint x="540" y="120" /><di:waypoint x="580" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A05_Car_A05_End_di" bpmnElement="Flow_A05_Car_A05_End"><di:waypoint x="680" y="120" /><di:waypoint x="742" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A05_NA_Start_A05_NA_Inform_di" bpmnElement="Flow_A05_NA_Start_A05_NA_Inform"><di:waypoint x="358" y="290" /><di:waypoint x="400" y="290" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A05_NA_Inform_A05_NA_End_di" bpmnElement="Flow_A05_NA_Inform_A05_NA_End"><di:waypoint x="500" y="290" /><di:waypoint x="542" y="290" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A05_D_Start_A05_D_Check_di" bpmnElement="Flow_A05_D_Start_A05_D_Check"><di:waypoint x="358" y="470" /><di:waypoint x="400" y="470" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A05_D_Check_A05_D_End_di" bpmnElement="Flow_A05_D_Check_A05_D_End"><di:waypoint x="500" y="470" /><di:waypoint x="542" y="470" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

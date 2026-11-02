@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A25_Kompensation_im_Teilprozess" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A25_Kompensation_im_Teilprozess">
+    <bpmn:participant id="P_A25_PDA" name="Process Driven Application" />
+    <bpmn:participant id="P_A25_SCIL" name="Service Contract Implementation Layer" processRef="A25_ServiceContract" />
+    <bpmn:participant id="P_A25_SP" name="Service Provider" />
+    <bpmn:messageFlow id="MsgFlow_P_A25_PDA_A25_Start" sourceRef="P_A25_PDA" targetRef="A25_Start" />
+    <bpmn:messageFlow id="MsgFlow_A25_EndOk_P_A25_PDA" sourceRef="A25_EndOk" targetRef="P_A25_PDA" />
+    <bpmn:messageFlow id="MsgFlow_A25_EndErr_P_A25_PDA" sourceRef="A25_EndErr" targetRef="P_A25_PDA" />
+  </bpmn:collaboration>
+  <bpmn:process id="A25_ServiceContract" name="Service Contract Implementation Layer" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 25: Kompensation in einem NORMALEN Teilprozess (ohne Transaktion). (1) Während der Ausführung: Fehler ERROR_1 an Service 3 auslösen (./dpe-demo.sh error &lt;taskId&gt; ERROR_1) -&gt; Ereignis-Teilprozess kompensiert Service 2 und 1 rückwärts und wirft ERROR_2 -&gt; außen Fehlermeldung. (2) Nach Abschluss: bei der 'Follow-Up Task' Fehler FOLLOWUP_FEHLER auslösen -&gt; Rollback des ganzen Teilprozesses (Ereignis-Teilprozess 'Compensation Handling after Sub-Process Finalization' kompensiert 3, 2, 1).</bpmn:documentation>
+    <bpmn:startEvent id="A25_Start" name="Service-Request">
+      <bpmn:outgoing>Flow_A25_Start_A25_Sub</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A25_Start" messageRef="Message_A25_ServiceRequest" />
+    </bpmn:startEvent>
+    <bpmn:subProcess id="A25_Sub" name="Ordinary Sub-Process">
+      <bpmn:incoming>Flow_A25_Start_A25_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_A25_Sub_A25_Follow</bpmn:outgoing>
+      <bpmn:startEvent id="A25_S_Start">
+        <bpmn:outgoing>Flow_A25_S_Start_A25_Sv1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:endEvent id="A25_S_End">
+        <bpmn:incoming>Flow_A25_Sv3_A25_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:userTask id="A25_Sv1" name="Service 1 (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A25_S_Start_A25_Sv1</bpmn:incoming>
+        <bpmn:outgoing>Flow_A25_Sv1_A25_Sv2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A25_CB1" attachedToRef="A25_Sv1">
+        <bpmn:compensateEventDefinition id="CompensateDef_A25_CB1" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A25_CH1" name="Compensation Service 1" camunda:assignee="demo" isForCompensation="true">
+      </bpmn:userTask>
+      <bpmn:userTask id="A25_Sv2" name="Service 2 (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A25_Sv1_A25_Sv2</bpmn:incoming>
+        <bpmn:outgoing>Flow_A25_Sv2_A25_Sv3</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A25_CB2" attachedToRef="A25_Sv2">
+        <bpmn:compensateEventDefinition id="CompensateDef_A25_CB2" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A25_CH2" name="Compensation Service 2" camunda:assignee="demo" isForCompensation="true">
+      </bpmn:userTask>
+      <bpmn:userTask id="A25_Sv3" name="Service 3 (System-Simulation)" camunda:assignee="demo">
+        <bpmn:documentation>Im Original ein automatischer Service Task. Hier als Benutzeraufgabe simuliert, damit du Zeit hast, Ereignisse auszulösen (Nachricht, Fehler, Eskalation). </bpmn:documentation>
+        <bpmn:incoming>Flow_A25_Sv2_A25_Sv3</bpmn:incoming>
+        <bpmn:outgoing>Flow_A25_Sv3_A25_S_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="A25_CB3" attachedToRef="A25_Sv3">
+        <bpmn:compensateEventDefinition id="CompensateDef_A25_CB3" />
+      </bpmn:boundaryEvent>
+      <bpmn:userTask id="A25_CH3" name="Compensation Service 3" camunda:assignee="demo" isForCompensation="true">
+      </bpmn:userTask>
+      <bpmn:subProcess id="A25_ES1" name="Compensation Handling after Sub-Process Finalization" triggeredByEvent="true">
+        <bpmn:startEvent id="A25_ES1_Start" name="Rollback">
+          <bpmn:outgoing>Flow_A25_ES1_Start_A25_ES1_C3</bpmn:outgoing>
+          <bpmn:compensateEventDefinition id="CompensateDef_A25_ES1_Start" />
+        </bpmn:startEvent>
+        <bpmn:intermediateThrowEvent id="A25_ES1_C3" name="Compensation Service 3">
+          <bpmn:incoming>Flow_A25_ES1_Start_A25_ES1_C3</bpmn:incoming>
+          <bpmn:outgoing>Flow_A25_ES1_C3_A25_ES1_C2</bpmn:outgoing>
+          <bpmn:compensateEventDefinition id="CompensateDef_A25_ES1_C3" activityRef="A25_Sv3" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:intermediateThrowEvent id="A25_ES1_C2" name="Compensation Service 2">
+          <bpmn:incoming>Flow_A25_ES1_C3_A25_ES1_C2</bpmn:incoming>
+          <bpmn:outgoing>Flow_A25_ES1_C2_A25_ES1_C1</bpmn:outgoing>
+          <bpmn:compensateEventDefinition id="CompensateDef_A25_ES1_C2" activityRef="A25_Sv2" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:intermediateThrowEvent id="A25_ES1_C1" name="Compensation Service 1">
+          <bpmn:incoming>Flow_A25_ES1_C2_A25_ES1_C1</bpmn:incoming>
+          <bpmn:outgoing>Flow_A25_ES1_C1_A25_ES1_End</bpmn:outgoing>
+          <bpmn:compensateEventDefinition id="CompensateDef_A25_ES1_C1" activityRef="A25_Sv1" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:endEvent id="A25_ES1_End">
+          <bpmn:incoming>Flow_A25_ES1_C1_A25_ES1_End</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_A25_ES1_Start_A25_ES1_C3" sourceRef="A25_ES1_Start" targetRef="A25_ES1_C3" />
+        <bpmn:sequenceFlow id="Flow_A25_ES1_C3_A25_ES1_C2" sourceRef="A25_ES1_C3" targetRef="A25_ES1_C2" />
+        <bpmn:sequenceFlow id="Flow_A25_ES1_C2_A25_ES1_C1" sourceRef="A25_ES1_C2" targetRef="A25_ES1_C1" />
+        <bpmn:sequenceFlow id="Flow_A25_ES1_C1_A25_ES1_End" sourceRef="A25_ES1_C1" targetRef="A25_ES1_End" />
+      </bpmn:subProcess>
+      <bpmn:subProcess id="A25_ES2" name="Compensation Handling During Sub-Process Execution" triggeredByEvent="true">
+        <bpmn:startEvent id="A25_ES2_Start" name="Error 1">
+          <bpmn:outgoing>Flow_A25_ES2_Start_A25_ES2_C2</bpmn:outgoing>
+          <bpmn:errorEventDefinition id="ErrorDef_A25_ES2_Start" errorRef="Error_ERROR_1" />
+        </bpmn:startEvent>
+        <bpmn:intermediateThrowEvent id="A25_ES2_C2" name="Compensation Service 2">
+          <bpmn:incoming>Flow_A25_ES2_Start_A25_ES2_C2</bpmn:incoming>
+          <bpmn:outgoing>Flow_A25_ES2_C2_A25_ES2_C1</bpmn:outgoing>
+          <bpmn:compensateEventDefinition id="CompensateDef_A25_ES2_C2" activityRef="A25_Sv2" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:intermediateThrowEvent id="A25_ES2_C1" name="Compensation Service 1">
+          <bpmn:incoming>Flow_A25_ES2_C2_A25_ES2_C1</bpmn:incoming>
+          <bpmn:outgoing>Flow_A25_ES2_C1_A25_ES2_End</bpmn:outgoing>
+          <bpmn:compensateEventDefinition id="CompensateDef_A25_ES2_C1" activityRef="A25_Sv1" />
+        </bpmn:intermediateThrowEvent>
+        <bpmn:endEvent id="A25_ES2_End" name="Error 2">
+          <bpmn:incoming>Flow_A25_ES2_C1_A25_ES2_End</bpmn:incoming>
+          <bpmn:errorEventDefinition id="ErrorDef_A25_ES2_End" errorRef="Error_ERROR_2" />
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_A25_ES2_Start_A25_ES2_C2" sourceRef="A25_ES2_Start" targetRef="A25_ES2_C2" />
+        <bpmn:sequenceFlow id="Flow_A25_ES2_C2_A25_ES2_C1" sourceRef="A25_ES2_C2" targetRef="A25_ES2_C1" />
+        <bpmn:sequenceFlow id="Flow_A25_ES2_C1_A25_ES2_End" sourceRef="A25_ES2_C1" targetRef="A25_ES2_End" />
+      </bpmn:subProcess>
+      <bpmn:sequenceFlow id="Flow_A25_S_Start_A25_Sv1" sourceRef="A25_S_Start" targetRef="A25_Sv1" />
+      <bpmn:sequenceFlow id="Flow_A25_Sv1_A25_Sv2" sourceRef="A25_Sv1" targetRef="A25_Sv2" />
+      <bpmn:sequenceFlow id="Flow_A25_Sv2_A25_Sv3" sourceRef="A25_Sv2" targetRef="A25_Sv3" />
+      <bpmn:sequenceFlow id="Flow_A25_Sv3_A25_S_End" sourceRef="A25_Sv3" targetRef="A25_S_End" />
+      <bpmn:association id="Assoc_A25_CB1_A25_CH1" associationDirection="One" sourceRef="A25_CB1" targetRef="A25_CH1" />
+      <bpmn:association id="Assoc_A25_CB2_A25_CH2" associationDirection="One" sourceRef="A25_CB2" targetRef="A25_CH2" />
+      <bpmn:association id="Assoc_A25_CB3_A25_CH3" associationDirection="One" sourceRef="A25_CB3" targetRef="A25_CH3" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="A25_BErr2" name="Error 2" attachedToRef="A25_Sub">
+      <bpmn:outgoing>Flow_A25_BErr2_A25_EndErr</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorDef_A25_BErr2" errorRef="Error_ERROR_2" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="A25_Follow" name="Follow-Up Task" camunda:assignee="demo">
+      <bpmn:documentation>Fehler auslösen: ./dpe-demo.sh error &lt;taskId&gt; FOLLOWUP_FEHLER</bpmn:documentation>
+      <bpmn:incoming>Flow_A25_Sub_A25_Follow</bpmn:incoming>
+      <bpmn:outgoing>Flow_A25_Follow_A25_EndOk</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="A25_EndOk" name="Service-Response">
+      <bpmn:incoming>Flow_A25_Follow_A25_EndOk</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A25_EndOk" messageRef="Message_A25_Response" camunda:expression="${execution.setVariable('letzteNachricht', 'Erfolgreich')}" />
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="A25_BFollow" attachedToRef="A25_Follow">
+      <bpmn:outgoing>Flow_A25_BFollow_A25_Rollback</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorDef_A25_BFollow" errorRef="Error_FOLLOWUP_FEHLER" />
+    </bpmn:boundaryEvent>
+    <bpmn:intermediateThrowEvent id="A25_Rollback" name="Rollback">
+      <bpmn:incoming>Flow_A25_BFollow_A25_Rollback</bpmn:incoming>
+      <bpmn:outgoing>Flow_A25_Rollback_A25_EndErr</bpmn:outgoing>
+      <bpmn:compensateEventDefinition id="CompensateDef_A25_Rollback" activityRef="A25_Sub" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="A25_EndErr" name="Error Message">
+      <bpmn:incoming>Flow_A25_Rollback_A25_EndErr</bpmn:incoming>
+      <bpmn:incoming>Flow_A25_BErr2_A25_EndErr</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A25_EndErr" messageRef="Message_A25_Error" camunda:expression="${execution.setVariable('letzteNachricht', 'Fehlermeldung')}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A25_Start_A25_Sub" sourceRef="A25_Start" targetRef="A25_Sub" />
+    <bpmn:sequenceFlow id="Flow_A25_Sub_A25_Follow" sourceRef="A25_Sub" targetRef="A25_Follow" />
+    <bpmn:sequenceFlow id="Flow_A25_Follow_A25_EndOk" sourceRef="A25_Follow" targetRef="A25_EndOk" />
+    <bpmn:sequenceFlow id="Flow_A25_BFollow_A25_Rollback" sourceRef="A25_BFollow" targetRef="A25_Rollback" />
+    <bpmn:sequenceFlow id="Flow_A25_Rollback_A25_EndErr" sourceRef="A25_Rollback" targetRef="A25_EndErr" />
+    <bpmn:sequenceFlow id="Flow_A25_BErr2_A25_EndErr" sourceRef="A25_BErr2" targetRef="A25_EndErr" />
+  </bpmn:process>
+  <bpmn:message id="Message_A25_ServiceRequest" name="A25_ServiceRequest" />
+  <bpmn:message id="Message_A25_Response" name="A25_Response" />
+  <bpmn:message id="Message_A25_Error" name="A25_Error" />
+  <bpmn:error id="Error_ERROR_1" name="ERROR_1" errorCode="ERROR_1" />
+  <bpmn:error id="Error_ERROR_2" name="ERROR_2" errorCode="ERROR_2" />
+  <bpmn:error id="Error_FOLLOWUP_FEHLER" name="FOLLOWUP_FEHLER" errorCode="FOLLOWUP_FEHLER" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A25_Kompensation_im_Teilprozess">
+    <bpmndi:BPMNPlane id="BPMNPlane_A25_Kompensation_im_Teilprozess" bpmnElement="Collaboration_A25_Kompensation_im_Teilprozess">
+      <bpmndi:BPMNShape id="P_A25_PDA_di" bpmnElement="P_A25_PDA" isHorizontal="true"><dc:Bounds x="140" y="40" width="1000" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A25_SCIL_di" bpmnElement="P_A25_SCIL" isHorizontal="true"><dc:Bounds x="140" y="140" width="1000" height="680" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A25_SP_di" bpmnElement="P_A25_SP" isHorizontal="true"><dc:Bounds x="140" y="860" width="1000" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_Sub_di" bpmnElement="A25_Sub" isExpanded="true"><dc:Bounds x="250" y="160" width="600" height="580" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES1_di" bpmnElement="A25_ES1" isExpanded="true"><dc:Bounds x="280" y="420" width="540" height="140" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES2_di" bpmnElement="A25_ES2" isExpanded="true"><dc:Bounds x="280" y="580" width="540" height="140" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_Start_di" bpmnElement="A25_Start"><dc:Bounds x="182" y="312" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="148" y="352" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_S_Start_di" bpmnElement="A25_S_Start"><dc:Bounds x="267" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_S_End_di" bpmnElement="A25_S_End"><dc:Bounds x="792" y="202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_Sv1_di" bpmnElement="A25_Sv1"><dc:Bounds x="330" y="180" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_CB1_di" bpmnElement="A25_CB1"><dc:Bounds x="332" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_CH1_di" bpmnElement="A25_CH1"><dc:Bounds x="360" y="305" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_Sv2_di" bpmnElement="A25_Sv2"><dc:Bounds x="480" y="180" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_CB2_di" bpmnElement="A25_CB2"><dc:Bounds x="482" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_CH2_di" bpmnElement="A25_CH2"><dc:Bounds x="510" y="305" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_Sv3_di" bpmnElement="A25_Sv3"><dc:Bounds x="630" y="180" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_CB3_di" bpmnElement="A25_CB3"><dc:Bounds x="632" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_CH3_di" bpmnElement="A25_CH3"><dc:Bounds x="660" y="305" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES1_Start_di" bpmnElement="A25_ES1_Start"><dc:Bounds x="297" y="482" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="285" y="522" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES1_C3_di" bpmnElement="A25_ES1_C3"><dc:Bounds x="402" y="482" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="350" y="522" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES1_C2_di" bpmnElement="A25_ES1_C2"><dc:Bounds x="512" y="482" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="460" y="522" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES1_C1_di" bpmnElement="A25_ES1_C1"><dc:Bounds x="622" y="482" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="570" y="522" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES1_End_di" bpmnElement="A25_ES1_End"><dc:Bounds x="742" y="482" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES2_Start_di" bpmnElement="A25_ES2_Start"><dc:Bounds x="297" y="642" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="285" y="682" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES2_C2_di" bpmnElement="A25_ES2_C2"><dc:Bounds x="412" y="642" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="360" y="682" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES2_C1_di" bpmnElement="A25_ES2_C1"><dc:Bounds x="522" y="642" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="470" y="682" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_ES2_End_di" bpmnElement="A25_ES2_End"><dc:Bounds x="742" y="642" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="730" y="682" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_BErr2_di" bpmnElement="A25_BErr2"><dc:Bounds x="802" y="722" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="790" y="762" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_Follow_di" bpmnElement="A25_Follow"><dc:Bounds x="910" y="290" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_EndOk_di" bpmnElement="A25_EndOk"><dc:Bounds x="1072" y="312" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1034" y="352" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_BFollow_di" bpmnElement="A25_BFollow"><dc:Bounds x="972" y="352" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_Rollback_di" bpmnElement="A25_Rollback"><dc:Bounds x="1042" y="442" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1082" y="453" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A25_EndErr_di" bpmnElement="A25_EndErr"><dc:Bounds x="1042" y="682" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1014" y="722" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A25_S_Start_A25_Sv1_di" bpmnElement="Flow_A25_S_Start_A25_Sv1"><di:waypoint x="303" y="220" /><di:waypoint x="330" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_Sv1_A25_Sv2_di" bpmnElement="Flow_A25_Sv1_A25_Sv2"><di:waypoint x="430" y="220" /><di:waypoint x="480" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_Sv2_A25_Sv3_di" bpmnElement="Flow_A25_Sv2_A25_Sv3"><di:waypoint x="580" y="220" /><di:waypoint x="630" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_Sv3_A25_S_End_di" bpmnElement="Flow_A25_Sv3_A25_S_End"><di:waypoint x="730" y="220" /><di:waypoint x="792" y="220" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_ES1_Start_A25_ES1_C3_di" bpmnElement="Flow_A25_ES1_Start_A25_ES1_C3"><di:waypoint x="333" y="500" /><di:waypoint x="402" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_ES1_C3_A25_ES1_C2_di" bpmnElement="Flow_A25_ES1_C3_A25_ES1_C2"><di:waypoint x="438" y="500" /><di:waypoint x="512" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_ES1_C2_A25_ES1_C1_di" bpmnElement="Flow_A25_ES1_C2_A25_ES1_C1"><di:waypoint x="548" y="500" /><di:waypoint x="622" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_ES1_C1_A25_ES1_End_di" bpmnElement="Flow_A25_ES1_C1_A25_ES1_End"><di:waypoint x="658" y="500" /><di:waypoint x="742" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_ES2_Start_A25_ES2_C2_di" bpmnElement="Flow_A25_ES2_Start_A25_ES2_C2"><di:waypoint x="333" y="660" /><di:waypoint x="412" y="660" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_ES2_C2_A25_ES2_C1_di" bpmnElement="Flow_A25_ES2_C2_A25_ES2_C1"><di:waypoint x="448" y="660" /><di:waypoint x="522" y="660" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_ES2_C1_A25_ES2_End_di" bpmnElement="Flow_A25_ES2_C1_A25_ES2_End"><di:waypoint x="558" y="660" /><di:waypoint x="742" y="660" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_Start_A25_Sub_di" bpmnElement="Flow_A25_Start_A25_Sub"><di:waypoint x="218" y="330" /><di:waypoint x="250" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_Sub_A25_Follow_di" bpmnElement="Flow_A25_Sub_A25_Follow"><di:waypoint x="850" y="330" /><di:waypoint x="910" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_Follow_A25_EndOk_di" bpmnElement="Flow_A25_Follow_A25_EndOk"><di:waypoint x="1010" y="330" /><di:waypoint x="1072" y="330" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_BFollow_A25_Rollback_di" bpmnElement="Flow_A25_BFollow_A25_Rollback"><di:waypoint x="990" y="388" /><di:waypoint x="990" y="460" /><di:waypoint x="1042" y="460" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_Rollback_A25_EndErr_di" bpmnElement="Flow_A25_Rollback_A25_EndErr"><di:waypoint x="1060" y="478" /><di:waypoint x="1060" y="682" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A25_BErr2_A25_EndErr_di" bpmnElement="Flow_A25_BErr2_A25_EndErr"><di:waypoint x="820" y="758" /><di:waypoint x="820" y="790" /><di:waypoint x="1060" y="790" /><di:waypoint x="1060" y="718" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A25_PDA_A25_Start_di" bpmnElement="MsgFlow_P_A25_PDA_A25_Start"><di:waypoint x="200" y="100" /><di:waypoint x="200" y="312" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A25_EndOk_P_A25_PDA_di" bpmnElement="MsgFlow_A25_EndOk_P_A25_PDA"><di:waypoint x="1090" y="312" /><di:waypoint x="1090" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A25_EndErr_P_A25_PDA_di" bpmnElement="MsgFlow_A25_EndErr_P_A25_PDA"><di:waypoint x="1078" y="700" /><di:waypoint x="1120" y="700" /><di:waypoint x="1120" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_A25_CB1_A25_CH1_di" bpmnElement="Assoc_A25_CB1_A25_CH1"><di:waypoint x="350" y="278" /><di:waypoint x="350" y="345" /><di:waypoint x="360" y="345" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_A25_CB2_A25_CH2_di" bpmnElement="Assoc_A25_CB2_A25_CH2"><di:waypoint x="500" y="278" /><di:waypoint x="500" y="345" /><di:waypoint x="510" y="345" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_A25_CB3_A25_CH3_di" bpmnElement="Assoc_A25_CB3_A25_CH3"><di:waypoint x="650" y="278" /><di:waypoint x="650" y="345" /><di:waypoint x="660" y="345" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E32_Was_ist_falsch_Deadlock" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E32_Was_ist_falsch_Deadlock">
+    <bpmn:participant id="P_E32_A" name="A: Modell der Folie (DEADLOCK)" processRef="E32_A_Deadlock" />
+    <bpmn:participant id="P_E32_B" name="B: Korrigierte Version" processRef="E32_B_Korrigiert" />
+  </bpmn:collaboration>
+  <bpmn:process id="E32_A_Deadlock" name="A: Modell der Folie (DEADLOCK)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 32: Fehler! Das erste parallele Gateway hat 2 eingehende Pfeile (von 'Enter Change Order' und von der Schleife). Ein paralleles Gateway wartet auf ALLE eingehenden Token – das Schleifen-Token kommt am Anfang nie -&gt; Deadlock. Im Cockpit siehst du: die Instanz hängt dauerhaft vor dem Gateway.</bpmn:documentation>
+    <bpmn:startEvent id="E32A_Start" name="Change Order">
+      <bpmn:outgoing>Flow_E32A_Start_E32A_Enter</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E32A_Start" messageRef="Message_E32_A_Aenderung" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="E32A_Enter" name="Enter Change Order" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32A_Start_E32A_Enter</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_Enter_E32A_Split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="E32A_Split">
+      <bpmn:incoming>Flow_E32A_Enter_E32A_Split</bpmn:incoming>
+      <bpmn:incoming>Flow_E32A_Gw_E32A_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_Split_E32A_U0</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E32A_Split_E32A_U1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E32A_Split_E32A_U2</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="E32A_U0" name="Update Order Data" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32A_Split_E32A_U0</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_U0_E32A_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E32A_U1" name="Update Budget Data" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32A_Split_E32A_U1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_U1_E32A_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E32A_U2" name="Update Resource Planning" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32A_Split_E32A_U2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_U2_E32A_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="E32A_Join">
+      <bpmn:incoming>Flow_E32A_U0_E32A_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E32A_U1_E32A_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E32A_U2_E32A_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_Join_E32A_Decide</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="E32A_Decide" name="Decide on Changes" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="accepted" label="Accepted?" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E32A_Join_E32A_Decide</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_Decide_E32A_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E32A_Gw" name="Accepted?">
+      <bpmn:incoming>Flow_E32A_Decide_E32A_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32A_Gw_E32A_End</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E32A_Gw_E32A_Split</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E32A_End">
+      <bpmn:incoming>Flow_E32A_Gw_E32A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E32A_Split_E32A_U0" sourceRef="E32A_Split" targetRef="E32A_U0" />
+    <bpmn:sequenceFlow id="Flow_E32A_Split_E32A_U1" sourceRef="E32A_Split" targetRef="E32A_U1" />
+    <bpmn:sequenceFlow id="Flow_E32A_Split_E32A_U2" sourceRef="E32A_Split" targetRef="E32A_U2" />
+    <bpmn:sequenceFlow id="Flow_E32A_U0_E32A_Join" sourceRef="E32A_U0" targetRef="E32A_Join" />
+    <bpmn:sequenceFlow id="Flow_E32A_U1_E32A_Join" sourceRef="E32A_U1" targetRef="E32A_Join" />
+    <bpmn:sequenceFlow id="Flow_E32A_U2_E32A_Join" sourceRef="E32A_U2" targetRef="E32A_Join" />
+    <bpmn:sequenceFlow id="Flow_E32A_Start_E32A_Enter" sourceRef="E32A_Start" targetRef="E32A_Enter" />
+    <bpmn:sequenceFlow id="Flow_E32A_Enter_E32A_Split" sourceRef="E32A_Enter" targetRef="E32A_Split" />
+    <bpmn:sequenceFlow id="Flow_E32A_Join_E32A_Decide" sourceRef="E32A_Join" targetRef="E32A_Decide" />
+    <bpmn:sequenceFlow id="Flow_E32A_Decide_E32A_Gw" sourceRef="E32A_Decide" targetRef="E32A_Gw" />
+    <bpmn:sequenceFlow id="Flow_E32A_Gw_E32A_End" name="Yes" sourceRef="E32A_Gw" targetRef="E32A_End">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${accepted}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E32A_Gw_E32A_Split" name="No" sourceRef="E32A_Gw" targetRef="E32A_Split">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!accepted}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:process id="E32_B_Korrigiert" name="B: Korrigierte Version" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Korrektur: Zuerst ein EXKLUSIVES Gateway zum Zusammenführen (Anfang + Schleife), danach das parallele Gateway zum Aufteilen.</bpmn:documentation>
+    <bpmn:startEvent id="E32B_Start" name="Change Order">
+      <bpmn:outgoing>Flow_E32B_Start_E32B_Enter</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E32B_Start" messageRef="Message_E32_B_Aenderung" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="E32B_Enter" name="Enter Change Order" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32B_Start_E32B_Enter</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_Enter_E32B_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E32B_Merge">
+      <bpmn:incoming>Flow_E32B_Enter_E32B_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_E32B_Gw_E32B_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_Merge_E32B_Split</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="E32B_Split">
+      <bpmn:incoming>Flow_E32B_Merge_E32B_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_Split_E32B_U0</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E32B_Split_E32B_U1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E32B_Split_E32B_U2</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="E32B_U0" name="Update Order Data" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32B_Split_E32B_U0</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_U0_E32B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E32B_U1" name="Update Budget Data" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32B_Split_E32B_U1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_U1_E32B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E32B_U2" name="Update Resource Planning" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E32B_Split_E32B_U2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_U2_E32B_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="E32B_Join">
+      <bpmn:incoming>Flow_E32B_U0_E32B_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E32B_U1_E32B_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E32B_U2_E32B_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_Join_E32B_Decide</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="E32B_Decide" name="Decide on Changes" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="accepted" label="Accepted?" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E32B_Join_E32B_Decide</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_Decide_E32B_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E32B_Gw" name="Accepted?">
+      <bpmn:incoming>Flow_E32B_Decide_E32B_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_E32B_Gw_E32B_End</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E32B_Gw_E32B_Merge</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E32B_End">
+      <bpmn:incoming>Flow_E32B_Gw_E32B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E32B_Split_E32B_U0" sourceRef="E32B_Split" targetRef="E32B_U0" />
+    <bpmn:sequenceFlow id="Flow_E32B_Split_E32B_U1" sourceRef="E32B_Split" targetRef="E32B_U1" />
+    <bpmn:sequenceFlow id="Flow_E32B_Split_E32B_U2" sourceRef="E32B_Split" targetRef="E32B_U2" />
+    <bpmn:sequenceFlow id="Flow_E32B_U0_E32B_Join" sourceRef="E32B_U0" targetRef="E32B_Join" />
+    <bpmn:sequenceFlow id="Flow_E32B_U1_E32B_Join" sourceRef="E32B_U1" targetRef="E32B_Join" />
+    <bpmn:sequenceFlow id="Flow_E32B_U2_E32B_Join" sourceRef="E32B_U2" targetRef="E32B_Join" />
+    <bpmn:sequenceFlow id="Flow_E32B_Start_E32B_Enter" sourceRef="E32B_Start" targetRef="E32B_Enter" />
+    <bpmn:sequenceFlow id="Flow_E32B_Enter_E32B_Merge" sourceRef="E32B_Enter" targetRef="E32B_Merge" />
+    <bpmn:sequenceFlow id="Flow_E32B_Merge_E32B_Split" sourceRef="E32B_Merge" targetRef="E32B_Split" />
+    <bpmn:sequenceFlow id="Flow_E32B_Join_E32B_Decide" sourceRef="E32B_Join" targetRef="E32B_Decide" />
+    <bpmn:sequenceFlow id="Flow_E32B_Decide_E32B_Gw" sourceRef="E32B_Decide" targetRef="E32B_Gw" />
+    <bpmn:sequenceFlow id="Flow_E32B_Gw_E32B_End" name="Yes" sourceRef="E32B_Gw" targetRef="E32B_End">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${accepted}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E32B_Gw_E32B_Merge" name="No" sourceRef="E32B_Gw" targetRef="E32B_Merge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!accepted}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:message id="Message_E32_A_Aenderung" name="E32_A_Aenderung" />
+  <bpmn:message id="Message_E32_B_Aenderung" name="E32_B_Aenderung" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E32_Was_ist_falsch_Deadlock">
+    <bpmndi:BPMNPlane id="BPMNPlane_E32_Was_ist_falsch_Deadlock" bpmnElement="Collaboration_E32_Was_ist_falsch_Deadlock">
+      <bpmndi:BPMNShape id="P_E32_A_di" bpmnElement="P_E32_A" isHorizontal="true"><dc:Bounds x="160" y="40" width="560" height="920" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E32_B_di" bpmnElement="P_E32_B" isHorizontal="true"><dc:Bounds x="760" y="40" width="560" height="920" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_Start_di" bpmnElement="E32A_Start"><dc:Bounds x="422" y="72" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="398" y="112" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_Enter_di" bpmnElement="E32A_Enter"><dc:Bounds x="390" y="140" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_Split_di" bpmnElement="E32A_Split"><dc:Bounds x="415" y="265" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_U0_di" bpmnElement="E32A_U0"><dc:Bounds x="250" y="370" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_U1_di" bpmnElement="E32A_U1"><dc:Bounds x="390" y="370" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_U2_di" bpmnElement="E32A_U2"><dc:Bounds x="530" y="370" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_Join_di" bpmnElement="E32A_Join"><dc:Bounds x="415" y="505" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_Decide_di" bpmnElement="E32A_Decide"><dc:Bounds x="390" y="590" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_Gw_di" bpmnElement="E32A_Gw" isMarkerVisible="true"><dc:Bounds x="415" y="715" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="469" y="733" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32A_End_di" bpmnElement="E32A_End"><dc:Bounds x="422" y="812" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_Start_di" bpmnElement="E32B_Start"><dc:Bounds x="1022" y="72" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="998" y="112" width="84" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_Enter_di" bpmnElement="E32B_Enter"><dc:Bounds x="990" y="140" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_Merge_di" bpmnElement="E32B_Merge" isMarkerVisible="true"><dc:Bounds x="1015" y="245" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_Split_di" bpmnElement="E32B_Split"><dc:Bounds x="1015" y="325" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_U0_di" bpmnElement="E32B_U0"><dc:Bounds x="850" y="430" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_U1_di" bpmnElement="E32B_U1"><dc:Bounds x="990" y="430" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_U2_di" bpmnElement="E32B_U2"><dc:Bounds x="1130" y="430" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_Join_di" bpmnElement="E32B_Join"><dc:Bounds x="1015" y="565" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_Decide_di" bpmnElement="E32B_Decide"><dc:Bounds x="990" y="650" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_Gw_di" bpmnElement="E32B_Gw" isMarkerVisible="true"><dc:Bounds x="1015" y="775" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1069" y="793" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E32B_End_di" bpmnElement="E32B_End"><dc:Bounds x="1022" y="872" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E32A_Split_E32A_U0_di" bpmnElement="Flow_E32A_Split_E32A_U0"><di:waypoint x="440" y="315" /><di:waypoint x="440" y="340" /><di:waypoint x="300" y="340" /><di:waypoint x="300" y="370" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Split_E32A_U1_di" bpmnElement="Flow_E32A_Split_E32A_U1"><di:waypoint x="440" y="315" /><di:waypoint x="440" y="370" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Split_E32A_U2_di" bpmnElement="Flow_E32A_Split_E32A_U2"><di:waypoint x="440" y="315" /><di:waypoint x="440" y="340" /><di:waypoint x="580" y="340" /><di:waypoint x="580" y="370" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_U0_E32A_Join_di" bpmnElement="Flow_E32A_U0_E32A_Join"><di:waypoint x="300" y="450" /><di:waypoint x="300" y="530" /><di:waypoint x="415" y="530" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_U1_E32A_Join_di" bpmnElement="Flow_E32A_U1_E32A_Join"><di:waypoint x="440" y="450" /><di:waypoint x="440" y="505" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_U2_E32A_Join_di" bpmnElement="Flow_E32A_U2_E32A_Join"><di:waypoint x="580" y="450" /><di:waypoint x="580" y="530" /><di:waypoint x="465" y="530" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Start_E32A_Enter_di" bpmnElement="Flow_E32A_Start_E32A_Enter"><di:waypoint x="440" y="108" /><di:waypoint x="440" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Enter_E32A_Split_di" bpmnElement="Flow_E32A_Enter_E32A_Split"><di:waypoint x="440" y="220" /><di:waypoint x="440" y="265" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Join_E32A_Decide_di" bpmnElement="Flow_E32A_Join_E32A_Decide"><di:waypoint x="440" y="555" /><di:waypoint x="440" y="590" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Decide_E32A_Gw_di" bpmnElement="Flow_E32A_Decide_E32A_Gw"><di:waypoint x="440" y="670" /><di:waypoint x="440" y="715" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Gw_E32A_End_di" bpmnElement="Flow_E32A_Gw_E32A_End"><di:waypoint x="440" y="765" /><di:waypoint x="440" y="812" /><bpmndi:BPMNLabel><dc:Bounds x="445" y="782" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32A_Gw_E32A_Split_di" bpmnElement="Flow_E32A_Gw_E32A_Split"><di:waypoint x="415" y="740" /><di:waypoint x="220" y="740" /><di:waypoint x="220" y="290" /><di:waypoint x="415" y="290" /><bpmndi:BPMNLabel><dc:Bounds x="235" y="722" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Split_E32B_U0_di" bpmnElement="Flow_E32B_Split_E32B_U0"><di:waypoint x="1040" y="375" /><di:waypoint x="1040" y="400" /><di:waypoint x="900" y="400" /><di:waypoint x="900" y="430" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Split_E32B_U1_di" bpmnElement="Flow_E32B_Split_E32B_U1"><di:waypoint x="1040" y="375" /><di:waypoint x="1040" y="430" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Split_E32B_U2_di" bpmnElement="Flow_E32B_Split_E32B_U2"><di:waypoint x="1040" y="375" /><di:waypoint x="1040" y="400" /><di:waypoint x="1180" y="400" /><di:waypoint x="1180" y="430" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_U0_E32B_Join_di" bpmnElement="Flow_E32B_U0_E32B_Join"><di:waypoint x="900" y="510" /><di:waypoint x="900" y="590" /><di:waypoint x="1015" y="590" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_U1_E32B_Join_di" bpmnElement="Flow_E32B_U1_E32B_Join"><di:waypoint x="1040" y="510" /><di:waypoint x="1040" y="565" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_U2_E32B_Join_di" bpmnElement="Flow_E32B_U2_E32B_Join"><di:waypoint x="1180" y="510" /><di:waypoint x="1180" y="590" /><di:waypoint x="1065" y="590" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Start_E32B_Enter_di" bpmnElement="Flow_E32B_Start_E32B_Enter"><di:waypoint x="1040" y="108" /><di:waypoint x="1040" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Enter_E32B_Merge_di" bpmnElement="Flow_E32B_Enter_E32B_Merge"><di:waypoint x="1040" y="220" /><di:waypoint x="1040" y="245" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Merge_E32B_Split_di" bpmnElement="Flow_E32B_Merge_E32B_Split"><di:waypoint x="1040" y="295" /><di:waypoint x="1040" y="325" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Join_E32B_Decide_di" bpmnElement="Flow_E32B_Join_E32B_Decide"><di:waypoint x="1040" y="615" /><di:waypoint x="1040" y="650" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Decide_E32B_Gw_di" bpmnElement="Flow_E32B_Decide_E32B_Gw"><di:waypoint x="1040" y="730" /><di:waypoint x="1040" y="775" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Gw_E32B_End_di" bpmnElement="Flow_E32B_Gw_E32B_End"><di:waypoint x="1040" y="825" /><di:waypoint x="1040" y="872" /><bpmndi:BPMNLabel><dc:Bounds x="1045" y="842" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E32B_Gw_E32B_Merge_di" bpmnElement="Flow_E32B_Gw_E32B_Merge"><di:waypoint x="1015" y="800" /><di:waypoint x="820" y="800" /><di:waypoint x="820" y="270" /><di:waypoint x="1015" y="270" /><bpmndi:BPMNLabel><dc:Bounds x="835" y="782" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

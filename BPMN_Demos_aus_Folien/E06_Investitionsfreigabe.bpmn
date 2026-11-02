@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E06_Investitionsfreigabe" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E06_Investitionsfreigabe">
+    <bpmn:participant id="P_E06" name="Investment Approval Process" processRef="E06_InvestmentApproval" />
+  </bpmn:collaboration>
+  <bpmn:process id="E06_InvestmentApproval" name="Investment Approval Process" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 6 (Einführung). Antrag erfassen -&gt; genehmigen -&gt; bei Ja Bestellung anlegen, bei Nein zurück zum Antragsteller.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_E06_InvestmentApproval">
+      <bpmn:lane id="Lane_E06_DB" name="Database">
+        <bpmn:flowNodeRef>E06_CreatePO</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_E06_Approver" name="Approver">
+        <bpmn:flowNodeRef>E06_Approve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E06_GwApproved</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_E06_Req" name="Requester">
+        <bpmn:flowNodeRef>E06_Start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E06_Enter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E06_Review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E06_End</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="E06_Start" name="Antrag">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="betrag" label="Betrag in EUR" type="long" defaultValue="25000" />
+          <camunda:formField id="zweck" label="Zweck" type="string" defaultValue="Neuer Server" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_E06_Start_E06_Enter</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E06_Start" messageRef="Message_E06_Investitionsantrag" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="E06_Enter" name="Enter/Modify Request Data" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="betrag" label="Betrag in EUR" type="long" />
+          <camunda:formField id="zweck" label="Zweck" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E06_Start_E06_Enter</bpmn:incoming>
+      <bpmn:incoming>Flow_E06_GwApproved_E06_Enter</bpmn:incoming>
+      <bpmn:outgoing>Flow_E06_Enter_E06_Approve</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E06_Approve" name="Approve Request" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="approved" label="Genehmigt?" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_E06_Enter_E06_Approve</bpmn:incoming>
+      <bpmn:outgoing>Flow_E06_Approve_E06_GwApproved</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="E06_GwApproved" name="Approved?">
+      <bpmn:incoming>Flow_E06_Approve_E06_GwApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_E06_GwApproved_E06_CreatePO</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E06_GwApproved_E06_Enter</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="E06_CreatePO" name="Create Purchase Order" camunda:expression="${execution.setVariable('bestellnummer', execution.getProcessInstanceId())}">
+      <bpmn:incoming>Flow_E06_GwApproved_E06_CreatePO</bpmn:incoming>
+      <bpmn:outgoing>Flow_E06_CreatePO_E06_Review</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="E06_Review" name="Review Confirmation of PO Creation" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E06_CreatePO_E06_Review</bpmn:incoming>
+      <bpmn:outgoing>Flow_E06_Review_E06_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E06_End" name="Bestellung angelegt">
+      <bpmn:incoming>Flow_E06_Review_E06_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E06_Start_E06_Enter" sourceRef="E06_Start" targetRef="E06_Enter" />
+    <bpmn:sequenceFlow id="Flow_E06_Enter_E06_Approve" sourceRef="E06_Enter" targetRef="E06_Approve" />
+    <bpmn:sequenceFlow id="Flow_E06_Approve_E06_GwApproved" sourceRef="E06_Approve" targetRef="E06_GwApproved" />
+    <bpmn:sequenceFlow id="Flow_E06_GwApproved_E06_CreatePO" name="Yes" sourceRef="E06_GwApproved" targetRef="E06_CreatePO">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E06_GwApproved_E06_Enter" name="No" sourceRef="E06_GwApproved" targetRef="E06_Enter">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E06_CreatePO_E06_Review" sourceRef="E06_CreatePO" targetRef="E06_Review" />
+    <bpmn:sequenceFlow id="Flow_E06_Review_E06_End" sourceRef="E06_Review" targetRef="E06_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_E06_Investitionsantrag" name="E06_Investitionsantrag" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E06_Investitionsfreigabe">
+    <bpmndi:BPMNPlane id="BPMNPlane_E06_Investitionsfreigabe" bpmnElement="Collaboration_E06_Investitionsfreigabe">
+      <bpmndi:BPMNShape id="P_E06_di" bpmnElement="P_E06" isHorizontal="true"><dc:Bounds x="160" y="80" width="900" height="390" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_E06_DB_di" bpmnElement="Lane_E06_DB" isHorizontal="true"><dc:Bounds x="190" y="80" width="870" height="130" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_E06_Approver_di" bpmnElement="Lane_E06_Approver" isHorizontal="true"><dc:Bounds x="190" y="210" width="870" height="130" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_E06_Req_di" bpmnElement="Lane_E06_Req" isHorizontal="true"><dc:Bounds x="190" y="340" width="870" height="130" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E06_Start_di" bpmnElement="E06_Start"><dc:Bounds x="217" y="387" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="205" y="427" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E06_Enter_di" bpmnElement="E06_Enter"><dc:Bounds x="290" y="365" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E06_Approve_di" bpmnElement="E06_Approve"><dc:Bounds x="450" y="235" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E06_GwApproved_di" bpmnElement="E06_GwApproved" isMarkerVisible="true"><dc:Bounds x="595" y="250" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="649" y="268" width="63" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E06_CreatePO_di" bpmnElement="E06_CreatePO"><dc:Bounds x="670" y="105" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E06_Review_di" bpmnElement="E06_Review"><dc:Bounds x="820" y="365" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E06_End_di" bpmnElement="E06_End"><dc:Bounds x="962" y="387" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="914" y="427" width="133" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E06_Start_E06_Enter_di" bpmnElement="Flow_E06_Start_E06_Enter"><di:waypoint x="253" y="405" /><di:waypoint x="290" y="405" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E06_Enter_E06_Approve_di" bpmnElement="Flow_E06_Enter_E06_Approve"><di:waypoint x="340" y="365" /><di:waypoint x="340" y="275" /><di:waypoint x="450" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E06_Approve_E06_GwApproved_di" bpmnElement="Flow_E06_Approve_E06_GwApproved"><di:waypoint x="550" y="275" /><di:waypoint x="595" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E06_GwApproved_E06_CreatePO_di" bpmnElement="Flow_E06_GwApproved_E06_CreatePO"><di:waypoint x="620" y="250" /><di:waypoint x="620" y="145" /><di:waypoint x="670" y="145" /><bpmndi:BPMNLabel><dc:Bounds x="635" y="127" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E06_GwApproved_E06_Enter_di" bpmnElement="Flow_E06_GwApproved_E06_Enter"><di:waypoint x="620" y="300" /><di:waypoint x="620" y="420" /><di:waypoint x="390" y="420" /><bpmndi:BPMNLabel><dc:Bounds x="405" y="402" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E06_CreatePO_E06_Review_di" bpmnElement="Flow_E06_CreatePO_E06_Review"><di:waypoint x="770" y="145" /><di:waypoint x="800" y="145" /><di:waypoint x="800" y="405" /><di:waypoint x="820" y="405" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E06_Review_E06_End_di" bpmnElement="Flow_E06_Review_E06_End"><di:waypoint x="920" y="405" /><di:waypoint x="962" y="405" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

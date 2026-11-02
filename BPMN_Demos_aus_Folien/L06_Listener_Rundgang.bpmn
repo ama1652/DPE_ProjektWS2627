@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_L06_Listener_Rundgang" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_L06_Listener_Rundgang">
+    <bpmn:participant id="P_L06" name="Listener-Rundgang" processRef="L06_ListenerRundgang" />
+  </bpmn:collaboration>
+  <bpmn:process id="L06_ListenerRundgang" name="Listener-Rundgang" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>EIGENE ERGÄNZUNG (nicht 1:1 aus den Folien, Grundlage: Folien 03/F. 9–10 und CIB-seven-Dokumentation). Jeder Listener hängt einen Eintrag an die Variable 'protokoll' an. Execution Listener: start/end an Prozess, Aktivität, Gateway, Ereignis; take am Sequenzfluss. Task Listener: create, assignment, complete, timeout (nach 1 Min, bricht NICHT ab), delete (wenn eine Aufgabe von außen beendet wird – hier durch den unterbrechenden Timer nach 2 Min). Ausprobieren: Aufgabe 1 eine Minute offen lassen (timeout), dann erledigen; Aufgabe 2 entweder erledigen oder 2 Min warten (delete). Am Ende zeigt 'Protokoll ansehen' die Reihenfolge.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <camunda:executionListener expression="${execution.setVariable('protokoll', 'Prozess start')}" event="start" />
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="L06_Start" name="Start">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Startereignis end'))}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_L06_Start_L06_T1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="L06_T1" name="Aufgabe 1" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 1 Execution-Listener start'))}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 1 Execution-Listener end'))}" event="end" />
+        <camunda:taskListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 1 Task-Listener create'))}" event="create" />
+        <camunda:taskListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 1 Task-Listener assignment an ').concat(task.assignee))}" event="assignment" />
+        <camunda:taskListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 1 Task-Listener complete'))}" event="complete" />
+        <camunda:taskListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 1 Task-Listener timeout (1 Min offen)'))}" event="timeout" id="TL_L06_T1_3">
+          <bpmn:timerEventDefinition id="TLT_L06_T1_3"><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration></bpmn:timerEventDefinition>
+        </camunda:taskListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L06_Start_L06_T1</bpmn:incoming>
+      <bpmn:outgoing>Flow_L06_T1_L06_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="L06_Gw">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Gateway start'))}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Gateway end'))}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L06_T1_L06_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_L06_Gw_L06_T2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="L06_T2" name="Aufgabe 2" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:taskListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 2 Task-Listener create'))}" event="create" />
+        <camunda:taskListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 2 Task-Listener complete'))}" event="complete" />
+        <camunda:taskListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Aufgabe 2 Task-Listener delete (durch Timer abgebrochen)'))}" event="delete" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L06_Gw_L06_T2</bpmn:incoming>
+      <bpmn:outgoing>Flow_L06_T2_L06_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="L06_BT" name="2 Min" attachedToRef="L06_T2">
+      <bpmn:outgoing>Flow_L06_BT_L06_Merge</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_L06_BT">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="L06_Merge">
+      <bpmn:incoming>Flow_L06_T2_L06_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_L06_BT_L06_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_L06_Merge_L06_Show</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="L06_Show" name="Protokoll ansehen" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="protokoll" label="Protokoll aller Listener" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L06_Merge_L06_Show</bpmn:incoming>
+      <bpmn:outgoing>Flow_L06_Show_L06_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L06_End" name="Ende">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Endereignis start'))}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L06_Show_L06_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L06_Start_L06_T1" sourceRef="L06_Start" targetRef="L06_T1" />
+    <bpmn:sequenceFlow id="Flow_L06_T1_L06_Gw" sourceRef="L06_T1" targetRef="L06_Gw" />
+    <bpmn:sequenceFlow id="Flow_L06_Gw_L06_T2" name="weiter" sourceRef="L06_Gw" targetRef="L06_T2">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('protokoll', protokoll.concat(' | Sequenzfluss take'))}" event="take" />
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L06_T2_L06_Merge" sourceRef="L06_T2" targetRef="L06_Merge" />
+    <bpmn:sequenceFlow id="Flow_L06_BT_L06_Merge" sourceRef="L06_BT" targetRef="L06_Merge" />
+    <bpmn:sequenceFlow id="Flow_L06_Merge_L06_Show" sourceRef="L06_Merge" targetRef="L06_Show" />
+    <bpmn:sequenceFlow id="Flow_L06_Show_L06_End" sourceRef="L06_Show" targetRef="L06_End" />
+    <bpmn:textAnnotation id="L06_Hinweis"><bpmn:text>Execution Listener 'take' sitzt am Sequenzfluss 'weiter'</bpmn:text></bpmn:textAnnotation>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_L06_Listener_Rundgang">
+    <bpmndi:BPMNPlane id="BPMNPlane_L06_Listener_Rundgang" bpmnElement="Collaboration_L06_Listener_Rundgang">
+      <bpmndi:BPMNShape id="P_L06_di" bpmnElement="P_L06" isHorizontal="true"><dc:Bounds x="140" y="40" width="1120" height="380" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_Start_di" bpmnElement="L06_Start"><dc:Bounds x="182" y="142" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="170" y="182" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_T1_di" bpmnElement="L06_T1"><dc:Bounds x="280" y="120" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_Gw_di" bpmnElement="L06_Gw" isMarkerVisible="true"><dc:Bounds x="445" y="135" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_T2_di" bpmnElement="L06_T2"><dc:Bounds x="550" y="120" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_BT_di" bpmnElement="L06_BT"><dc:Bounds x="612" y="182" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="600" y="222" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_Merge_di" bpmnElement="L06_Merge" isMarkerVisible="true"><dc:Bounds x="735" y="135" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_Show_di" bpmnElement="L06_Show"><dc:Bounds x="850" y="120" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_End_di" bpmnElement="L06_End"><dc:Bounds x="1022" y="142" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1010" y="182" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L06_Hinweis_di" bpmnElement="L06_Hinweis"><dc:Bounds x="540" y="310" width="200" height="40" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_L06_Start_L06_T1_di" bpmnElement="Flow_L06_Start_L06_T1"><di:waypoint x="218" y="160" /><di:waypoint x="280" y="160" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L06_T1_L06_Gw_di" bpmnElement="Flow_L06_T1_L06_Gw"><di:waypoint x="380" y="160" /><di:waypoint x="445" y="160" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L06_Gw_L06_T2_di" bpmnElement="Flow_L06_Gw_L06_T2"><di:waypoint x="495" y="160" /><di:waypoint x="550" y="160" /><bpmndi:BPMNLabel><dc:Bounds x="510" y="142" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L06_T2_L06_Merge_di" bpmnElement="Flow_L06_T2_L06_Merge"><di:waypoint x="650" y="160" /><di:waypoint x="735" y="160" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L06_BT_L06_Merge_di" bpmnElement="Flow_L06_BT_L06_Merge"><di:waypoint x="630" y="218" /><di:waypoint x="630" y="260" /><di:waypoint x="760" y="260" /><di:waypoint x="760" y="185" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L06_Merge_L06_Show_di" bpmnElement="Flow_L06_Merge_L06_Show"><di:waypoint x="785" y="160" /><di:waypoint x="850" y="160" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L06_Show_L06_End_di" bpmnElement="Flow_L06_Show_L06_End"><di:waypoint x="950" y="160" /><di:waypoint x="1022" y="160" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

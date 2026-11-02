@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_C01_REST_API_Investment_Approval" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_C01_REST_API_Investment_Approval">
+    <bpmn:participant id="P_C01" name="Investment Approval Process" processRef="investmentApprovalProcess_ProcessId" />
+  </bpmn:collaboration>
+  <bpmn:process id="investmentApprovalProcess_ProcessId" name="Investment Approval Process" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>02 CIB seven, Folien 14–21. Das Demo-Szenario der Einführung; gestartet wird es auf den Folien per REST-API (Postman): POST http://localhost:8080/engine-rest/process-definition/key/investmentApprovalProcess_ProcessId/start mit Header Content-Type: application/json und Body {"variables": {...}}. Die Antwort enthält die id der neuen Instanz.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_investmentApprovalProcess_ProcessId">
+      <bpmn:lane id="Lane_C01_Req" name="Requester">
+        <bpmn:flowNodeRef>C01_Start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C01_Merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C01_Enter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C01_Review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C01_End</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_C01_App" name="Approver">
+        <bpmn:flowNodeRef>C01_Approve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C01_Gw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C01_Create</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="C01_Start" name="Investment necessary">
+      <bpmn:outgoing>Flow_C01_Start_C01_Merge</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="C01_Merge">
+      <bpmn:incoming>Flow_C01_Start_C01_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_C01_Gw_C01_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_C01_Merge_C01_Enter</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="C01_Enter" name="Enter/Modify Request Data" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="product" label="Product" type="string" />
+          <camunda:formField id="quantity" label="Quantity" type="long" />
+          <camunda:formField id="comment" label="Comment" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C01_Merge_C01_Enter</bpmn:incoming>
+      <bpmn:outgoing>Flow_C01_Enter_C01_Approve</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="C01_Approve" name="Approve Request" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="approved" label="Request approved?" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_C01_Enter_C01_Approve</bpmn:incoming>
+      <bpmn:outgoing>Flow_C01_Approve_C01_Gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="C01_Gw" name="Request Approved?">
+      <bpmn:incoming>Flow_C01_Approve_C01_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_C01_Gw_C01_Create</bpmn:outgoing>
+      <bpmn:outgoing>Flow_C01_Gw_C01_Merge</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="C01_Create" name="Create Purchase Order" camunda:expression="${execution.setVariable('purchaseOrder', product)}">
+      <bpmn:incoming>Flow_C01_Gw_C01_Create</bpmn:incoming>
+      <bpmn:outgoing>Flow_C01_Create_C01_Review</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="C01_Review" name="Review Confirmation of Order Creation" camunda:assignee="demo">
+      <bpmn:incoming>Flow_C01_Create_C01_Review</bpmn:incoming>
+      <bpmn:outgoing>Flow_C01_Review_C01_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="C01_End" name="Successful Investment">
+      <bpmn:incoming>Flow_C01_Review_C01_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_C01_Start_C01_Merge" sourceRef="C01_Start" targetRef="C01_Merge" />
+    <bpmn:sequenceFlow id="Flow_C01_Merge_C01_Enter" sourceRef="C01_Merge" targetRef="C01_Enter" />
+    <bpmn:sequenceFlow id="Flow_C01_Enter_C01_Approve" sourceRef="C01_Enter" targetRef="C01_Approve" />
+    <bpmn:sequenceFlow id="Flow_C01_Approve_C01_Gw" sourceRef="C01_Approve" targetRef="C01_Gw" />
+    <bpmn:sequenceFlow id="Flow_C01_Gw_C01_Create" name="Yes" sourceRef="C01_Gw" targetRef="C01_Create">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_C01_Gw_C01_Merge" name="No" sourceRef="C01_Gw" targetRef="C01_Merge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!approved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_C01_Create_C01_Review" sourceRef="C01_Create" targetRef="C01_Review" />
+    <bpmn:sequenceFlow id="Flow_C01_Review_C01_End" sourceRef="C01_Review" targetRef="C01_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_C01_REST_API_Investment_Approval">
+    <bpmndi:BPMNPlane id="BPMNPlane_C01_REST_API_Investment_Approval" bpmnElement="Collaboration_C01_REST_API_Investment_Approval">
+      <bpmndi:BPMNShape id="P_C01_di" bpmnElement="P_C01" isHorizontal="true"><dc:Bounds x="140" y="40" width="1000" height="300" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_C01_Req_di" bpmnElement="Lane_C01_Req" isHorizontal="true"><dc:Bounds x="170" y="40" width="970" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_C01_App_di" bpmnElement="Lane_C01_App" isHorizontal="true"><dc:Bounds x="170" y="190" width="970" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_Start_di" bpmnElement="C01_Start"><dc:Bounds x="212" y="92" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="160" y="132" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_Merge_di" bpmnElement="C01_Merge" isMarkerVisible="true"><dc:Bounds x="295" y="85" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_Enter_di" bpmnElement="C01_Enter"><dc:Bounds x="400" y="70" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_Approve_di" bpmnElement="C01_Approve"><dc:Bounds x="550" y="225" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_Gw_di" bpmnElement="C01_Gw" isMarkerVisible="true"><dc:Bounds x="695" y="240" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="660" y="294" width="119" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_Create_di" bpmnElement="C01_Create"><dc:Bounds x="790" y="225" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_Review_di" bpmnElement="C01_Review"><dc:Bounds x="910" y="70" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C01_End_di" bpmnElement="C01_End"><dc:Bounds x="1062" y="92" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1010" y="132" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_C01_Start_C01_Merge_di" bpmnElement="Flow_C01_Start_C01_Merge"><di:waypoint x="248" y="110" /><di:waypoint x="295" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C01_Merge_C01_Enter_di" bpmnElement="Flow_C01_Merge_C01_Enter"><di:waypoint x="345" y="110" /><di:waypoint x="400" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C01_Enter_C01_Approve_di" bpmnElement="Flow_C01_Enter_C01_Approve"><di:waypoint x="500" y="110" /><di:waypoint x="525" y="110" /><di:waypoint x="525" y="265" /><di:waypoint x="550" y="265" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C01_Approve_C01_Gw_di" bpmnElement="Flow_C01_Approve_C01_Gw"><di:waypoint x="650" y="265" /><di:waypoint x="695" y="265" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C01_Gw_C01_Create_di" bpmnElement="Flow_C01_Gw_C01_Create"><di:waypoint x="745" y="265" /><di:waypoint x="790" y="265" /><bpmndi:BPMNLabel><dc:Bounds x="760" y="247" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C01_Gw_C01_Merge_di" bpmnElement="Flow_C01_Gw_C01_Merge"><di:waypoint x="720" y="240" /><di:waypoint x="720" y="60" /><di:waypoint x="320" y="60" /><di:waypoint x="320" y="85" /><bpmndi:BPMNLabel><dc:Bounds x="335" y="42" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C01_Create_C01_Review_di" bpmnElement="Flow_C01_Create_C01_Review"><di:waypoint x="890" y="265" /><di:waypoint x="900" y="265" /><di:waypoint x="900" y="110" /><di:waypoint x="910" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C01_Review_C01_End_di" bpmnElement="Flow_C01_Review_C01_End"><di:waypoint x="1010" y="110" /><di:waypoint x="1062" y="110" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E20_E21_Token_Semantik" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E20_E21_Token_Semantik">
+    <bpmn:participant id="P_E20" name="Folie 20: paralleles Zusammenführen" processRef="E20_Token" />
+    <bpmn:participant id="P_E21" name="Folie 21: exklusives Zusammenführen (Achtung!)" processRef="E21_Token" />
+  </bpmn:collaboration>
+  <bpmn:process id="E20_Token" name="Folie 20: paralleles Zusammenführen" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 20: Das parallele Gateway wartet auf beide Token und führt sie zu EINEM zusammen -&gt; Task 4 läuft 1x (Variable anzahlTask4 = 1).</bpmn:documentation>
+    <bpmn:startEvent id="E20_Start" name="Start">
+      <bpmn:outgoing>Flow_E20_Start_E20_T1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E20_T1" name="Task 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E20_Start_E20_T1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E20_T1_E20_Split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="E20_Split">
+      <bpmn:incoming>Flow_E20_T1_E20_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_E20_Split_E20_T2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E20_Split_E20_T3</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:businessRuleTask id="E20_T2" name="Task 2" camunda:expression="${execution.setVariable('task2', 'ausgeführt')}">
+      <bpmn:incoming>Flow_E20_Split_E20_T2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E20_T2_E20_Join</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:serviceTask id="E20_T3" name="Task 3" camunda:expression="${execution.setVariable('task3', 'ausgeführt')}">
+      <bpmn:incoming>Flow_E20_Split_E20_T3</bpmn:incoming>
+      <bpmn:outgoing>Flow_E20_T3_E20_Join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="E20_Join">
+      <bpmn:incoming>Flow_E20_T2_E20_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E20_T3_E20_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_E20_Join_E20_T4</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sendTask id="E20_T4" name="Task 4" camunda:expression="${execution.setVariable('anzahlTask4', execution.getVariable('anzahlTask4') == null ? 1 : execution.getVariable('anzahlTask4') + 1)}">
+      <bpmn:incoming>Flow_E20_Join_E20_T4</bpmn:incoming>
+      <bpmn:outgoing>Flow_E20_T4_E20_End</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="E20_End" name="Ende">
+      <bpmn:incoming>Flow_E20_T4_E20_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E20_Start_E20_T1" sourceRef="E20_Start" targetRef="E20_T1" />
+    <bpmn:sequenceFlow id="Flow_E20_T1_E20_Split" sourceRef="E20_T1" targetRef="E20_Split" />
+    <bpmn:sequenceFlow id="Flow_E20_Split_E20_T2" sourceRef="E20_Split" targetRef="E20_T2" />
+    <bpmn:sequenceFlow id="Flow_E20_Split_E20_T3" sourceRef="E20_Split" targetRef="E20_T3" />
+    <bpmn:sequenceFlow id="Flow_E20_T2_E20_Join" sourceRef="E20_T2" targetRef="E20_Join" />
+    <bpmn:sequenceFlow id="Flow_E20_T3_E20_Join" sourceRef="E20_T3" targetRef="E20_Join" />
+    <bpmn:sequenceFlow id="Flow_E20_Join_E20_T4" sourceRef="E20_Join" targetRef="E20_T4" />
+    <bpmn:sequenceFlow id="Flow_E20_T4_E20_End" sourceRef="E20_T4" targetRef="E20_End" />
+  </bpmn:process>
+  <bpmn:process id="E21_Token" name="Folie 21: exklusives Zusammenführen (Achtung!)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 21: Das exklusive Gateway ist 'dumm' und lässt jedes ankommende Token sofort durch -&gt; Task 4 läuft 2x (Variable anzahlTask4 = 2). Prüfe es im Cockpit unter Variablen/Historie.</bpmn:documentation>
+    <bpmn:startEvent id="E21_Start" name="Start">
+      <bpmn:outgoing>Flow_E21_Start_E21_T1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E21_T1" name="Task 1" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E21_Start_E21_T1</bpmn:incoming>
+      <bpmn:outgoing>Flow_E21_T1_E21_Split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="E21_Split">
+      <bpmn:incoming>Flow_E21_T1_E21_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_E21_Split_E21_T2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E21_Split_E21_T3</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:businessRuleTask id="E21_T2" name="Task 2" camunda:expression="${execution.setVariable('task2', 'ausgeführt')}">
+      <bpmn:incoming>Flow_E21_Split_E21_T2</bpmn:incoming>
+      <bpmn:outgoing>Flow_E21_T2_E21_Join</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:serviceTask id="E21_T3" name="Task 3" camunda:expression="${execution.setVariable('task3', 'ausgeführt')}">
+      <bpmn:incoming>Flow_E21_Split_E21_T3</bpmn:incoming>
+      <bpmn:outgoing>Flow_E21_T3_E21_Join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="E21_Join">
+      <bpmn:incoming>Flow_E21_T2_E21_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E21_T3_E21_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_E21_Join_E21_T4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="E21_T4" name="Task 4" camunda:expression="${execution.setVariable('anzahlTask4', execution.getVariable('anzahlTask4') == null ? 1 : execution.getVariable('anzahlTask4') + 1)}">
+      <bpmn:incoming>Flow_E21_Join_E21_T4</bpmn:incoming>
+      <bpmn:outgoing>Flow_E21_T4_E21_End</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="E21_End" name="Ende">
+      <bpmn:incoming>Flow_E21_T4_E21_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E21_Start_E21_T1" sourceRef="E21_Start" targetRef="E21_T1" />
+    <bpmn:sequenceFlow id="Flow_E21_T1_E21_Split" sourceRef="E21_T1" targetRef="E21_Split" />
+    <bpmn:sequenceFlow id="Flow_E21_Split_E21_T2" sourceRef="E21_Split" targetRef="E21_T2" />
+    <bpmn:sequenceFlow id="Flow_E21_Split_E21_T3" sourceRef="E21_Split" targetRef="E21_T3" />
+    <bpmn:sequenceFlow id="Flow_E21_T2_E21_Join" sourceRef="E21_T2" targetRef="E21_Join" />
+    <bpmn:sequenceFlow id="Flow_E21_T3_E21_Join" sourceRef="E21_T3" targetRef="E21_Join" />
+    <bpmn:sequenceFlow id="Flow_E21_Join_E21_T4" sourceRef="E21_Join" targetRef="E21_T4" />
+    <bpmn:sequenceFlow id="Flow_E21_T4_E21_End" sourceRef="E21_T4" targetRef="E21_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E20_E21_Token_Semantik">
+    <bpmndi:BPMNPlane id="BPMNPlane_E20_E21_Token_Semantik" bpmnElement="Collaboration_E20_E21_Token_Semantik">
+      <bpmndi:BPMNShape id="P_E20_di" bpmnElement="P_E20" isHorizontal="true"><dc:Bounds x="160" y="60" width="840" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E21_di" bpmnElement="P_E21" isHorizontal="true"><dc:Bounds x="160" y="360" width="840" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_Start_di" bpmnElement="E20_Start"><dc:Bounds x="212" y="172" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="200" y="212" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_T1_di" bpmnElement="E20_T1"><dc:Bounds x="280" y="150" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_Split_di" bpmnElement="E20_Split"><dc:Bounds x="425" y="165" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_T2_di" bpmnElement="E20_T2"><dc:Bounds x="520" y="70" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_T3_di" bpmnElement="E20_T3"><dc:Bounds x="520" y="230" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_Join_di" bpmnElement="E20_Join"><dc:Bounds x="665" y="165" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_T4_di" bpmnElement="E20_T4"><dc:Bounds x="760" y="150" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E20_End_di" bpmnElement="E20_End"><dc:Bounds x="912" y="172" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="900" y="212" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_Start_di" bpmnElement="E21_Start"><dc:Bounds x="212" y="472" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="200" y="512" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_T1_di" bpmnElement="E21_T1"><dc:Bounds x="280" y="450" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_Split_di" bpmnElement="E21_Split"><dc:Bounds x="425" y="465" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_T2_di" bpmnElement="E21_T2"><dc:Bounds x="520" y="370" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_T3_di" bpmnElement="E21_T3"><dc:Bounds x="520" y="530" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_Join_di" bpmnElement="E21_Join" isMarkerVisible="true"><dc:Bounds x="665" y="465" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_T4_di" bpmnElement="E21_T4"><dc:Bounds x="760" y="450" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E21_End_di" bpmnElement="E21_End"><dc:Bounds x="912" y="472" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="900" y="512" width="60" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E20_Start_E20_T1_di" bpmnElement="Flow_E20_Start_E20_T1"><di:waypoint x="248" y="190" /><di:waypoint x="280" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E20_T1_E20_Split_di" bpmnElement="Flow_E20_T1_E20_Split"><di:waypoint x="380" y="190" /><di:waypoint x="425" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E20_Split_E20_T2_di" bpmnElement="Flow_E20_Split_E20_T2"><di:waypoint x="450" y="165" /><di:waypoint x="450" y="110" /><di:waypoint x="520" y="110" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E20_Split_E20_T3_di" bpmnElement="Flow_E20_Split_E20_T3"><di:waypoint x="450" y="215" /><di:waypoint x="450" y="270" /><di:waypoint x="520" y="270" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E20_T2_E20_Join_di" bpmnElement="Flow_E20_T2_E20_Join"><di:waypoint x="620" y="110" /><di:waypoint x="690" y="110" /><di:waypoint x="690" y="165" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E20_T3_E20_Join_di" bpmnElement="Flow_E20_T3_E20_Join"><di:waypoint x="620" y="270" /><di:waypoint x="690" y="270" /><di:waypoint x="690" y="215" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E20_Join_E20_T4_di" bpmnElement="Flow_E20_Join_E20_T4"><di:waypoint x="715" y="190" /><di:waypoint x="760" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E20_T4_E20_End_di" bpmnElement="Flow_E20_T4_E20_End"><di:waypoint x="860" y="190" /><di:waypoint x="912" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_Start_E21_T1_di" bpmnElement="Flow_E21_Start_E21_T1"><di:waypoint x="248" y="490" /><di:waypoint x="280" y="490" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_T1_E21_Split_di" bpmnElement="Flow_E21_T1_E21_Split"><di:waypoint x="380" y="490" /><di:waypoint x="425" y="490" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_Split_E21_T2_di" bpmnElement="Flow_E21_Split_E21_T2"><di:waypoint x="450" y="465" /><di:waypoint x="450" y="410" /><di:waypoint x="520" y="410" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_Split_E21_T3_di" bpmnElement="Flow_E21_Split_E21_T3"><di:waypoint x="450" y="515" /><di:waypoint x="450" y="570" /><di:waypoint x="520" y="570" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_T2_E21_Join_di" bpmnElement="Flow_E21_T2_E21_Join"><di:waypoint x="620" y="410" /><di:waypoint x="690" y="410" /><di:waypoint x="690" y="465" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_T3_E21_Join_di" bpmnElement="Flow_E21_T3_E21_Join"><di:waypoint x="620" y="570" /><di:waypoint x="690" y="570" /><di:waypoint x="690" y="515" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_Join_E21_T4_di" bpmnElement="Flow_E21_Join_E21_T4"><di:waypoint x="715" y="490" /><di:waypoint x="760" y="490" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E21_T4_E21_End_di" bpmnElement="Flow_E21_T4_E21_End"><di:waypoint x="860" y="490" /><di:waypoint x="912" y="490" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

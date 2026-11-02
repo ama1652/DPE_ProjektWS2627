@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E29_Komplexes_Gateway" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E29_Komplexes_Gateway">
+    <bpmn:participant id="P_E29_A" name="A: Original der Folie (Complex Gateway – nur Ansicht)" processRef="E29_A_Original" />
+    <bpmn:participant id="P_E29_B" name="B: Ausführbare Alternative – Mehrfachinstanz mit Abschlussbedingung" processRef="E29_B_DreiVonFuenf" />
+  </bpmn:collaboration>
+  <bpmn:process id="E29_A_Original" name="A: Original der Folie (Complex Gateway – nur Ansicht)" isExecutable="false">
+    <bpmn:documentation>Folie 29: Das komplexe Gateway läuft weiter, sobald 3 von 5 Antworten da sind. Camunda 7 / CIB seven unterstützen das Complex Gateway NICHT – deshalb nur zur Ansicht. Ausführbare Alternative: Pool B.</bpmn:documentation>
+    <bpmn:startEvent id="E29A_Start">
+      <bpmn:outgoing>Flow_E29A_Start_E29A_Form</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E29A_Form" name="Formulate Questionnaire" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E29A_Start_E29A_Form</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_Form_E29A_Split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="E29A_Split">
+      <bpmn:incoming>Flow_E29A_Form_E29A_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_Split_E29A_SendRobert</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E29A_Split_E29A_SendSusan</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E29A_Split_E29A_SendBill</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E29A_Split_E29A_SendAlice</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E29A_Split_E29A_SendBobby</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:complexGateway id="E29A_Cx">
+      <bpmn:incoming>Flow_E29A_RecRobert_E29A_Cx</bpmn:incoming>
+      <bpmn:incoming>Flow_E29A_RecSusan_E29A_Cx</bpmn:incoming>
+      <bpmn:incoming>Flow_E29A_RecBill_E29A_Cx</bpmn:incoming>
+      <bpmn:incoming>Flow_E29A_RecAlice_E29A_Cx</bpmn:incoming>
+      <bpmn:incoming>Flow_E29A_RecBobby_E29A_Cx</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_Cx_E29A_Decide</bpmn:outgoing>
+    </bpmn:complexGateway>
+    <bpmn:sendTask id="E29A_SendRobert" name="Send to Robert" camunda:expression="${true}">
+      <bpmn:incoming>Flow_E29A_Split_E29A_SendRobert</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_SendRobert_E29A_RecRobert</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="E29A_RecRobert">
+      <bpmn:incoming>Flow_E29A_SendRobert_E29A_RecRobert</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_RecRobert_E29A_Cx</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E29A_RecRobert" messageRef="Message_E29_Antwort" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="E29A_SendSusan" name="Send to Susan" camunda:expression="${true}">
+      <bpmn:incoming>Flow_E29A_Split_E29A_SendSusan</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_SendSusan_E29A_RecSusan</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="E29A_RecSusan">
+      <bpmn:incoming>Flow_E29A_SendSusan_E29A_RecSusan</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_RecSusan_E29A_Cx</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E29A_RecSusan" messageRef="Message_E29_Antwort" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="E29A_SendBill" name="Send to Bill" camunda:expression="${true}">
+      <bpmn:incoming>Flow_E29A_Split_E29A_SendBill</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_SendBill_E29A_RecBill</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="E29A_RecBill">
+      <bpmn:incoming>Flow_E29A_SendBill_E29A_RecBill</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_RecBill_E29A_Cx</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E29A_RecBill" messageRef="Message_E29_Antwort" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="E29A_SendAlice" name="Send to Alice" camunda:expression="${true}">
+      <bpmn:incoming>Flow_E29A_Split_E29A_SendAlice</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_SendAlice_E29A_RecAlice</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="E29A_RecAlice">
+      <bpmn:incoming>Flow_E29A_SendAlice_E29A_RecAlice</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_RecAlice_E29A_Cx</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E29A_RecAlice" messageRef="Message_E29_Antwort" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="E29A_SendBobby" name="Send to Bobby" camunda:expression="${true}">
+      <bpmn:incoming>Flow_E29A_Split_E29A_SendBobby</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_SendBobby_E29A_RecBobby</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="E29A_RecBobby">
+      <bpmn:incoming>Flow_E29A_SendBobby_E29A_RecBobby</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_RecBobby_E29A_Cx</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E29A_RecBobby" messageRef="Message_E29_Antwort" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="E29A_Decide" name="Decide Based on Responses" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E29A_Cx_E29A_Decide</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29A_Decide_E29A_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E29A_End">
+      <bpmn:incoming>Flow_E29A_Decide_E29A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E29A_Split_E29A_SendRobert" sourceRef="E29A_Split" targetRef="E29A_SendRobert" />
+    <bpmn:sequenceFlow id="Flow_E29A_SendRobert_E29A_RecRobert" sourceRef="E29A_SendRobert" targetRef="E29A_RecRobert" />
+    <bpmn:sequenceFlow id="Flow_E29A_RecRobert_E29A_Cx" sourceRef="E29A_RecRobert" targetRef="E29A_Cx" />
+    <bpmn:sequenceFlow id="Flow_E29A_Split_E29A_SendSusan" sourceRef="E29A_Split" targetRef="E29A_SendSusan" />
+    <bpmn:sequenceFlow id="Flow_E29A_SendSusan_E29A_RecSusan" sourceRef="E29A_SendSusan" targetRef="E29A_RecSusan" />
+    <bpmn:sequenceFlow id="Flow_E29A_RecSusan_E29A_Cx" sourceRef="E29A_RecSusan" targetRef="E29A_Cx" />
+    <bpmn:sequenceFlow id="Flow_E29A_Split_E29A_SendBill" sourceRef="E29A_Split" targetRef="E29A_SendBill" />
+    <bpmn:sequenceFlow id="Flow_E29A_SendBill_E29A_RecBill" sourceRef="E29A_SendBill" targetRef="E29A_RecBill" />
+    <bpmn:sequenceFlow id="Flow_E29A_RecBill_E29A_Cx" sourceRef="E29A_RecBill" targetRef="E29A_Cx" />
+    <bpmn:sequenceFlow id="Flow_E29A_Split_E29A_SendAlice" sourceRef="E29A_Split" targetRef="E29A_SendAlice" />
+    <bpmn:sequenceFlow id="Flow_E29A_SendAlice_E29A_RecAlice" sourceRef="E29A_SendAlice" targetRef="E29A_RecAlice" />
+    <bpmn:sequenceFlow id="Flow_E29A_RecAlice_E29A_Cx" sourceRef="E29A_RecAlice" targetRef="E29A_Cx" />
+    <bpmn:sequenceFlow id="Flow_E29A_Split_E29A_SendBobby" sourceRef="E29A_Split" targetRef="E29A_SendBobby" />
+    <bpmn:sequenceFlow id="Flow_E29A_SendBobby_E29A_RecBobby" sourceRef="E29A_SendBobby" targetRef="E29A_RecBobby" />
+    <bpmn:sequenceFlow id="Flow_E29A_RecBobby_E29A_Cx" sourceRef="E29A_RecBobby" targetRef="E29A_Cx" />
+    <bpmn:sequenceFlow id="Flow_E29A_Start_E29A_Form" sourceRef="E29A_Start" targetRef="E29A_Form" />
+    <bpmn:sequenceFlow id="Flow_E29A_Form_E29A_Split" sourceRef="E29A_Form" targetRef="E29A_Split" />
+    <bpmn:sequenceFlow id="Flow_E29A_Cx_E29A_Decide" sourceRef="E29A_Cx" targetRef="E29A_Decide" />
+    <bpmn:sequenceFlow id="Flow_E29A_Decide_E29A_End" sourceRef="E29A_Decide" targetRef="E29A_End" />
+    <bpmn:textAnnotation id="E29A_Ann"><bpmn:text>3 Responses of 5 Received</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_E29A_Cx_E29A_Ann" sourceRef="E29A_Cx" targetRef="E29A_Ann" />
+  </bpmn:process>
+  <bpmn:process id="E29_B_DreiVonFuenf" name="B: Ausführbare Alternative – Mehrfachinstanz mit Abschlussbedingung" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Ausführbarer Ersatz für Folie 29: Der Teilprozess läuft 5x parallel (je Person einmal). Abschlussbedingung: ${nrOfCompletedInstances &gt;= 3}. Sobald du 3 der 5 Aufgaben 'Antwort erfassen' erledigt hast, werden die 2 übrigen automatisch abgebrochen und 'Decide Based on Responses' erscheint.</bpmn:documentation>
+    <bpmn:startEvent id="E29B_Start">
+      <bpmn:outgoing>Flow_E29B_Start_E29B_Form</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="E29B_Form" name="Formulate Questionnaire" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E29B_Start_E29B_Form</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29B_Form_E29B_Sub</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="E29B_Sub" name="Befragung (5x parallel, fertig bei 3 Antworten)">
+      <bpmn:incoming>Flow_E29B_Form_E29B_Sub</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29B_Sub_E29B_Decide</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">5</bpmn:loopCardinality>
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${nrOfCompletedInstances &gt;= 3}</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+      <bpmn:startEvent id="E29B_S_Start">
+        <bpmn:outgoing>Flow_E29B_S_Start_E29B_S_Send</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sendTask id="E29B_S_Send" name="Fragebogen senden" camunda:expression="${execution.setVariable('person', loopCounter + 1)}">
+        <bpmn:incoming>Flow_E29B_S_Start_E29B_S_Send</bpmn:incoming>
+        <bpmn:outgoing>Flow_E29B_S_Send_E29B_S_Ans</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:userTask id="E29B_S_Ans" name="Antwort erfassen" camunda:assignee="demo">
+        <bpmn:incoming>Flow_E29B_S_Send_E29B_S_Ans</bpmn:incoming>
+        <bpmn:outgoing>Flow_E29B_S_Ans_E29B_S_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="E29B_S_End">
+        <bpmn:incoming>Flow_E29B_S_Ans_E29B_S_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_E29B_S_Start_E29B_S_Send" sourceRef="E29B_S_Start" targetRef="E29B_S_Send" />
+      <bpmn:sequenceFlow id="Flow_E29B_S_Send_E29B_S_Ans" sourceRef="E29B_S_Send" targetRef="E29B_S_Ans" />
+      <bpmn:sequenceFlow id="Flow_E29B_S_Ans_E29B_S_End" sourceRef="E29B_S_Ans" targetRef="E29B_S_End" />
+    </bpmn:subProcess>
+    <bpmn:userTask id="E29B_Decide" name="Decide Based on Responses" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E29B_Sub_E29B_Decide</bpmn:incoming>
+      <bpmn:outgoing>Flow_E29B_Decide_E29B_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E29B_End">
+      <bpmn:incoming>Flow_E29B_Decide_E29B_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E29B_Start_E29B_Form" sourceRef="E29B_Start" targetRef="E29B_Form" />
+    <bpmn:sequenceFlow id="Flow_E29B_Form_E29B_Sub" sourceRef="E29B_Form" targetRef="E29B_Sub" />
+    <bpmn:sequenceFlow id="Flow_E29B_Sub_E29B_Decide" sourceRef="E29B_Sub" targetRef="E29B_Decide" />
+    <bpmn:sequenceFlow id="Flow_E29B_Decide_E29B_End" sourceRef="E29B_Decide" targetRef="E29B_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_E29_Antwort" name="E29_Antwort" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E29_Komplexes_Gateway">
+    <bpmndi:BPMNPlane id="BPMNPlane_E29_Komplexes_Gateway" bpmnElement="Collaboration_E29_Komplexes_Gateway">
+      <bpmndi:BPMNShape id="P_E29_A_di" bpmnElement="P_E29_A" isHorizontal="true"><dc:Bounds x="160" y="40" width="900" height="470" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E29_B_di" bpmnElement="P_E29_B" isHorizontal="true"><dc:Bounds x="160" y="550" width="900" height="260" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_Sub_di" bpmnElement="E29B_Sub" isExpanded="true"><dc:Bounds x="420" y="600" width="380" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_Start_di" bpmnElement="E29A_Start"><dc:Bounds x="202" y="257" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_Form_di" bpmnElement="E29A_Form"><dc:Bounds x="270" y="235" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_Split_di" bpmnElement="E29A_Split"><dc:Bounds x="405" y="250" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_Cx_di" bpmnElement="E29A_Cx"><dc:Bounds x="755" y="250" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_Ann_di" bpmnElement="E29A_Ann"><dc:Bounds x="805" y="145" width="110" height="40" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_SendRobert_di" bpmnElement="E29A_SendRobert"><dc:Bounds x="490" y="55" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_RecRobert_di" bpmnElement="E29A_RecRobert"><dc:Bounds x="642" y="77" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_SendSusan_di" bpmnElement="E29A_SendSusan"><dc:Bounds x="490" y="145" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_RecSusan_di" bpmnElement="E29A_RecSusan"><dc:Bounds x="642" y="167" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_SendBill_di" bpmnElement="E29A_SendBill"><dc:Bounds x="490" y="235" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_RecBill_di" bpmnElement="E29A_RecBill"><dc:Bounds x="642" y="257" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_SendAlice_di" bpmnElement="E29A_SendAlice"><dc:Bounds x="490" y="325" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_RecAlice_di" bpmnElement="E29A_RecAlice"><dc:Bounds x="642" y="347" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_SendBobby_di" bpmnElement="E29A_SendBobby"><dc:Bounds x="490" y="415" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_RecBobby_di" bpmnElement="E29A_RecBobby"><dc:Bounds x="642" y="437" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_Decide_di" bpmnElement="E29A_Decide"><dc:Bounds x="850" y="235" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29A_End_di" bpmnElement="E29A_End"><dc:Bounds x="992" y="257" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_Start_di" bpmnElement="E29B_Start"><dc:Bounds x="202" y="662" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_Form_di" bpmnElement="E29B_Form"><dc:Bounds x="270" y="640" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_S_Start_di" bpmnElement="E29B_S_Start"><dc:Bounds x="437" y="672" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_S_Send_di" bpmnElement="E29B_S_Send"><dc:Bounds x="490" y="650" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_S_Ans_di" bpmnElement="E29B_S_Ans"><dc:Bounds x="630" y="650" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_S_End_di" bpmnElement="E29B_S_End"><dc:Bounds x="752" y="672" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_Decide_di" bpmnElement="E29B_Decide"><dc:Bounds x="850" y="640" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E29B_End_di" bpmnElement="E29B_End"><dc:Bounds x="992" y="662" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E29A_Split_E29A_SendRobert_di" bpmnElement="Flow_E29A_Split_E29A_SendRobert"><di:waypoint x="430" y="250" /><di:waypoint x="430" y="95" /><di:waypoint x="490" y="95" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_SendRobert_E29A_RecRobert_di" bpmnElement="Flow_E29A_SendRobert_E29A_RecRobert"><di:waypoint x="590" y="95" /><di:waypoint x="642" y="95" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_RecRobert_E29A_Cx_di" bpmnElement="Flow_E29A_RecRobert_E29A_Cx"><di:waypoint x="678" y="95" /><di:waypoint x="780" y="95" /><di:waypoint x="780" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Split_E29A_SendSusan_di" bpmnElement="Flow_E29A_Split_E29A_SendSusan"><di:waypoint x="430" y="250" /><di:waypoint x="430" y="185" /><di:waypoint x="490" y="185" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_SendSusan_E29A_RecSusan_di" bpmnElement="Flow_E29A_SendSusan_E29A_RecSusan"><di:waypoint x="590" y="185" /><di:waypoint x="642" y="185" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_RecSusan_E29A_Cx_di" bpmnElement="Flow_E29A_RecSusan_E29A_Cx"><di:waypoint x="678" y="185" /><di:waypoint x="780" y="185" /><di:waypoint x="780" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Split_E29A_SendBill_di" bpmnElement="Flow_E29A_Split_E29A_SendBill"><di:waypoint x="455" y="275" /><di:waypoint x="490" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_SendBill_E29A_RecBill_di" bpmnElement="Flow_E29A_SendBill_E29A_RecBill"><di:waypoint x="590" y="275" /><di:waypoint x="642" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_RecBill_E29A_Cx_di" bpmnElement="Flow_E29A_RecBill_E29A_Cx"><di:waypoint x="678" y="275" /><di:waypoint x="755" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Split_E29A_SendAlice_di" bpmnElement="Flow_E29A_Split_E29A_SendAlice"><di:waypoint x="430" y="300" /><di:waypoint x="430" y="365" /><di:waypoint x="490" y="365" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_SendAlice_E29A_RecAlice_di" bpmnElement="Flow_E29A_SendAlice_E29A_RecAlice"><di:waypoint x="590" y="365" /><di:waypoint x="642" y="365" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_RecAlice_E29A_Cx_di" bpmnElement="Flow_E29A_RecAlice_E29A_Cx"><di:waypoint x="678" y="365" /><di:waypoint x="780" y="365" /><di:waypoint x="780" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Split_E29A_SendBobby_di" bpmnElement="Flow_E29A_Split_E29A_SendBobby"><di:waypoint x="430" y="300" /><di:waypoint x="430" y="455" /><di:waypoint x="490" y="455" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_SendBobby_E29A_RecBobby_di" bpmnElement="Flow_E29A_SendBobby_E29A_RecBobby"><di:waypoint x="590" y="455" /><di:waypoint x="642" y="455" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_RecBobby_E29A_Cx_di" bpmnElement="Flow_E29A_RecBobby_E29A_Cx"><di:waypoint x="678" y="455" /><di:waypoint x="780" y="455" /><di:waypoint x="780" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Start_E29A_Form_di" bpmnElement="Flow_E29A_Start_E29A_Form"><di:waypoint x="238" y="275" /><di:waypoint x="270" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Form_E29A_Split_di" bpmnElement="Flow_E29A_Form_E29A_Split"><di:waypoint x="370" y="275" /><di:waypoint x="405" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Cx_E29A_Decide_di" bpmnElement="Flow_E29A_Cx_E29A_Decide"><di:waypoint x="805" y="275" /><di:waypoint x="850" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29A_Decide_E29A_End_di" bpmnElement="Flow_E29A_Decide_E29A_End"><di:waypoint x="950" y="275" /><di:waypoint x="992" y="275" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29B_S_Start_E29B_S_Send_di" bpmnElement="Flow_E29B_S_Start_E29B_S_Send"><di:waypoint x="473" y="690" /><di:waypoint x="490" y="690" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29B_S_Send_E29B_S_Ans_di" bpmnElement="Flow_E29B_S_Send_E29B_S_Ans"><di:waypoint x="590" y="690" /><di:waypoint x="630" y="690" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29B_S_Ans_E29B_S_End_di" bpmnElement="Flow_E29B_S_Ans_E29B_S_End"><di:waypoint x="730" y="690" /><di:waypoint x="752" y="690" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29B_Start_E29B_Form_di" bpmnElement="Flow_E29B_Start_E29B_Form"><di:waypoint x="238" y="680" /><di:waypoint x="270" y="680" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29B_Form_E29B_Sub_di" bpmnElement="Flow_E29B_Form_E29B_Sub"><di:waypoint x="370" y="680" /><di:waypoint x="420" y="680" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29B_Sub_E29B_Decide_di" bpmnElement="Flow_E29B_Sub_E29B_Decide"><di:waypoint x="800" y="680" /><di:waypoint x="850" y="680" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E29B_Decide_E29B_End_di" bpmnElement="Flow_E29B_Decide_E29B_End"><di:waypoint x="950" y="680" /><di:waypoint x="992" y="680" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_E29A_Cx_E29A_Ann_di" bpmnElement="Assoc_E29A_Cx_E29A_Ann"><di:waypoint x="790" y="260" /><di:waypoint x="860" y="185" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

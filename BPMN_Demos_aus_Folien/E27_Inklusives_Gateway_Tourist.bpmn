@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_E27_Inklusives_Gateway_Tourist" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_E27_Inklusives_Gateway_Tourist">
+    <bpmn:participant id="P_E27_Tourist" name="Tourist" />
+    <bpmn:participant id="P_E27" name="Touristen-Information" processRef="E27_TouristInfo" />
+    <bpmn:messageFlow id="MsgFlow_P_E27_Tourist_E27_Start" sourceRef="P_E27_Tourist" targetRef="E27_Start" />
+    <bpmn:messageFlow id="MsgFlow_E27_End_P_E27_Tourist" sourceRef="E27_End" targetRef="P_E27_Tourist" />
+  </bpmn:collaboration>
+  <bpmn:process id="E27_TouristInfo" name="Touristen-Information" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 27: Das inklusive (ODER-)Gateway nimmt JEDEN Pfad, dessen Bedingung wahr ist (1 bis 5 Pfade). Das zusammenführende ODER-Gateway wartet genau auf diese Pfade. Mindestens eine Option ankreuzen!</bpmn:documentation>
+    <bpmn:startEvent id="E27_Start" name="Request Received">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="cityMap" label="City Map?" type="boolean" defaultValue="True" />
+          <camunda:formField id="transport" label="Public Transport Guide?" type="boolean" defaultValue="False" />
+          <camunda:formField id="eventGuide" label="Event Guide?" type="boolean" defaultValue="True" />
+          <camunda:formField id="restaurant" label="Restaurant Guide?" type="boolean" defaultValue="False" />
+          <camunda:formField id="sightseeing" label="Sightseeing Guide?" type="boolean" defaultValue="False" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_E27_Start_E27_Split</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_E27_Start" messageRef="Message_E27_TouristenAnfrage" />
+    </bpmn:startEvent>
+    <bpmn:inclusiveGateway id="E27_Split" name="What is requested?">
+      <bpmn:incoming>Flow_E27_Start_E27_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_E27_Split_E27_CityMap</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E27_Split_E27_Transport</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E27_Split_E27_Event</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E27_Split_E27_Restaurant</bpmn:outgoing>
+      <bpmn:outgoing>Flow_E27_Split_E27_Sight</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:inclusiveGateway id="E27_Join">
+      <bpmn:incoming>Flow_E27_CityMap_E27_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E27_Transport_E27_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E27_Event_E27_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E27_Restaurant_E27_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_E27_Sight_E27_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_E27_Join_E27_End</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="E27_CityMap" name="Add City Map" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E27_Split_E27_CityMap</bpmn:incoming>
+      <bpmn:outgoing>Flow_E27_CityMap_E27_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E27_Transport" name="Add Public Transport Guide" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E27_Split_E27_Transport</bpmn:incoming>
+      <bpmn:outgoing>Flow_E27_Transport_E27_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E27_Event" name="Add Event Guide" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E27_Split_E27_Event</bpmn:incoming>
+      <bpmn:outgoing>Flow_E27_Event_E27_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E27_Restaurant" name="Add Restaurant Guide" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E27_Split_E27_Restaurant</bpmn:incoming>
+      <bpmn:outgoing>Flow_E27_Restaurant_E27_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="E27_Sight" name="Add Sightseeing Guide" camunda:assignee="demo">
+      <bpmn:incoming>Flow_E27_Split_E27_Sight</bpmn:incoming>
+      <bpmn:outgoing>Flow_E27_Sight_E27_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="E27_End" name="Send Response">
+      <bpmn:incoming>Flow_E27_Join_E27_End</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_E27_End" messageRef="Message_E27_Antwort" camunda:expression="${execution.setVariable('letzteNachricht', 'Antwort an Tourist gesendet')}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_E27_Split_E27_CityMap" name="City Map" sourceRef="E27_Split" targetRef="E27_CityMap">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${cityMap}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E27_CityMap_E27_Join" sourceRef="E27_CityMap" targetRef="E27_Join" />
+    <bpmn:sequenceFlow id="Flow_E27_Split_E27_Transport" name="Public Transport Guide" sourceRef="E27_Split" targetRef="E27_Transport">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${transport}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E27_Transport_E27_Join" sourceRef="E27_Transport" targetRef="E27_Join" />
+    <bpmn:sequenceFlow id="Flow_E27_Split_E27_Event" name="Event Guide" sourceRef="E27_Split" targetRef="E27_Event">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${eventGuide}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E27_Event_E27_Join" sourceRef="E27_Event" targetRef="E27_Join" />
+    <bpmn:sequenceFlow id="Flow_E27_Split_E27_Restaurant" name="Restaurant Guide" sourceRef="E27_Split" targetRef="E27_Restaurant">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${restaurant}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E27_Restaurant_E27_Join" sourceRef="E27_Restaurant" targetRef="E27_Join" />
+    <bpmn:sequenceFlow id="Flow_E27_Split_E27_Sight" name="Sightseeing Guide" sourceRef="E27_Split" targetRef="E27_Sight">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${sightseeing}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_E27_Sight_E27_Join" sourceRef="E27_Sight" targetRef="E27_Join" />
+    <bpmn:sequenceFlow id="Flow_E27_Start_E27_Split" sourceRef="E27_Start" targetRef="E27_Split" />
+    <bpmn:sequenceFlow id="Flow_E27_Join_E27_End" sourceRef="E27_Join" targetRef="E27_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_E27_TouristenAnfrage" name="E27_TouristenAnfrage" />
+  <bpmn:message id="Message_E27_Antwort" name="E27_Antwort" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_E27_Inklusives_Gateway_Tourist">
+    <bpmndi:BPMNPlane id="BPMNPlane_E27_Inklusives_Gateway_Tourist" bpmnElement="Collaboration_E27_Inklusives_Gateway_Tourist">
+      <bpmndi:BPMNShape id="P_E27_Tourist_di" bpmnElement="P_E27_Tourist" isHorizontal="true"><dc:Bounds x="160" y="40" width="820" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_E27_di" bpmnElement="P_E27" isHorizontal="true"><dc:Bounds x="160" y="130" width="820" height="630" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_Start_di" bpmnElement="E27_Start"><dc:Bounds x="212" y="382" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="174" y="422" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_Split_di" bpmnElement="E27_Split"><dc:Bounds x="295" y="375" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="349" y="393" width="126" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_Join_di" bpmnElement="E27_Join"><dc:Bounds x="735" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_CityMap_di" bpmnElement="E27_CityMap"><dc:Bounds x="560" y="150" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_Transport_di" bpmnElement="E27_Transport"><dc:Bounds x="560" y="260" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_Event_di" bpmnElement="E27_Event"><dc:Bounds x="560" y="460" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_Restaurant_di" bpmnElement="E27_Restaurant"><dc:Bounds x="560" y="560" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_Sight_di" bpmnElement="E27_Sight"><dc:Bounds x="560" y="660" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E27_End_di" bpmnElement="E27_End"><dc:Bounds x="842" y="382" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="814" y="422" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_E27_Split_E27_CityMap_di" bpmnElement="Flow_E27_Split_E27_CityMap"><di:waypoint x="320" y="375" /><di:waypoint x="320" y="190" /><di:waypoint x="560" y="190" /><bpmndi:BPMNLabel><dc:Bounds x="335" y="172" width="48" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_CityMap_E27_Join_di" bpmnElement="Flow_E27_CityMap_E27_Join"><di:waypoint x="660" y="190" /><di:waypoint x="760" y="190" /><di:waypoint x="760" y="375" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Split_E27_Transport_di" bpmnElement="Flow_E27_Split_E27_Transport"><di:waypoint x="320" y="375" /><di:waypoint x="320" y="300" /><di:waypoint x="560" y="300" /><bpmndi:BPMNLabel><dc:Bounds x="335" y="282" width="132" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Transport_E27_Join_di" bpmnElement="Flow_E27_Transport_E27_Join"><di:waypoint x="660" y="300" /><di:waypoint x="760" y="300" /><di:waypoint x="760" y="375" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Split_E27_Event_di" bpmnElement="Flow_E27_Split_E27_Event"><di:waypoint x="320" y="425" /><di:waypoint x="320" y="500" /><di:waypoint x="560" y="500" /><bpmndi:BPMNLabel><dc:Bounds x="335" y="482" width="66" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Event_E27_Join_di" bpmnElement="Flow_E27_Event_E27_Join"><di:waypoint x="660" y="500" /><di:waypoint x="760" y="500" /><di:waypoint x="760" y="425" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Split_E27_Restaurant_di" bpmnElement="Flow_E27_Split_E27_Restaurant"><di:waypoint x="320" y="425" /><di:waypoint x="320" y="600" /><di:waypoint x="560" y="600" /><bpmndi:BPMNLabel><dc:Bounds x="335" y="582" width="96" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Restaurant_E27_Join_di" bpmnElement="Flow_E27_Restaurant_E27_Join"><di:waypoint x="660" y="600" /><di:waypoint x="760" y="600" /><di:waypoint x="760" y="425" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Split_E27_Sight_di" bpmnElement="Flow_E27_Split_E27_Sight"><di:waypoint x="320" y="425" /><di:waypoint x="320" y="700" /><di:waypoint x="560" y="700" /><bpmndi:BPMNLabel><dc:Bounds x="335" y="682" width="102" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Sight_E27_Join_di" bpmnElement="Flow_E27_Sight_E27_Join"><di:waypoint x="660" y="700" /><di:waypoint x="760" y="700" /><di:waypoint x="760" y="425" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Start_E27_Split_di" bpmnElement="Flow_E27_Start_E27_Split"><di:waypoint x="248" y="400" /><di:waypoint x="295" y="400" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_E27_Join_E27_End_di" bpmnElement="Flow_E27_Join_E27_End"><di:waypoint x="785" y="400" /><di:waypoint x="842" y="400" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_E27_Tourist_E27_Start_di" bpmnElement="MsgFlow_P_E27_Tourist_E27_Start"><di:waypoint x="230" y="100" /><di:waypoint x="230" y="382" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_E27_End_P_E27_Tourist_di" bpmnElement="MsgFlow_E27_End_P_E27_Tourist"><di:waypoint x="860" y="382" /><di:waypoint x="860" y="100" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

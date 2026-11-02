@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_A18_Timeout_Ereignisbasiertes_Gateway" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_A18_Timeout_Ereignisbasiertes_Gateway">
+    <bpmn:participant id="P_A18_PDA" name="Process Driven Application" />
+    <bpmn:participant id="P_A18_SCIL" name="Service Contract Implementation Layer" processRef="A18_ServiceContract" />
+    <bpmn:participant id="P_A18_SP" name="Service Provider" />
+    <bpmn:messageFlow id="MsgFlow_P_A18_PDA_A18_Start" sourceRef="P_A18_PDA" targetRef="A18_Start" />
+    <bpmn:messageFlow id="MsgFlow_A18_Send_P_A18_SP" sourceRef="A18_Send" targetRef="P_A18_SP" />
+    <bpmn:messageFlow id="MsgFlow_P_A18_SP_A18_Rec" sourceRef="P_A18_SP" targetRef="A18_Rec" />
+    <bpmn:messageFlow id="MsgFlow_A18_EndOk_P_A18_PDA" sourceRef="A18_EndOk" targetRef="P_A18_PDA" />
+    <bpmn:messageFlow id="MsgFlow_A18_EndErr_P_A18_PDA" sourceRef="A18_EndErr" targetRef="P_A18_PDA" />
+  </bpmn:collaboration>
+  <bpmn:process id="A18_ServiceContract" name="Service Contract Implementation Layer" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Folie 18: Das ereignisbasierte Gateway wartet auf das, was ZUERST passiert: Antwort des Service Providers oder Ablauf von 15 Sekunden. Nach diesem Gateway dürfen nur Ereignisse (oder Receive Tasks) folgen. Starten: ./dpe-demo.sh start A18_ServiceContract, dann innerhalb von 15 s: ./dpe-demo.sh msg A18_Antwort &lt;processInstanceId&gt;</bpmn:documentation>
+    <bpmn:startEvent id="A18_Start" name="Service-Request">
+      <bpmn:outgoing>Flow_A18_Start_A18_Send</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A18_Start" messageRef="Message_A18_ServiceRequest" />
+    </bpmn:startEvent>
+    <bpmn:intermediateThrowEvent id="A18_Send" name="Message to Service Provider">
+      <bpmn:incoming>Flow_A18_Start_A18_Send</bpmn:incoming>
+      <bpmn:outgoing>Flow_A18_Send_A18_Gw</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A18_Send" messageRef="Message_A18_AnProvider" camunda:expression="${execution.setVariable('letzteNachricht', 'Anfrage an Service Provider')}" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:eventBasedGateway id="A18_Gw">
+      <bpmn:incoming>Flow_A18_Send_A18_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_A18_Gw_A18_Rec</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A18_Gw_A18_Timer</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="A18_Rec" name="Message from Service Provider">
+      <bpmn:incoming>Flow_A18_Gw_A18_Rec</bpmn:incoming>
+      <bpmn:outgoing>Flow_A18_Rec_A18_EndOk</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_A18_Rec" messageRef="Message_A18_Antwort" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="A18_Timer" name="max. 15 sec Waiting Time">
+      <bpmn:incoming>Flow_A18_Gw_A18_Timer</bpmn:incoming>
+      <bpmn:outgoing>Flow_A18_Timer_A18_EndErr</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_A18_Timer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="A18_EndOk" name="Service-Response">
+      <bpmn:incoming>Flow_A18_Rec_A18_EndOk</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A18_EndOk" messageRef="Message_A18_Response" camunda:expression="${execution.setVariable('letzteNachricht', 'Antwort an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="A18_EndErr" name="Error Message">
+      <bpmn:incoming>Flow_A18_Timer_A18_EndErr</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MessageDef_A18_EndErr" messageRef="Message_A18_Error" camunda:expression="${execution.setVariable('letzteNachricht', 'Fehlermeldung an Anwendung')}" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A18_Start_A18_Send" sourceRef="A18_Start" targetRef="A18_Send" />
+    <bpmn:sequenceFlow id="Flow_A18_Send_A18_Gw" sourceRef="A18_Send" targetRef="A18_Gw" />
+    <bpmn:sequenceFlow id="Flow_A18_Gw_A18_Rec" sourceRef="A18_Gw" targetRef="A18_Rec" />
+    <bpmn:sequenceFlow id="Flow_A18_Gw_A18_Timer" sourceRef="A18_Gw" targetRef="A18_Timer" />
+    <bpmn:sequenceFlow id="Flow_A18_Rec_A18_EndOk" sourceRef="A18_Rec" targetRef="A18_EndOk" />
+    <bpmn:sequenceFlow id="Flow_A18_Timer_A18_EndErr" sourceRef="A18_Timer" targetRef="A18_EndErr" />
+  </bpmn:process>
+  <bpmn:message id="Message_A18_ServiceRequest" name="A18_ServiceRequest" />
+  <bpmn:message id="Message_A18_AnProvider" name="A18_AnProvider" />
+  <bpmn:message id="Message_A18_Antwort" name="A18_Antwort" />
+  <bpmn:message id="Message_A18_Response" name="A18_Response" />
+  <bpmn:message id="Message_A18_Error" name="A18_Error" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_A18_Timeout_Ereignisbasiertes_Gateway">
+    <bpmndi:BPMNPlane id="BPMNPlane_A18_Timeout_Ereignisbasiertes_Gateway" bpmnElement="Collaboration_A18_Timeout_Ereignisbasiertes_Gateway">
+      <bpmndi:BPMNShape id="P_A18_PDA_di" bpmnElement="P_A18_PDA" isHorizontal="true"><dc:Bounds x="140" y="40" width="860" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A18_SCIL_di" bpmnElement="P_A18_SCIL" isHorizontal="true"><dc:Bounds x="140" y="140" width="860" height="230" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_A18_SP_di" bpmnElement="P_A18_SP" isHorizontal="true"><dc:Bounds x="140" y="410" width="860" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A18_Start_di" bpmnElement="A18_Start"><dc:Bounds x="242" y="212" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="208" y="252" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A18_Send_di" bpmnElement="A18_Send"><dc:Bounds x="342" y="212" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="290" y="252" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A18_Gw_di" bpmnElement="A18_Gw"><dc:Bounds x="435" y="205" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A18_Rec_di" bpmnElement="A18_Rec"><dc:Bounds x="542" y="162" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="490" y="132" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A18_Timer_di" bpmnElement="A18_Timer"><dc:Bounds x="602" y="282" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="550" y="322" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A18_EndOk_di" bpmnElement="A18_EndOk"><dc:Bounds x="682" y="162" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="644" y="202" width="112" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="A18_EndErr_di" bpmnElement="A18_EndErr"><dc:Bounds x="762" y="282" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="734" y="322" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A18_Start_A18_Send_di" bpmnElement="Flow_A18_Start_A18_Send"><di:waypoint x="278" y="230" /><di:waypoint x="342" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A18_Send_A18_Gw_di" bpmnElement="Flow_A18_Send_A18_Gw"><di:waypoint x="378" y="230" /><di:waypoint x="435" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A18_Gw_A18_Rec_di" bpmnElement="Flow_A18_Gw_A18_Rec"><di:waypoint x="460" y="205" /><di:waypoint x="460" y="180" /><di:waypoint x="542" y="180" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A18_Gw_A18_Timer_di" bpmnElement="Flow_A18_Gw_A18_Timer"><di:waypoint x="460" y="255" /><di:waypoint x="460" y="300" /><di:waypoint x="602" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A18_Rec_A18_EndOk_di" bpmnElement="Flow_A18_Rec_A18_EndOk"><di:waypoint x="578" y="180" /><di:waypoint x="682" y="180" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A18_Timer_A18_EndErr_di" bpmnElement="Flow_A18_Timer_A18_EndErr"><di:waypoint x="638" y="300" /><di:waypoint x="762" y="300" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A18_PDA_A18_Start_di" bpmnElement="MsgFlow_P_A18_PDA_A18_Start"><di:waypoint x="260" y="100" /><di:waypoint x="260" y="212" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A18_Send_P_A18_SP_di" bpmnElement="MsgFlow_A18_Send_P_A18_SP"><di:waypoint x="360" y="248" /><di:waypoint x="360" y="410" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_P_A18_SP_A18_Rec_di" bpmnElement="MsgFlow_P_A18_SP_A18_Rec"><di:waypoint x="560" y="410" /><di:waypoint x="560" y="198" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A18_EndOk_P_A18_PDA_di" bpmnElement="MsgFlow_A18_EndOk_P_A18_PDA"><di:waypoint x="700" y="162" /><di:waypoint x="700" y="100" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_A18_EndErr_P_A18_PDA_di" bpmnElement="MsgFlow_A18_EndErr_P_A18_PDA"><di:waypoint x="780" y="282" /><di:waypoint x="780" y="100" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

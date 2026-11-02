@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_L03_Verschachtelte_Teilprozesse_Sichtbarkeit" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_L03_Verschachtelte_Teilprozesse_Sichtbarkeit">
+    <bpmn:participant id="P_L03" name="Verschachtelte Teilprozesse - Prozessebene 0" processRef="L03_VerschachtelteTeilprozesse" />
+  </bpmn:collaboration>
+  <bpmn:process id="L03_VerschachtelteTeilprozesse" name="Verschachtelte Teilprozesse - Prozessebene 0" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>04 Sichtbarkeit von Variablen, Folien 9–21. Auf jeder Ebene setzt ein Execution Listener (start) eine LOKALE Variable. Ebene 1 legt zusätzlich ebene1SchattenVar an. Fragen der Folien zum Ausprobieren: (1) In welchem Scope landet das neue Formularfeld dateneingabeVar? -&gt; ganz oben (Prozessebene 0), weil setVariable() von innen nach außen sucht und spätestens im äußersten Scope anlegt. (2) Wo landet ebene3outputMappingVar? -&gt; ebenfalls ganz oben. (3) ebene1SchattenVar wird auf Ebene 1 gefunden und dort überschrieben. Nach jeder Ebene sind deren lokale Variablen weg – vergleiche die 'Datenanzeige'-Aufgaben und das Cockpit (Spalte Scope).</bpmn:documentation>
+    <bpmn:startEvent id="L03_Start">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression='${execution.setVariableLocal("ebene0Var", "Ebene 0")}' event="start" />
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_L03_Start_L03_E1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="L03_E1" name="Prozessebene 1">
+      <bpmn:incoming>Flow_L03_Start_L03_E1</bpmn:incoming>
+      <bpmn:outgoing>Flow_L03_E1_L03_Anz0</bpmn:outgoing>
+      <bpmn:startEvent id="L03_E1_Start">
+        <bpmn:extensionElements>
+          <camunda:executionListener expression='${execution.setVariableLocal("ebene1Var", "Ebene 1")}' event="start" />
+          <camunda:executionListener expression='${execution.setVariableLocal("ebene1SchattenVar", "Ebene 1 Schattenvar")}' event="start" />
+        </bpmn:extensionElements>
+        <bpmn:outgoing>Flow_L03_E1_Start_L03_E2</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:subProcess id="L03_E2" name="Prozessebene 2">
+        <bpmn:incoming>Flow_L03_E1_Start_L03_E2</bpmn:incoming>
+        <bpmn:outgoing>Flow_L03_E2_L03_Anz1</bpmn:outgoing>
+        <bpmn:startEvent id="L03_E2_Start">
+          <bpmn:extensionElements>
+            <camunda:executionListener expression='${execution.setVariableLocal("ebene2Var", "Ebene 2")}' event="start" />
+          </bpmn:extensionElements>
+          <bpmn:outgoing>Flow_L03_E2_Start_L03_E3</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:subProcess id="L03_E3" name="Prozessebene 3">
+          <bpmn:extensionElements>
+            <camunda:inputOutput>
+              <camunda:outputParameter name="ebene1SchattenVar">${dateneingabeVar}</camunda:outputParameter>
+              <camunda:outputParameter name="ebene3outputMappingVar">${dateneingabeVar}</camunda:outputParameter>
+            </camunda:inputOutput>
+          </bpmn:extensionElements>
+          <bpmn:incoming>Flow_L03_E2_Start_L03_E3</bpmn:incoming>
+          <bpmn:outgoing>Flow_L03_E3_L03_Anz2</bpmn:outgoing>
+          <bpmn:startEvent id="L03_E3_Start">
+            <bpmn:extensionElements>
+              <camunda:executionListener expression='${execution.setVariableLocal("ebene3Var", "Ebene 3")}' event="start" />
+            </bpmn:extensionElements>
+            <bpmn:outgoing>Flow_L03_E3_Start_L03_Eingabe</bpmn:outgoing>
+          </bpmn:startEvent>
+          <bpmn:userTask id="L03_Eingabe" name="Dateneingabe" camunda:assignee="demo">
+            <bpmn:extensionElements>
+              <camunda:formData>
+                <camunda:formField id="ebene0Var" label="Ebene 0 Variable" type="string" defaultValue="${ebene0Var}" />
+                <camunda:formField id="ebene1Var" label="Ebene 1 Variable" type="string" defaultValue="${ebene1Var}" />
+                <camunda:formField id="ebene2Var" label="Ebene 2 Variable" type="string" defaultValue="${ebene2Var}" />
+                <camunda:formField id="ebene3Var" label="Ebene 3 Variable" type="string" defaultValue="${ebene3Var}" />
+                <camunda:formField id="dateneingabeVar" label="Neues Datenfeld" type="string" defaultValue="Hier Wert eingeben" />
+              </camunda:formData>
+            </bpmn:extensionElements>
+            <bpmn:incoming>Flow_L03_E3_Start_L03_Eingabe</bpmn:incoming>
+            <bpmn:outgoing>Flow_L03_Eingabe_L03_Anz3</bpmn:outgoing>
+          </bpmn:userTask>
+          <bpmn:userTask id="L03_Anz3" name="Datenanzeige Ebene 3" camunda:assignee="demo">
+            <bpmn:documentation>Generisches Formular: Variablen laden.</bpmn:documentation>
+            <bpmn:incoming>Flow_L03_Eingabe_L03_Anz3</bpmn:incoming>
+            <bpmn:outgoing>Flow_L03_Anz3_L03_E3_End</bpmn:outgoing>
+          </bpmn:userTask>
+          <bpmn:endEvent id="L03_E3_End">
+            <bpmn:incoming>Flow_L03_Anz3_L03_E3_End</bpmn:incoming>
+          </bpmn:endEvent>
+          <bpmn:sequenceFlow id="Flow_L03_E3_Start_L03_Eingabe" sourceRef="L03_E3_Start" targetRef="L03_Eingabe" />
+          <bpmn:sequenceFlow id="Flow_L03_Eingabe_L03_Anz3" sourceRef="L03_Eingabe" targetRef="L03_Anz3" />
+          <bpmn:sequenceFlow id="Flow_L03_Anz3_L03_E3_End" sourceRef="L03_Anz3" targetRef="L03_E3_End" />
+        </bpmn:subProcess>
+        <bpmn:userTask id="L03_Anz2" name="Datenanzeige Ebene 2" camunda:assignee="demo">
+          <bpmn:documentation>Generisches Formular: Variablen laden.</bpmn:documentation>
+          <bpmn:incoming>Flow_L03_E3_L03_Anz2</bpmn:incoming>
+          <bpmn:outgoing>Flow_L03_Anz2_L03_E2_End</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:endEvent id="L03_E2_End">
+          <bpmn:incoming>Flow_L03_Anz2_L03_E2_End</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="Flow_L03_E2_Start_L03_E3" sourceRef="L03_E2_Start" targetRef="L03_E3" />
+        <bpmn:sequenceFlow id="Flow_L03_E3_L03_Anz2" sourceRef="L03_E3" targetRef="L03_Anz2" />
+        <bpmn:sequenceFlow id="Flow_L03_Anz2_L03_E2_End" sourceRef="L03_Anz2" targetRef="L03_E2_End" />
+      </bpmn:subProcess>
+      <bpmn:userTask id="L03_Anz1" name="Datenanzeige Ebene 1" camunda:assignee="demo">
+        <bpmn:documentation>Generisches Formular: Variablen laden.</bpmn:documentation>
+        <bpmn:incoming>Flow_L03_E2_L03_Anz1</bpmn:incoming>
+        <bpmn:outgoing>Flow_L03_Anz1_L03_E1_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="L03_E1_End">
+        <bpmn:incoming>Flow_L03_Anz1_L03_E1_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_L03_E1_Start_L03_E2" sourceRef="L03_E1_Start" targetRef="L03_E2" />
+      <bpmn:sequenceFlow id="Flow_L03_E2_L03_Anz1" sourceRef="L03_E2" targetRef="L03_Anz1" />
+      <bpmn:sequenceFlow id="Flow_L03_Anz1_L03_E1_End" sourceRef="L03_Anz1" targetRef="L03_E1_End" />
+    </bpmn:subProcess>
+    <bpmn:userTask id="L03_Anz0" name="Datenanzeige Ebene 0" camunda:assignee="demo">
+      <bpmn:documentation>Generisches Formular: Variablen laden.</bpmn:documentation>
+      <bpmn:incoming>Flow_L03_E1_L03_Anz0</bpmn:incoming>
+      <bpmn:outgoing>Flow_L03_Anz0_L03_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L03_End">
+      <bpmn:incoming>Flow_L03_Anz0_L03_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L03_Start_L03_E1" sourceRef="L03_Start" targetRef="L03_E1" />
+    <bpmn:sequenceFlow id="Flow_L03_E1_L03_Anz0" sourceRef="L03_E1" targetRef="L03_Anz0" />
+    <bpmn:sequenceFlow id="Flow_L03_Anz0_L03_End" sourceRef="L03_Anz0" targetRef="L03_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_L03_Verschachtelte_Teilprozesse_Sichtbarkeit">
+    <bpmndi:BPMNPlane id="BPMNPlane_L03_Verschachtelte_Teilprozesse_Sichtbarkeit" bpmnElement="Collaboration_L03_Verschachtelte_Teilprozesse_Sichtbarkeit">
+      <bpmndi:BPMNShape id="P_L03_di" bpmnElement="P_L03" isHorizontal="true"><dc:Bounds x="140" y="40" width="1440" height="440" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E1_di" bpmnElement="L03_E1" isExpanded="true"><dc:Bounds x="240" y="80" width="1030" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E2_di" bpmnElement="L03_E2" isExpanded="true"><dc:Bounds x="320" y="120" width="740" height="280" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E3_di" bpmnElement="L03_E3" isExpanded="true"><dc:Bounds x="400" y="160" width="460" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_Start_di" bpmnElement="L03_Start"><dc:Bounds x="177" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E1_Start_di" bpmnElement="L03_E1_Start"><dc:Bounds x="262" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E2_Start_di" bpmnElement="L03_E2_Start"><dc:Bounds x="342" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E3_Start_di" bpmnElement="L03_E3_Start"><dc:Bounds x="422" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_Eingabe_di" bpmnElement="L03_Eingabe"><dc:Bounds x="510" y="220" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_Anz3_di" bpmnElement="L03_Anz3"><dc:Bounds x="660" y="220" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E3_End_di" bpmnElement="L03_E3_End"><dc:Bounds x="802" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_Anz2_di" bpmnElement="L03_Anz2"><dc:Bounds x="910" y="220" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E2_End_di" bpmnElement="L03_E2_End"><dc:Bounds x="1012" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_Anz1_di" bpmnElement="L03_Anz1"><dc:Bounds x="1100" y="220" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_E1_End_di" bpmnElement="L03_E1_End"><dc:Bounds x="1222" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_Anz0_di" bpmnElement="L03_Anz0"><dc:Bounds x="1330" y="220" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L03_End_di" bpmnElement="L03_End"><dc:Bounds x="1492" y="242" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_L03_E3_Start_L03_Eingabe_di" bpmnElement="Flow_L03_E3_Start_L03_Eingabe"><di:waypoint x="458" y="260" /><di:waypoint x="510" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_Eingabe_L03_Anz3_di" bpmnElement="Flow_L03_Eingabe_L03_Anz3"><di:waypoint x="610" y="260" /><di:waypoint x="660" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_Anz3_L03_E3_End_di" bpmnElement="Flow_L03_Anz3_L03_E3_End"><di:waypoint x="760" y="260" /><di:waypoint x="802" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_E2_Start_L03_E3_di" bpmnElement="Flow_L03_E2_Start_L03_E3"><di:waypoint x="378" y="260" /><di:waypoint x="400" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_E3_L03_Anz2_di" bpmnElement="Flow_L03_E3_L03_Anz2"><di:waypoint x="860" y="260" /><di:waypoint x="910" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_Anz2_L03_E2_End_di" bpmnElement="Flow_L03_Anz2_L03_E2_End"><di:waypoint x="1010" y="260" /><di:waypoint x="1012" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_E1_Start_L03_E2_di" bpmnElement="Flow_L03_E1_Start_L03_E2"><di:waypoint x="298" y="260" /><di:waypoint x="320" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_E2_L03_Anz1_di" bpmnElement="Flow_L03_E2_L03_Anz1"><di:waypoint x="1060" y="260" /><di:waypoint x="1100" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_Anz1_L03_E1_End_di" bpmnElement="Flow_L03_Anz1_L03_E1_End"><di:waypoint x="1200" y="260" /><di:waypoint x="1222" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_Start_L03_E1_di" bpmnElement="Flow_L03_Start_L03_E1"><di:waypoint x="213" y="260" /><di:waypoint x="240" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_E1_L03_Anz0_di" bpmnElement="Flow_L03_E1_L03_Anz0"><di:waypoint x="1270" y="260" /><di:waypoint x="1330" y="260" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L03_Anz0_L03_End_di" bpmnElement="Flow_L03_Anz0_L03_End"><di:waypoint x="1430" y="260" /><di:waypoint x="1492" y="260" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

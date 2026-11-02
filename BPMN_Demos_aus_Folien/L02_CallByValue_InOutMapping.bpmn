@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_L02_CallByValue_InOutMapping" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_L02_CallByValue_InOutMapping">
+    <bpmn:participant id="P_L02" name="Var Sichtbarkeit Prozess 2" processRef="L02_VarSichtbarkeitProzess2" />
+    <bpmn:participant id="P_L02_Sub" name="Var Sichtbarkeit Unterprozess 2" processRef="L02_VarSichtbarkeitUnterprozess2" />
+  </bpmn:collaboration>
+  <bpmn:process id="L02_VarSichtbarkeitProzess2" name="Var Sichtbarkeit Prozess 2" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>03 Call by Ref/Value, Folien 21–32. HIER STARTEN. Die Call Activity ruft einen eigenständigen Prozess auf. In-Mapping: Feld2 (Hauptprozess) -&gt; Feld2 (Teilprozess) als KOPIE. Out-Mapping: Feld2_Subprozess -&gt; Feld2AusSubprozess. Ausprobieren: Im Teilprozess Feld2 ändern ('Feld 2 im TP neu'). Ergebnis in 'Ausgabe Prozess 2': Feld2 ist UNVERÄNDERT, nur Feld2AusSubprozess kam über das Out-Mapping zurück.</bpmn:documentation>
+    <bpmn:startEvent id="L02_Start">
+      <bpmn:outgoing>Flow_L02_Start_L02_In</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="L02_In" name="Eingabe Prozess 2" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Feld2" label="Feld 2" type="string" defaultValue="Feld 2 in HP" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L02_Start_L02_In</bpmn:incoming>
+      <bpmn:outgoing>Flow_L02_In_L02_Call</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:callActivity id="L02_Call" name="Aufruf Unterprozess 2 Sichtbarkeit" calledElement="L02_VarSichtbarkeitUnterprozess2">
+      <bpmn:extensionElements>
+        <camunda:in source="Feld2" target="Feld2" />
+        <camunda:out source="Feld2_Subprozess" target="Feld2AusSubprozess" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L02_In_L02_Call</bpmn:incoming>
+      <bpmn:outgoing>Flow_L02_Call_L02_Out</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:userTask id="L02_Out" name="Ausgabe Prozess 2" camunda:assignee="demo">
+      <bpmn:documentation>Generisches Formular: Variablen laden.</bpmn:documentation>
+      <bpmn:incoming>Flow_L02_Call_L02_Out</bpmn:incoming>
+      <bpmn:outgoing>Flow_L02_Out_L02_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L02_End">
+      <bpmn:incoming>Flow_L02_Out_L02_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L02_Start_L02_In" sourceRef="L02_Start" targetRef="L02_In" />
+    <bpmn:sequenceFlow id="Flow_L02_In_L02_Call" sourceRef="L02_In" targetRef="L02_Call" />
+    <bpmn:sequenceFlow id="Flow_L02_Call_L02_Out" sourceRef="L02_Call" targetRef="L02_Out" />
+    <bpmn:sequenceFlow id="Flow_L02_Out_L02_End" sourceRef="L02_Out" targetRef="L02_End" />
+  </bpmn:process>
+  <bpmn:process id="L02_VarSichtbarkeitUnterprozess2" name="Var Sichtbarkeit Unterprozess 2" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Aufgerufener Prozess – nicht direkt starten. Er kennt nur, was per In-Mapping kopiert wurde.</bpmn:documentation>
+    <bpmn:startEvent id="L02_C_Start">
+      <bpmn:outgoing>Flow_L02_C_Start_L02_C_In</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="L02_C_In" name="Eingabe in Subprozess 2" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Feld2_Subprozess" label="Feld 2 Subprozess" type="string" defaultValue="Defaultbelegung" />
+          <camunda:formField id="Feld2" label="Feld 2 aus Hauptprozess übergeben" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L02_C_Start_L02_C_In</bpmn:incoming>
+      <bpmn:outgoing>Flow_L02_C_In_L02_C_Out</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="L02_C_Out" name="Ausgabe in Subprozess 2" camunda:assignee="demo">
+      <bpmn:documentation>Generisches Formular: Variablen laden.</bpmn:documentation>
+      <bpmn:incoming>Flow_L02_C_In_L02_C_Out</bpmn:incoming>
+      <bpmn:outgoing>Flow_L02_C_Out_L02_C_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L02_C_End">
+      <bpmn:incoming>Flow_L02_C_Out_L02_C_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L02_C_Start_L02_C_In" sourceRef="L02_C_Start" targetRef="L02_C_In" />
+    <bpmn:sequenceFlow id="Flow_L02_C_In_L02_C_Out" sourceRef="L02_C_In" targetRef="L02_C_Out" />
+    <bpmn:sequenceFlow id="Flow_L02_C_Out_L02_C_End" sourceRef="L02_C_Out" targetRef="L02_C_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_L02_CallByValue_InOutMapping">
+    <bpmndi:BPMNPlane id="BPMNPlane_L02_CallByValue_InOutMapping" bpmnElement="Collaboration_L02_CallByValue_InOutMapping">
+      <bpmndi:BPMNShape id="P_L02_di" bpmnElement="P_L02" isHorizontal="true"><dc:Bounds x="140" y="40" width="800" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_L02_Sub_di" bpmnElement="P_L02_Sub" isHorizontal="true"><dc:Bounds x="140" y="280" width="640" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_Start_di" bpmnElement="L02_Start"><dc:Bounds x="182" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_In_di" bpmnElement="L02_In"><dc:Bounds x="260" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_Call_di" bpmnElement="L02_Call"><dc:Bounds x="430" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_Out_di" bpmnElement="L02_Out"><dc:Bounds x="600" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_End_di" bpmnElement="L02_End"><dc:Bounds x="772" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_C_Start_di" bpmnElement="L02_C_Start"><dc:Bounds x="182" y="362" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_C_In_di" bpmnElement="L02_C_In"><dc:Bounds x="280" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_C_Out_di" bpmnElement="L02_C_Out"><dc:Bounds x="450" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L02_C_End_di" bpmnElement="L02_C_End"><dc:Bounds x="622" y="362" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_L02_Start_L02_In_di" bpmnElement="Flow_L02_Start_L02_In"><di:waypoint x="218" y="140" /><di:waypoint x="260" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L02_In_L02_Call_di" bpmnElement="Flow_L02_In_L02_Call"><di:waypoint x="360" y="140" /><di:waypoint x="430" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L02_Call_L02_Out_di" bpmnElement="Flow_L02_Call_L02_Out"><di:waypoint x="530" y="140" /><di:waypoint x="600" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L02_Out_L02_End_di" bpmnElement="Flow_L02_Out_L02_End"><di:waypoint x="700" y="140" /><di:waypoint x="772" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L02_C_Start_L02_C_In_di" bpmnElement="Flow_L02_C_Start_L02_C_In"><di:waypoint x="218" y="380" /><di:waypoint x="280" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L02_C_In_L02_C_Out_di" bpmnElement="Flow_L02_C_In_L02_C_Out"><di:waypoint x="380" y="380" /><di:waypoint x="450" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L02_C_Out_L02_C_End_di" bpmnElement="Flow_L02_C_Out_L02_C_End"><di:waypoint x="550" y="380" /><di:waypoint x="622" y="380" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

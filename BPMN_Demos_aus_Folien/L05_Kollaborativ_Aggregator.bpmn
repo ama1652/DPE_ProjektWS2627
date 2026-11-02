@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_L05_Kollaborativ_Aggregator" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_L05_Kollaborativ_Aggregator">
+    <bpmn:participant id="P_L05_Order" name="Bestellprozess" processRef="L05_Bestellprozess" />
+    <bpmn:participant id="P_L05_Agg" name="Aggregator" processRef="L05_Aggregator" />
+    <bpmn:messageFlow id="MsgFlow_L05_A_Send_L05_G_Start" sourceRef="L05_A_Send" targetRef="L05_G_Start" />
+    <bpmn:messageFlow id="MsgFlow_L05_A_Send_L05_G_Catch" sourceRef="L05_A_Send" targetRef="L05_G_Catch" />
+  </bpmn:collaboration>
+  <bpmn:process id="L05_Bestellprozess" name="Bestellprozess" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>08b Kollaborative Prozesse, Folien 3–13. HIER STARTEN (2x mit demselben Produkt). 'Verify Data' hat einen Execution Listener (end, JavaScript), der product/quantity/comment als JSON-Objekt 'order' ablegt. Der Send Task korreliert die Nachricht NewOrderMessage über processInstanceVariableEquals('product', product): Beim ERSTEN Mal wartet noch kein Aggregator für dieses Produkt -&gt; neue Aggregator-Instanz über das Nachrichten-Startereignis. Beim ZWEITEN Mal mit demselben Produkt wird die wartende Instanz fortgesetzt. Ein anderes Produkt startet einen eigenen Aggregator.</bpmn:documentation>
+    <bpmn:startEvent id="L05_A_Start" name="Process started">
+      <bpmn:outgoing>Flow_L05_A_Start_L05_A_Verify</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="L05_A_Verify" name="Verify Data" camunda:assignee="demo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="product" label="Product" type="string" defaultValue="Fahrrad" />
+          <camunda:formField id="quantity" label="Quantity" type="long" defaultValue="1" />
+          <camunda:formField id="comment" label="Comment" type="string" defaultValue="" />
+        </camunda:formData>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="JavaScript">var order = S(JSON.stringify({
+    product: execution.getVariable("product"),
+    quantity: execution.getVariable("quantity"),
+    comment: execution.getVariable("comment")
+}), "application/json");
+
+execution.setVariable("order", order);</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L05_A_Start_L05_A_Verify</bpmn:incoming>
+      <bpmn:outgoing>Flow_L05_A_Verify_L05_A_Send</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="L05_A_Send" name="Send to Aggregator" camunda:expression='${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation("NewOrderMessage").processInstanceVariableEquals("product", product).setVariable("order", order).correlateWithResult()}'>
+      <bpmn:incoming>Flow_L05_A_Verify_L05_A_Send</bpmn:incoming>
+      <bpmn:outgoing>Flow_L05_A_Send_L05_A_Sent</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="L05_A_Sent" name="Data Sent to Aggregator" camunda:assignee="demo">
+      <bpmn:incoming>Flow_L05_A_Send_L05_A_Sent</bpmn:incoming>
+      <bpmn:outgoing>Flow_L05_A_Sent_L05_A_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L05_A_End" name="Process ended">
+      <bpmn:incoming>Flow_L05_A_Sent_L05_A_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L05_A_Start_L05_A_Verify" sourceRef="L05_A_Start" targetRef="L05_A_Verify" />
+    <bpmn:sequenceFlow id="Flow_L05_A_Verify_L05_A_Send" sourceRef="L05_A_Verify" targetRef="L05_A_Send" />
+    <bpmn:sequenceFlow id="Flow_L05_A_Send_L05_A_Sent" sourceRef="L05_A_Send" targetRef="L05_A_Sent" />
+    <bpmn:sequenceFlow id="Flow_L05_A_Sent_L05_A_End" sourceRef="L05_A_Sent" targetRef="L05_A_End" />
+  </bpmn:process>
+  <bpmn:process id="L05_Aggregator" name="Aggregator" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Wird nur per Nachricht gestartet. Execution Listener (end) am Startereignis: legt orderList mit der ersten Bestellung an. Execution Listener (end) am Zwischenereignis: hängt jede weitere Bestellung an. Bei orderListLength &gt;= 2 geht es weiter.</bpmn:documentation>
+    <bpmn:dataObjectReference id="L05_DO" name="Order List" dataObjectRef="DO_L05_DO" />
+    <bpmn:dataObject id="DO_L05_DO" isCollection="true" />
+    <bpmn:startEvent id="L05_G_Start" name="NewOrderMessage">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="JavaScript">var product = execution.getVariable("order").prop("product").stringValue();
+execution.setVariable("product", product);
+var neueOrder = JSON.parse(execution.getVariable("order").toString());
+var orderList = [neueOrder];
+execution.setVariable("orderList", S(JSON.stringify(orderList)));
+execution.setVariable("orderListLength", orderList.length);</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_L05_G_Start_L05_G_Merge</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DOA_L05_G_Start_L05_DO"><bpmn:targetRef>L05_DO</bpmn:targetRef></bpmn:dataOutputAssociation>
+      <bpmn:messageEventDefinition id="MessageDef_L05_G_Start" messageRef="Message_NewOrderMessage" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="L05_G_Merge">
+      <bpmn:incoming>Flow_L05_G_Start_L05_G_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_L05_G_Catch_L05_G_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_L05_G_Merge_L05_G_Gw</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="L05_G_Gw" name="All Messages Received?" default="Flow_L05_G_Gw_L05_G_Catch">
+      <bpmn:incoming>Flow_L05_G_Merge_L05_G_Gw</bpmn:incoming>
+      <bpmn:outgoing>Flow_L05_G_Gw_L05_G_Catch</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L05_G_Gw_L05_G_Store</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="L05_G_Catch" name="NewOrderMessage">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="JavaScript">var neueOrder = JSON.parse(execution.getVariable("order").toString());
+var orderList = JSON.parse(execution.getVariable("orderList").toString());
+orderList.push(neueOrder);
+execution.setVariable("orderList", S(JSON.stringify(orderList)));
+execution.setVariable("orderListLength", orderList.length);</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_L05_G_Gw_L05_G_Catch</bpmn:incoming>
+      <bpmn:outgoing>Flow_L05_G_Catch_L05_G_Merge</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DOA_L05_G_Catch_L05_DO"><bpmn:targetRef>L05_DO</bpmn:targetRef></bpmn:dataOutputAssociation>
+      <bpmn:messageEventDefinition id="MessageDef_L05_G_Catch" messageRef="Message_NewOrderMessage" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="L05_G_Store" name="Store Orders in DB" camunda:assignee="demo">
+      <bpmn:documentation>Generisches Formular: Variablen laden – orderList enthält beide Bestellungen.</bpmn:documentation>
+      <bpmn:incoming>Flow_L05_G_Gw_L05_G_Store</bpmn:incoming>
+      <bpmn:outgoing>Flow_L05_G_Store_L05_G_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="L05_G_End" name="Successful Aggregation">
+      <bpmn:incoming>Flow_L05_G_Store_L05_G_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_L05_G_Start_L05_G_Merge" sourceRef="L05_G_Start" targetRef="L05_G_Merge" />
+    <bpmn:sequenceFlow id="Flow_L05_G_Merge_L05_G_Gw" sourceRef="L05_G_Merge" targetRef="L05_G_Gw" />
+    <bpmn:sequenceFlow id="Flow_L05_G_Gw_L05_G_Catch" name="No" sourceRef="L05_G_Gw" targetRef="L05_G_Catch" />
+    <bpmn:sequenceFlow id="Flow_L05_G_Catch_L05_G_Merge" sourceRef="L05_G_Catch" targetRef="L05_G_Merge" />
+    <bpmn:sequenceFlow id="Flow_L05_G_Gw_L05_G_Store" name="Yes" sourceRef="L05_G_Gw" targetRef="L05_G_Store">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${orderListLength &gt;= 2}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L05_G_Store_L05_G_End" sourceRef="L05_G_Store" targetRef="L05_G_End" />
+  </bpmn:process>
+  <bpmn:message id="Message_NewOrderMessage" name="NewOrderMessage" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_L05_Kollaborativ_Aggregator">
+    <bpmndi:BPMNPlane id="BPMNPlane_L05_Kollaborativ_Aggregator" bpmnElement="Collaboration_L05_Kollaborativ_Aggregator">
+      <bpmndi:BPMNShape id="P_L05_Order_di" bpmnElement="P_L05_Order" isHorizontal="true"><dc:Bounds x="140" y="40" width="900" height="200" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_L05_Agg_di" bpmnElement="P_L05_Agg" isHorizontal="true"><dc:Bounds x="140" y="290" width="900" height="330" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_A_Start_di" bpmnElement="L05_A_Start"><dc:Bounds x="182" y="122" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="148" y="162" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_A_Verify_di" bpmnElement="L05_A_Verify"><dc:Bounds x="270" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_A_Send_di" bpmnElement="L05_A_Send"><dc:Bounds x="430" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_A_Sent_di" bpmnElement="L05_A_Sent"><dc:Bounds x="590" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_A_End_di" bpmnElement="L05_A_End"><dc:Bounds x="772" y="122" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="744" y="162" width="91" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_DO_di" bpmnElement="L05_DO"><dc:Bounds x="662" y="335" width="36" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="645" y="389" width="70" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_G_Start_di" bpmnElement="L05_G_Start"><dc:Bounds x="192" y="412" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="158" y="452" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_G_Merge_di" bpmnElement="L05_G_Merge" isMarkerVisible="true"><dc:Bounds x="275" y="405" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_G_Gw_di" bpmnElement="L05_G_Gw" isMarkerVisible="true"><dc:Bounds x="385" y="405" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="340" y="375" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_G_Catch_di" bpmnElement="L05_G_Catch"><dc:Bounds x="502" y="412" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="468" y="452" width="105" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_G_Store_di" bpmnElement="L05_G_Store"><dc:Bounds x="510" y="510" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="L05_G_End_di" bpmnElement="L05_G_End"><dc:Bounds x="682" y="532" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="630" y="572" width="140" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_L05_A_Start_L05_A_Verify_di" bpmnElement="Flow_L05_A_Start_L05_A_Verify"><di:waypoint x="218" y="140" /><di:waypoint x="270" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_A_Verify_L05_A_Send_di" bpmnElement="Flow_L05_A_Verify_L05_A_Send"><di:waypoint x="370" y="140" /><di:waypoint x="430" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_A_Send_L05_A_Sent_di" bpmnElement="Flow_L05_A_Send_L05_A_Sent"><di:waypoint x="530" y="140" /><di:waypoint x="590" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_A_Sent_L05_A_End_di" bpmnElement="Flow_L05_A_Sent_L05_A_End"><di:waypoint x="690" y="140" /><di:waypoint x="772" y="140" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_G_Start_L05_G_Merge_di" bpmnElement="Flow_L05_G_Start_L05_G_Merge"><di:waypoint x="228" y="430" /><di:waypoint x="275" y="430" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_G_Merge_L05_G_Gw_di" bpmnElement="Flow_L05_G_Merge_L05_G_Gw"><di:waypoint x="325" y="430" /><di:waypoint x="385" y="430" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_G_Gw_L05_G_Catch_di" bpmnElement="Flow_L05_G_Gw_L05_G_Catch"><di:waypoint x="435" y="430" /><di:waypoint x="502" y="430" /><bpmndi:BPMNLabel><dc:Bounds x="450" y="412" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_G_Catch_L05_G_Merge_di" bpmnElement="Flow_L05_G_Catch_L05_G_Merge"><di:waypoint x="520" y="448" /><di:waypoint x="520" y="490" /><di:waypoint x="300" y="490" /><di:waypoint x="300" y="455" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_G_Gw_L05_G_Store_di" bpmnElement="Flow_L05_G_Gw_L05_G_Store"><di:waypoint x="410" y="455" /><di:waypoint x="410" y="550" /><di:waypoint x="510" y="550" /><bpmndi:BPMNLabel><dc:Bounds x="425" y="532" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_L05_G_Store_L05_G_End_di" bpmnElement="Flow_L05_G_Store_L05_G_End"><di:waypoint x="610" y="550" /><di:waypoint x="682" y="550" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_L05_A_Send_L05_G_Start_di" bpmnElement="MsgFlow_L05_A_Send_L05_G_Start"><di:waypoint x="465" y="180" /><di:waypoint x="465" y="260" /><di:waypoint x="210" y="260" /><di:waypoint x="210" y="412" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_L05_A_Send_L05_G_Catch_di" bpmnElement="MsgFlow_L05_A_Send_L05_G_Catch"><di:waypoint x="500" y="180" /><di:waypoint x="500" y="300" /><di:waypoint x="520" y="300" /><di:waypoint x="520" y="412" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_L05_G_Start_L05_DO_di" bpmnElement="DOA_L05_G_Start_L05_DO"><di:waypoint x="225" y="412" /><di:waypoint x="680" y="385" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DOA_L05_G_Catch_L05_DO_di" bpmnElement="DOA_L05_G_Catch_L05_DO"><di:waypoint x="535" y="412" /><di:waypoint x="680" y="385" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
