@@ -3,7 +3,10 @@
 
   <bpmn:collaboration id="Collaboration_T2_Kundenentscheidung">
     <bpmn:participant id="P_T2_Kundenentscheidung_einholen" name="Gemeinsame Funktion: Kundenentscheidung einholen (Team 2)" processRef="T2_Kundenentscheidung_einholen" />
+    <bpmn:participant id="P_KE_App" name="Pflege-App (Anzeige der Benachrichtigungen)" />
     <bpmn:participant id="P_KE_Aufrufer" name="Aufrufender Prozess (Team 1, 2 oder 3) per Call Activity" />
+    <bpmn:messageFlow id="MF_KE_Benachr" sourceRef="KE_Benachr" targetRef="P_KE_App" />
+    <bpmn:messageFlow id="MF_KE_Erinn" sourceRef="KE_Erinn" targetRef="P_KE_App" />
   </bpmn:collaboration>
   <bpmn:process id="T2_Kundenentscheidung_einholen" name="Kundenentscheidung einholen (gemeinsame Funktion)" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:documentation>Wiederverwendbarer Teilprozess (Team 2 verantwortet ihn für alle Teams). Holt eine nachvollziehbare Kundenentscheidung zu einer konkret beschriebenen Handlung ein. Ausgaben: entscheidung (FREIGEGEBEN, ABGELEHNT, AENDERUNG, AUFSCHUB, KEINE_ANTWORT), entscheidungKommentar, gewuenschteMenge. Keine Antwort innerhalb der Frist gilt NICHT als Freigabe.</bpmn:documentation>
@@ -13,11 +16,11 @@
         <bpmn:flowNodeRef>KE_B_Erinn</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>KE_B_Frist</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>KE_Erinn</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>KE_E_Erinn</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_KE_Backoffice" name="Pflege-Backoffice (Prozess)">
         <bpmn:flowNodeRef>KE_Start</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>KE_Anfrage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>KE_Benachr</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>KE_Keine</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>KE_Doku</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>KE_Join</bpmn:flowNodeRef>
@@ -28,28 +31,17 @@
       <bpmn:documentation>Wird per Call Activity gestartet. Eingaben: freigabeHandlung, freigabeBegruendung, freigabeFolgen, freigabeGueltigBis, fristKundenentscheidung, erinnerungszyklus, pflegehaushaltId, vorgangId.</bpmn:documentation>
       <bpmn:outgoing>Flow_KE_Start_KE_Anfrage</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:scriptTask id="KE_Anfrage" name="Freigabeanforderung erstellen und Kunden benachrichtigen" scriptFormat="javascript">
-      <bpmn:documentation>Erstellt die allgemeine Freigabeanforderung (Handlung, Begründung, Folgen, Gültigkeit) und benachrichtigt den Kunden. SIMULIERT: Benachrichtigung nur protokolliert.</bpmn:documentation>
+    <bpmn:serviceTask id="KE_Anfrage" name="Freigabeanforderung anlegen" camunda:type="external" camunda:topic="t2-freigabe-anlegen">
+      <bpmn:documentation>Legt die allgemeine Freigabeanforderung an (Handlung, Begründung, Folgen, Gültigkeit) und vergibt eine Freigabekennung. SIMULIERT.</bpmn:documentation>
       <bpmn:incoming>Flow_KE_Start_KE_Anfrage</bpmn:incoming>
-      <bpmn:outgoing>Flow_KE_Anfrage_KE_Entscheiden</bpmn:outgoing>
-      <bpmn:script>function v(n) { return execution.getVariable(n); }
-function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
-function set(n, w) { execution.setVariable(n, w); }
-function def(n, w) { if (!has(n)) { set(n, w); } }
-// Allgemeine Freigabeanforderung erstellen (nutzbar fuer Team 1, 2 und 3)
-def('freigabeHandlung', '(keine Handlung uebergeben)');
-def('freigabeBegruendung', '-');
-def('freigabeFolgen', '-');
-def('freigabeGueltigBis', 'unbefristet');
-def('fristKundenentscheidung', 'P3D');
-def('erinnerungszyklus', 'R2/P1D');
-var d = new Date();
-set('freigabeAngefordertAm', d.toISOString());
-set('anzahlErinnerungen', 0);
-set('vorgangsstatus', 'Wartet auf Kunde');
-set('letztesEreignis', 'Kundenentscheidung angefordert');
-</bpmn:script>
-    </bpmn:scriptTask>
+      <bpmn:outgoing>Flow_KE_Anfrage_KE_Benachr</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateThrowEvent id="KE_Benachr" name="Kunde benachrichtigt">
+      <bpmn:documentation>Gemeinsamer Benachrichtigungsdienst (Topic t2-benachrichtigung-senden): Hinweis auf die offene Entscheidung in der Pflege-App. SIMULIERT.</bpmn:documentation>
+      <bpmn:incoming>Flow_KE_Anfrage_KE_Benachr</bpmn:incoming>
+      <bpmn:outgoing>Flow_KE_Benachr_KE_Entscheiden</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_KE_Benachr" messageRef="Msg_KE_Benachrichtigung" camunda:type="external" camunda:topic="t2-benachrichtigung-senden" />
+    </bpmn:intermediateThrowEvent>
     <bpmn:userTask id="KE_Entscheiden" name="Über Freigabe entscheiden" camunda:assignee="demo">
       <bpmn:documentation>Anlass: eine konkret beschriebene Handlung braucht eine Freigabe. Benötigt: Handlung, Begründung, Folgen, Gültigkeit. Rolle: pflegende Person (Kunde). Ergebnis: freigegeben, abgelehnt, Änderung oder Aufschub. Frist: fristKundenentscheidung.</bpmn:documentation>
       <bpmn:extensionElements>
@@ -77,7 +69,7 @@ set('letztesEreignis', 'Kundenentscheidung angefordert');
           <camunda:formField id="entscheidungKommentar" label="Kommentar" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_KE_Anfrage_KE_Entscheiden</bpmn:incoming>
+      <bpmn:incoming>Flow_KE_Benachr_KE_Entscheiden</bpmn:incoming>
       <bpmn:outgoing>Flow_KE_Entscheiden_KE_Doku</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:boundaryEvent id="KE_B_Erinn" name="Erinnerung fällig" attachedToRef="KE_Entscheiden" cancelActivity="false">
@@ -92,47 +84,19 @@ set('letztesEreignis', 'Kundenentscheidung angefordert');
         <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${fristKundenentscheidung}</bpmn:timeDuration>
       </bpmn:timerEventDefinition>
     </bpmn:boundaryEvent>
-    <bpmn:scriptTask id="KE_Erinn" name="An offene Freigabe erinnern" scriptFormat="javascript">
+    <bpmn:endEvent id="KE_Erinn" name="An offene Freigabe erinnert">
       <bpmn:incoming>Flow_KE_B_Erinn_KE_Erinn</bpmn:incoming>
-      <bpmn:outgoing>Flow_KE_Erinn_KE_E_Erinn</bpmn:outgoing>
-      <bpmn:script>function v(n) { return execution.getVariable(n); }
-function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
-function set(n, w) { execution.setVariable(n, w); }
-function def(n, w) { if (!has(n)) { set(n, w); } }
-// Erinnerung an offene Freigabe (SIMULIERT: Benachrichtigung nur protokolliert)
-set('anzahlErinnerungen', Number(v('anzahlErinnerungen')) + 1);
-set('letztesEreignis', 'Nachricht versandt (Erinnerung Freigabe)');
-</bpmn:script>
-    </bpmn:scriptTask>
-    <bpmn:endEvent id="KE_E_Erinn" name="Erinnerung versandt">
-      <bpmn:incoming>Flow_KE_Erinn_KE_E_Erinn</bpmn:incoming>
+      <bpmn:messageEventDefinition id="MED_KE_Erinn" messageRef="Msg_KE_Benachrichtigung" camunda:type="external" camunda:topic="t2-benachrichtigung-senden" />
     </bpmn:endEvent>
-    <bpmn:scriptTask id="KE_Keine" name="Keine Antwort dokumentieren" scriptFormat="javascript">
+    <bpmn:serviceTask id="KE_Keine" name="Keine Antwort dokumentieren" camunda:type="external" camunda:topic="t2-freigabe-dokumentieren">
+      <bpmn:documentation>Frist abgelaufen: entscheidung = KEINE_ANTWORT. Keine Antwort ist keine Freigabe.</bpmn:documentation>
       <bpmn:incoming>Flow_KE_B_Frist_KE_Keine</bpmn:incoming>
       <bpmn:outgoing>Flow_KE_Keine_KE_Join</bpmn:outgoing>
-      <bpmn:script>function v(n) { return execution.getVariable(n); }
-function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
-function set(n, w) { execution.setVariable(n, w); }
-function def(n, w) { if (!has(n)) { set(n, w); } }
-// Frist abgelaufen: keine Antwort ist keine Freigabe
-set('entscheidung', 'KEINE_ANTWORT');
-set('entscheidungKommentar', 'Frist abgelaufen ohne Rueckmeldung');
-set('letztesEreignis', 'Frist abgelaufen');
-</bpmn:script>
-    </bpmn:scriptTask>
-    <bpmn:scriptTask id="KE_Doku" name="Entscheidung dokumentieren" scriptFormat="javascript">
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="KE_Doku" name="Entscheidung dokumentieren" camunda:type="external" camunda:topic="t2-freigabe-dokumentieren">
       <bpmn:incoming>Flow_KE_Entscheiden_KE_Doku</bpmn:incoming>
       <bpmn:outgoing>Flow_KE_Doku_KE_Join</bpmn:outgoing>
-      <bpmn:script>function v(n) { return execution.getVariable(n); }
-function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
-function set(n, w) { execution.setVariable(n, w); }
-function def(n, w) { if (!has(n)) { set(n, w); } }
-// Entscheidung nachvollziehbar dokumentieren
-set('entschiedenAm', new Date().toISOString());
-def('entscheidungKommentar', '');
-set('letztesEreignis', v('entscheidung') == 'FREIGEGEBEN' ? 'Freigabe erteilt' : 'Freigabe verweigert oder zurueckgegeben');
-</bpmn:script>
-    </bpmn:scriptTask>
+    </bpmn:serviceTask>
     <bpmn:exclusiveGateway id="KE_Join">
       <bpmn:incoming>Flow_KE_Doku_KE_Join</bpmn:incoming>
       <bpmn:incoming>Flow_KE_Keine_KE_Join</bpmn:incoming>
@@ -142,108 +106,123 @@ set('letztesEreignis', v('entscheidung') == 'FREIGEGEBEN' ? 'Freigabe erteilt' :
       <bpmn:incoming>Flow_KE_Join_KE_Ende</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_KE_Start_KE_Anfrage" sourceRef="KE_Start" targetRef="KE_Anfrage" />
-    <bpmn:sequenceFlow id="Flow_KE_Anfrage_KE_Entscheiden" sourceRef="KE_Anfrage" targetRef="KE_Entscheiden" />
+    <bpmn:sequenceFlow id="Flow_KE_Anfrage_KE_Benachr" sourceRef="KE_Anfrage" targetRef="KE_Benachr" />
+    <bpmn:sequenceFlow id="Flow_KE_Benachr_KE_Entscheiden" sourceRef="KE_Benachr" targetRef="KE_Entscheiden" />
     <bpmn:sequenceFlow id="Flow_KE_B_Erinn_KE_Erinn" sourceRef="KE_B_Erinn" targetRef="KE_Erinn" />
-    <bpmn:sequenceFlow id="Flow_KE_Erinn_KE_E_Erinn" sourceRef="KE_Erinn" targetRef="KE_E_Erinn" />
     <bpmn:sequenceFlow id="Flow_KE_Entscheiden_KE_Doku" sourceRef="KE_Entscheiden" targetRef="KE_Doku" />
     <bpmn:sequenceFlow id="Flow_KE_B_Frist_KE_Keine" sourceRef="KE_B_Frist" targetRef="KE_Keine" />
     <bpmn:sequenceFlow id="Flow_KE_Doku_KE_Join" sourceRef="KE_Doku" targetRef="KE_Join" />
     <bpmn:sequenceFlow id="Flow_KE_Keine_KE_Join" sourceRef="KE_Keine" targetRef="KE_Join" />
     <bpmn:sequenceFlow id="Flow_KE_Join_KE_Ende" sourceRef="KE_Join" targetRef="KE_Ende" />
   </bpmn:process>
+  <bpmn:message id="Msg_KE_Benachrichtigung" name="MV_Benachrichtigung" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_T2_Kundenentscheidung_einholen">
     <bpmndi:BPMNPlane id="BPMNPlane_T2_Kundenentscheidung_einholen" bpmnElement="Collaboration_T2_Kundenentscheidung">
       <bpmndi:BPMNShape id="P_T2_Kundenentscheidung_einholen_di" bpmnElement="P_T2_Kundenentscheidung_einholen" isHorizontal="true">
-        <dc:Bounds x="150" y="60" width="960" height="460" />
+        <dc:Bounds x="150" y="120" width="1110" height="460" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_KE_Kunde_di" bpmnElement="Lane_KE_Kunde" isHorizontal="true">
-        <dc:Bounds x="180" y="60" width="930" height="240" />
+        <dc:Bounds x="180" y="120" width="1080" height="240" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_KE_Backoffice_di" bpmnElement="Lane_KE_Backoffice" isHorizontal="true">
-        <dc:Bounds x="180" y="300" width="930" height="220" />
+        <dc:Bounds x="180" y="360" width="1080" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_KE_App_di" bpmnElement="P_KE_App" isHorizontal="true">
+        <dc:Bounds x="150" y="20" width="1110" height="60" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="P_KE_Aufrufer_di" bpmnElement="P_KE_Aufrufer" isHorizontal="true">
-        <dc:Bounds x="150" y="560" width="960" height="60" />
+        <dc:Bounds x="150" y="620" width="1110" height="60" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Start_di" bpmnElement="KE_Start">
-        <dc:Bounds x="242" y="362" width="36" height="36" />
+        <dc:Bounds x="242" y="422" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Anfrage_di" bpmnElement="KE_Anfrage">
-        <dc:Bounds x="350" y="340" width="120" height="80" />
+        <dc:Bounds x="350" y="400" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Benachr_di" bpmnElement="KE_Benachr">
+        <dc:Bounds x="542" y="422" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Entscheiden_di" bpmnElement="KE_Entscheiden">
-        <dc:Bounds x="500" y="200" width="120" height="80" />
+        <dc:Bounds x="650" y="260" width="120" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_B_Erinn_di" bpmnElement="KE_B_Erinn">
-        <dc:Bounds x="512" y="182" width="36" height="36" />
+        <dc:Bounds x="662" y="242" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="415" y="155" width="95" height="14" />
+          <dc:Bounds x="565" y="215" width="95" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_B_Frist_di" bpmnElement="KE_B_Frist">
-        <dc:Bounds x="572" y="262" width="36" height="36" />
+        <dc:Bounds x="722" y="322" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="598" y="300" width="85" height="27" />
+          <dc:Bounds x="748" y="360" width="85" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Erinn_di" bpmnElement="KE_Erinn">
-        <dc:Bounds x="650" y="90" width="120" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="KE_E_Erinn_di" bpmnElement="KE_E_Erinn">
-        <dc:Bounds x="842" y="112" width="36" height="36" />
+        <dc:Bounds x="842" y="172" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="884" y="180" width="100" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Keine_di" bpmnElement="KE_Keine">
-        <dc:Bounds x="690" y="430" width="120" height="80" />
+        <dc:Bounds x="840" y="490" width="120" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Doku_di" bpmnElement="KE_Doku">
-        <dc:Bounds x="690" y="330" width="120" height="80" />
+        <dc:Bounds x="840" y="390" width="120" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Join_di" bpmnElement="KE_Join" isMarkerVisible="true">
-        <dc:Bounds x="875" y="345" width="50" height="50" />
+        <dc:Bounds x="1025" y="405" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="KE_Ende_di" bpmnElement="KE_Ende">
-        <dc:Bounds x="1012" y="352" width="36" height="36" />
+        <dc:Bounds x="1162" y="412" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_KE_Start_KE_Anfrage_di" bpmnElement="Flow_KE_Start_KE_Anfrage">
-        <di:waypoint x="278" y="380" />
-        <di:waypoint x="350" y="380" />
+        <di:waypoint x="278" y="440" />
+        <di:waypoint x="350" y="440" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_KE_Anfrage_KE_Entscheiden_di" bpmnElement="Flow_KE_Anfrage_KE_Entscheiden">
-        <di:waypoint x="470" y="380" />
-        <di:waypoint x="560" y="380" />
-        <di:waypoint x="560" y="280" />
+      <bpmndi:BPMNEdge id="Flow_KE_Anfrage_KE_Benachr_di" bpmnElement="Flow_KE_Anfrage_KE_Benachr">
+        <di:waypoint x="470" y="440" />
+        <di:waypoint x="542" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_Benachr_KE_Entscheiden_di" bpmnElement="Flow_KE_Benachr_KE_Entscheiden">
+        <di:waypoint x="578" y="440" />
+        <di:waypoint x="710" y="440" />
+        <di:waypoint x="710" y="340" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_KE_B_Erinn_KE_Erinn_di" bpmnElement="Flow_KE_B_Erinn_KE_Erinn">
-        <di:waypoint x="530" y="182" />
-        <di:waypoint x="530" y="130" />
-        <di:waypoint x="650" y="130" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_KE_Erinn_KE_E_Erinn_di" bpmnElement="Flow_KE_Erinn_KE_E_Erinn">
-        <di:waypoint x="770" y="130" />
-        <di:waypoint x="842" y="130" />
+        <di:waypoint x="680" y="242" />
+        <di:waypoint x="680" y="190" />
+        <di:waypoint x="842" y="190" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_KE_Entscheiden_KE_Doku_di" bpmnElement="Flow_KE_Entscheiden_KE_Doku">
-        <di:waypoint x="620" y="240" />
-        <di:waypoint x="750" y="240" />
-        <di:waypoint x="750" y="330" />
+        <di:waypoint x="770" y="300" />
+        <di:waypoint x="900" y="300" />
+        <di:waypoint x="900" y="390" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_KE_B_Frist_KE_Keine_di" bpmnElement="Flow_KE_B_Frist_KE_Keine">
-        <di:waypoint x="590" y="298" />
-        <di:waypoint x="590" y="470" />
-        <di:waypoint x="690" y="470" />
+        <di:waypoint x="740" y="358" />
+        <di:waypoint x="740" y="530" />
+        <di:waypoint x="840" y="530" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_KE_Doku_KE_Join_di" bpmnElement="Flow_KE_Doku_KE_Join">
-        <di:waypoint x="810" y="370" />
-        <di:waypoint x="875" y="370" />
+        <di:waypoint x="960" y="430" />
+        <di:waypoint x="1025" y="430" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_KE_Keine_KE_Join_di" bpmnElement="Flow_KE_Keine_KE_Join">
-        <di:waypoint x="810" y="470" />
-        <di:waypoint x="900" y="470" />
-        <di:waypoint x="900" y="395" />
+        <di:waypoint x="960" y="530" />
+        <di:waypoint x="1050" y="530" />
+        <di:waypoint x="1050" y="455" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_KE_Join_KE_Ende_di" bpmnElement="Flow_KE_Join_KE_Ende">
-        <di:waypoint x="925" y="370" />
-        <di:waypoint x="1012" y="370" />
+        <di:waypoint x="1075" y="430" />
+        <di:waypoint x="1162" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_KE_Benachr_di" bpmnElement="MF_KE_Benachr">
+        <di:waypoint x="560" y="422" />
+        <di:waypoint x="560" y="80" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_KE_Erinn_di" bpmnElement="MF_KE_Erinn">
+        <di:waypoint x="860" y="172" />
+        <di:waypoint x="860" y="80" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

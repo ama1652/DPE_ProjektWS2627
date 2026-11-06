@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_T2_Versorgungsprofil" name="Versorgungsprofil Materialversorgung" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <decision id="T2_Versorgungsprofil" name="Versorgungsprofil laden" camunda:historyTimeToLive="180">
+    <description>Konfiguration je Testprodukt (künstliche Testdaten des Testhaushalts PH-0001). Alle Werte sind Projektannahmen und keine medizinischen Vorgaben; der Verbrauch ist eine Kundenangabe. Änderungen hier wirken ohne Änderung von Prozess oder Code. TP-SCHNELL ist identisch mit TP-M, hat aber kurze Fristen für Tests.</description>
+    <decisionTable id="DecisionTable_T2_Versorgungsprofil" hitPolicy="UNIQUE">
+      <input id="Input_1" label="Produkt-ID">
+        <inputExpression id="InputExpression_1" typeRef="string">
+          <text>produktId</text>
+        </inputExpression>
+      </input>
+      <output id="Output_1" label="Produkt" name="produkt" typeRef="string" />
+      <output id="Output_2" label="Hinterlegte Ersatzoption" name="ersatzprodukt" typeRef="string" />
+      <output id="Output_3" label="Bevorzugter Lieferant" name="lieferant" typeRef="string" />
+      <output id="Output_4" label="Zugelassener Alternativlieferant" name="alternativLieferant" typeRef="string" />
+      <output id="Output_5" label="Packungsgröße" name="packungsgroesse" typeRef="integer" />
+      <output id="Output_6" label="Zielbestand" name="zielbestand" typeRef="integer" />
+      <output id="Output_7" label="Verbrauch pro Tag (Kundenangabe)" name="verbrauchProTag" typeRef="integer" />
+      <output id="Output_8" label="Lieferzeit (Tage)" name="lieferzeitTage" typeRef="integer" />
+      <output id="Output_9" label="Prüfintervall (Tage)" name="tageBisNaechstePruefung" typeRef="integer" />
+      <output id="Output_10" label="Stückpreis (EUR)" name="stueckpreis" typeRef="double" />
+      <output id="Output_11" label="Stückpreis Alternativlieferant (EUR)" name="stueckpreisAlternativ" typeRef="double" />
+      <output id="Output_12" label="Höchstmenge je Bestellung" name="maxBestellmenge" typeRef="integer" />
+      <output id="Output_13" label="Schwelle Verbrauchssprung (Anteil)" name="schwelleVerbrauchssprung" typeRef="double" />
+      <output id="Output_14" label="Erinnerungszyklus Kunde" name="erinnerungszyklus" typeRef="string" />
+      <output id="Output_15" label="Frist Bestandsmeldung" name="fristBestandsmeldung" typeRef="string" />
+      <output id="Output_16" label="Frist Kundenentscheidung" name="fristKundenentscheidung" typeRef="string" />
+      <output id="Output_17" label="Frist Bestellbestätigung" name="fristBestaetigungLieferant" typeRef="string" />
+      <output id="Output_18" label="Max. Nachfassen" name="maxNachfassen" typeRef="integer" />
+      <output id="Output_19" label="Mahnzyklus Lieferung" name="mahnzyklusLieferung" typeRef="string" />
+      <output id="Output_20" label="Endgültige Lieferfrist" name="fristLieferungEndgueltig" typeRef="string" />
+      <output id="Output_21" label="Erinnerungszyklus Lieferbestätigung" name="erinnerungszyklusLieferbestaetigung" typeRef="string" />
+      <rule id="Rule_1">
+        <description>Leitgeschichte</description>
+        <inputEntry id="UnaryTests_1_1"><text>"TP-M"</text></inputEntry>
+        <outputEntry id="LiteralExpression_1_1"><text>"Inkontinenzmaterial Testprodukt M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_2"><text>"Inkontinenzmaterial Testprodukt M, Variante B"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_3"><text>"Versorgungsdienst Beispiel (SIMULIERT)"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_4"><text>"Versorgungsdienst Alternativ (SIMULIERT)"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_5"><text>30</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_6"><text>120</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_7"><text>4</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_8"><text>3</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_9"><text>7</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_10"><text>0.45</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_11"><text>0.5</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_12"><text>150</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_13"><text>0.3</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_14"><text>"R2/P1D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_15"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_16"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_17"><text>"PT48H"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_18"><text>2</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_19"><text>"R2/P2D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_20"><text>"P10D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_21"><text>"R3/P2D"</text></outputEntry>
+      </rule>
+      <rule id="Rule_2">
+        <description>Zweites Testprodukt</description>
+        <inputEntry id="UnaryTests_2_1"><text>"TP-HS"</text></inputEntry>
+        <outputEntry id="LiteralExpression_2_1"><text>"Einmalhandschuhe Testprodukt Größe M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_2"><text>"Einmalhandschuhe Testprodukt Größe M, andere Marke"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_3"><text>"Versorgungsdienst Beispiel (SIMULIERT)"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_4"><text>"Versorgungsdienst Alternativ (SIMULIERT)"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_5"><text>100</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_6"><text>300</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_7"><text>10</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_8"><text>2</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_9"><text>14</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_10"><text>0.08</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_11"><text>0.09</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_12"><text>400</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_13"><text>0.3</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_14"><text>"R2/P1D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_15"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_16"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_17"><text>"PT48H"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_18"><text>2</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_19"><text>"R2/P2D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_20"><text>"P10D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_21"><text>"R3/P2D"</text></outputEntry>
+      </rule>
+      <rule id="Rule_3">
+        <description>Nur für Tests: kurze Fristen</description>
+        <inputEntry id="UnaryTests_3_1"><text>"TP-SCHNELL"</text></inputEntry>
+        <outputEntry id="LiteralExpression_3_1"><text>"Inkontinenzmaterial Testprodukt M (Schnelltest)"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_2"><text>"Inkontinenzmaterial Testprodukt M, Variante B"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_3"><text>"Versorgungsdienst Beispiel (SIMULIERT)"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_4"><text>"Versorgungsdienst Alternativ (SIMULIERT)"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_5"><text>30</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_6"><text>120</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_7"><text>4</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_8"><text>3</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_9"><text>7</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_10"><text>0.45</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_11"><text>0.5</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_12"><text>150</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_13"><text>0.3</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_14"><text>"R2/PT30S"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_15"><text>"PT2M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_16"><text>"PT2M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_17"><text>"PT1M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_18"><text>1</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_19"><text>"R2/PT1M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_20"><text>"PT5M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_21"><text>"R3/PT1M"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_T2_Versorgungsprofil">
+      <dmndi:DMNShape id="DMNShape_T2_Versorgungsprofil" dmnElementRef="T2_Versorgungsprofil">
+        <dc:Bounds height="80" width="200" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

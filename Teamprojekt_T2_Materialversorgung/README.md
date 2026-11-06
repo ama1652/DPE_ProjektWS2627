@@ -1,156 +1,180 @@
-# Team 2 – Materialversorgung: erstes ausführbares BPMN-Modell
+# Team 2 – Materialversorgung
 
-Erster Entwurf (Stand 6. November 2026) für den Teamauftrag 2 „Ausgewählte Verbrauchsprodukte rechtzeitig und kontrolliert nachversorgen“.
-Angelegt für **Camunda 7 / CIB seven** (Modeler: Camunda 7.24). Status: **Entwurf, noch nicht auf CIB seven getestet.**
+Ausführbares Prozessmodell für den Teamauftrag 2 „Ausgewählte Verbrauchsprodukte rechtzeitig und kontrolliert nachversorgen“.
+Für **Camunda 7 / CIB seven** (Modeler: Camunda 7.24). Stand 6. November 2026, **Version 2, Entwurf**: noch nicht auf CIB seven getestet und noch nicht vom Team bestätigt.
 
-## Dateien
+## Aufbau: Prozess, Regeln und Dienste getrennt
 
-| Datei | Inhalt |
-|---|---|
-| `T2_Materialversorgung.bpmn` | Hauptprozess (Prozess-Key `T2_Materialversorgung`), alle 12 Schritte aus Teamauftrag Abschnitt 4 und alle 8 Ausnahmen aus Abschnitt 5 |
-| `T2_Kundenentscheidung_einholen.bpmn` | Gemeinsame Funktion „Kundenentscheidung einholen“ (Key `T2_Kundenentscheidung_einholen`), per Call Activity auch für Team 1 und 3 nutzbar |
-| `T2_Berechtigungsregel.dmn` | DMN-Tabelle „Berechtigungsregel anwenden“ (Key `T2_Berechtigungsregel`, Hit Policy FIRST) |
+| Schicht | Inhalt | Dateien |
+|---|---|---|
+| **Prozess** | Ablauf, Wartezustände, Fristen, menschliche Aufgaben. Keine Programmlogik im Modell. | `T2_Materialversorgung.bpmn`, `T2_Kundenentscheidung_einholen.bpmn` |
+| **Regeln und Konfiguration** | Versorgungsprofil je Produkt und Berechtigungsgrenzen, änderbar ohne Code (Projekthandbuch 5.6) | `T2_Versorgungsprofil.dmn`, `T2_Berechtigungsregel.dmn` |
+| **Dienste** | Berechnungen und Kontakte zu Lieferant, Team 1 und Team 3 als **External Tasks**. Vorerst ein Simulator, später austauschbar, ohne das BPMN-Modell zu ändern (Teamauftrag 7.1) | `simulator/` |
 
-## Aufbau des Hauptprozesses
+## Hauptprozess
 
 **Lanes:** Pflegende Person · Pflege-Backoffice (Prozess) · Menschliche Prüfstelle.
-**Externe Teilnehmer (zugeklappte Pools, alle SIMULIERT):** Pflege-App und Prüfplaner, Lieferant, Team 3, Team 1.
+**Externe Teilnehmer (alle SIMULIERT):** Pflege-App und Prüfplaner, Lieferant, Team 3, Team 1.
 
 | Nr. (Auftrag) | Im Modell |
 |---|---|
 | Prozessbeginn | 3 Nachrichten-Startereignisse: Bestandsprüfung fällig, Bestandsmeldung eingegangen, Schwellenwert unterschritten |
-| 1 Bestand prüfen | „Aktuellen Bestand melden“ (nur wenn kein Bestand mitgeliefert wurde) |
-| 2 Reichweite | Script „Verbrauch und Reichweite berechnen“ |
+| 1 Bestand | „Vorgang eröffnen“ → „Versorgungsprofil laden“ (DMN) → bei Bedarf „Aktuellen Bestand melden“ |
+| 2 Reichweite | „Verbrauch und Reichweite berechnen“ |
 | 3 Bedarf | Gateway „Reicht der Bestand bis Prüfung + Lieferzeit?“ → sonst nächste Prüfung terminieren |
-| 4 Vorschlag | Script „Produkt, Menge und Lieferant vorschlagen“ (auf ganze Packungen gerundet) |
-| 5 Abweichungen | Script „Abweichungen prüfen“ (Preis, Produkt, Lieferant, Verbrauch, Menge) |
-| 6 Berechtigungsregel | Business Rule Task → DMN: AUTOMATISCH / KUNDENFREIGABE / PRUEFSTELLE |
+| 4 Vorschlag | „Produkt, Menge und Lieferant vorschlagen“ (ganze Packungen) |
+| 5 Abweichungen | „Abweichungen prüfen“ (Produkt, Lieferant, Verbrauch, Menge) |
+| 6 Berechtigung | „Berechtigung prüfen“ (DMN, gemeinsamer Dienst): AUTOMATISCH / KUNDENFREIGABE / PRUEFSTELLE |
 | 7 Kundenentscheidung | Call Activity „Kundenentscheidung einholen“ |
-| 8 Bestellung | Send Task „Bestellung simuliert übermitteln“ |
-| 9 Lieferung überwachen | Ereignisbasiertes Gateway (bestätigt / nicht lieferbar / Frist) und Receive Task „Auf Zustellmeldung warten“ |
-| 10 Lieferung bestätigen | „Lieferung prüfen und bestätigen“ → bei Abweichung „Lieferabweichung klären“ (Prüfstelle) |
-| 11 Fortschreiben | Script „Bestand und Verbrauch fortschreiben“ |
-| 12 Beleg und Abschluss | Send Task an Team 1, Kunden informieren, Endereignis |
+| 8 Bestellung | „Bestellung simuliert übermitteln“ |
+| 9 Lieferung überwachen | Ereignisbasiertes Gateway (bestätigt / nicht lieferbar / Frist) und „Auf Zustellmeldung warten“ |
+| 10 Lieferung bestätigen | „Lieferung prüfen und bestätigen“ → bei Abweichung „Lieferabweichung klären“ |
+| 11 Fortschreiben | „Bestand und Verbrauch fortschreiben“ |
+| 12 Beleg und Abschluss | „Liefernachweis an Team 1 übergeben“ → Nachrichten-Endereignis „Kunde informiert“ |
 
-**Ausnahmen (Abschnitt 5):**
+**Ausnahmen (Teamauftrag Abschnitt 5):**
 
 | Situation | Umsetzung |
 |---|---|
-| Bestand nicht gemeldet | nicht unterbrechender Timer (Erinnerungen) + unterbrechender Timer → Ende „Abgebrochen“ |
-| Verbrauch deutlich verändert | DMN → Kundenfreigabe, keine stille Mengenerhöhung |
-| Preisgrenze überschritten | DMN → Kundenfreigabe mit Mehrkosten im Freigabetext |
-| Produkt nicht verfügbar | Nachricht „Nicht lieferbar“ → nur hinterlegte Ersatzoption → erneute Prüfung; ist auch die Ersatzoption nicht lieferbar → Prüfstelle |
+| Bestand nicht gemeldet | nicht unterbrechender Timer (Erinnerungen) + unterbrechender Timer → Ende „Abgebrochen“, Kunde wird informiert |
+| Verbrauch deutlich verändert | Abweichung mit Folgen → Kundenfreigabe, keine stille Mengenerhöhung |
+| Preisgrenze überschritten | DMN: Bestellung über 40 EUR → Kundenfreigabe mit Mehrkosten im Freigabetext |
+| Produkt nicht verfügbar | Nachricht „Nicht lieferbar“ → nur hinterlegte Ersatzoption → erneute Prüfung; Ersatz auch nicht lieferbar → Prüfstelle |
 | Lieferant antwortet nicht | Timer am ereignisbasierten Gateway → Nachfassen über Team 3 (max. `maxNachfassen`) → Prüfstelle → Alternativlieferant oder Ende |
 | Teil- oder Falschlieferung | Abweichung erfassen, an Lieferanten melden, Prüfstelle klärt (Nachlieferung / Teilmenge / Übergabe) |
-| Kunde lehnt ab oder verschiebt | keine Bestellung, Reichweitenrisiko wird dem Kunden angezeigt |
+| Kunde lehnt ab oder verschiebt | keine Bestellung, Kunde wird über das Reichweitenrisiko informiert |
 | Lieferung bleibt unbestätigt | nur Erinnerungen, **kein** automatischer erfolgreicher Abschluss |
 
-**Zustände:** Jede Station setzt `vorgangsstatus` (Zustände aus Projekthandbuch 7.2) und `letztesEreignis` (Ereignisse aus 7.3). Jedes Endereignis setzt zusätzlich `ergebnis`.
+**Zustände:** Jede Station setzt `vorgangsstatus` (Zustände aus Projekthandbuch 7.2) und `letztesEreignis` (Ereignisse aus 7.3). Jedes Endereignis setzt `ergebnis`.
 
-## Testen auf CIB seven
+## Gemeinsame Funktionen für Team 1 und Team 3
 
-Voraussetzung wie bei den Demos: Container `cibseven` läuft, Anmeldung **demo / demo**. Alle Benutzeraufgaben sind `demo` zugewiesen.
+| Funktion | So nutzen andere Teams sie |
+|---|---|
+| **Kundenentscheidung einholen** | Call Activity auf `T2_Kundenentscheidung_einholen`. Eingaben: `freigabeHandlung`, `freigabeBegruendung`, `freigabeFolgen`, `freigabeGueltigBis`, `fristKundenentscheidung`, `erinnerungszyklus`. Ausgabe: `entscheidung` (FREIGEGEBEN, ABGELEHNT, AENDERUNG, AUFSCHUB, KEINE_ANTWORT). Keine Antwort ist keine Freigabe. |
+| **Berechtigung prüfen** | Business Rule Task auf `T2_Berechtigungsregel`. Eingaben (alle setzen, notfalls `null`): `handlungsart` (BESTELLUNG, EINREICHUNG, ERSATZVERSORGUNG), `betrag`, `fallUngeklaert`, `abweichungMitFolgen`. Ausgabe: `freigabeweg`, `begruendung`. |
+| **Kunden informieren** | Nachrichten-End- oder Zwischenereignis mit External Task, Topic `t2-benachrichtigung-senden`. |
+
+## Dienste (Topics)
+
+| Topic | Aufgabe | Liefert später |
+|---|---|---|
+| `t2-vorgang-eroeffnen` | Vorgangskennung vergeben | Team 1 (Vorgangsakte) |
+| `t2-reichweite-berechnen`, `t2-pruefung-terminieren`, `t2-vorschlag-erstellen`, `t2-abweichungen-pruefen`, `t2-lieferabweichung-erfassen`, `t2-bestand-fortschreiben` | Fachlogik Materialversorgung | Team 2 |
+| `t2-bestellung-uebermitteln` | Bestellung an den Lieferanten | Lieferdienst |
+| `t2-benachrichtigung-senden` | Kunden über die App informieren | Team 2 (gemeinsam) |
+| `t2-freigabe-anlegen`, `t2-freigabe-dokumentieren` | Freigaben verwalten | Team 2 (gemeinsam) |
+| `t3-nachfassen`, `t3-gegenstelle-kontaktieren` | Nachfassen, Mahnen, Beanstandung | Team 3 |
+| `t1-nachweis-uebergeben` | Liefernachweis übergeben | Team 1 |
+
+Die Fachlogik steht in `simulator/handlers.js`. Wer einen Dienst echt umsetzt, holt dasselbe Topic ab und schaltet den Simulator für dieses Topic ab.
+
+## Testprodukte (Versorgungsprofil, alle Werte Projektannahmen)
+
+| produktId | Produkt | Zielbestand / Packung | Verbrauch pro Tag | Fristen |
+|---|---|---|---|---|
+| `TP-M` | Inkontinenzmaterial Testprodukt M (Leitgeschichte) | 120 / 30 | 4 | normal (z. B. Lieferantenbestätigung 48 h) |
+| `TP-HS` | Einmalhandschuhe Testprodukt Größe M | 300 / 100 | 10 | normal |
+| `TP-SCHNELL` | wie TP-M, **nur für Tests** | 120 / 30 | 4 | kurz (Lieferantenbestätigung 1 min, Entscheidung 2 min) |
+
+Grenzen in `T2_Berechtigungsregel.dmn`: Bestellungen bis 40 EUR automatisch, darüber Kundenfreigabe.
+
+## Starten und testen
+
+Voraussetzung wie bei den Demos: Container `cibseven` läuft, Anmeldung **demo / demo**, Node.js 18 oder neuer.
 
 ```bash
 cd Teamprojekt_T2_Materialversorgung
 H=../BPMN_Demos_aus_Folien/dpe-demo.sh
-bash $H deploy T2_Berechtigungsregel.dmn T2_Kundenentscheidung_einholen.bpmn T2_Materialversorgung.bpmn
+bash $H deploy T2_Versorgungsprofil.dmn T2_Berechtigungsregel.dmn T2_Kundenentscheidung_einholen.bpmn T2_Materialversorgung.bpmn
+
+# zweites Terminal: simulierte Dienste starten (ohne laufen alle Service Tasks auf Warten)
+cd simulator && npm start          # Lieferant antwortet per Hand (dpe-demo.sh msg ...)
+# oder: npm run start:auto         # Lieferant bestätigt nach dem ersten Nachfassen selbst
 ```
 
 ### Testfall 1: Gemeinsamer Beispieldurchlauf (Teamauftrag Abschnitt 9)
 
 ```bash
-# 1. Bestand 20 melden; Bestätigungsfrist für den Test auf 1 Minute verkürzen
-bash $H msg MV_Bestandsmeldung_eingegangen '' '{"bestand":{"value":20,"type":"Long"},"fristBestaetigungLieferant":{"value":"PT1M","type":"String"}}'
+bash $H msg MV_Bestandsmeldung_eingegangen '' '{"produktId":{"value":"TP-SCHNELL","type":"String"},"bestand":{"value":20,"type":"Long"}}'
 bash $H instances T2_Materialversorgung      # Instanz-ID merken
 ```
 
-2. Erwartung: Reichweite 5 Tage < 10 Tage → Vorschlag 120 Stück für 54 EUR > Preisgrenze 40 EUR → Kundenfreigabe.
-   Tasklist „Über Freigabe entscheiden“ → **Freigeben**.
-3. 1 Minute warten (oder in Cockpit den Timer sofort ausführen) → Nachfassen über Team 3, Token wartet wieder am Gateway.
-4. `bash $H msg MV_Bestellbestaetigung <instanzId>`
-5. `bash $H msg MV_Zustellung_gemeldet <instanzId>`
-6. Tasklist „Lieferung prüfen und bestätigen“ → **Richtig und vollständig**.
-7. `bash $H vars <instanzId>` → `vorgangsstatus = Erfolgreich abgeschlossen`, `bestand = 140`, `anzahlNachfassen = 1`.
+1. Erwartung: Reichweite 5 Tage < 10 Tage → 120 Stück für 54 EUR → über 40 EUR → Kundenfreigabe. Tasklist „Über Freigabe entscheiden“ → innerhalb von 2 Minuten **Freigeben** (TP-SCHNELL hat kurze Fristen).
+2. Nach 1 Minute ohne Bestätigung → Nachfassen über Team 3, Token wartet wieder am Gateway.
+3. `bash $H msg MV_Bestellbestaetigung <instanzId>`, dann `bash $H msg MV_Zustellung_gemeldet <instanzId>` (entfällt mit `npm run start:auto`).
+4. Tasklist „Lieferung prüfen und bestätigen“ → **Richtig und vollständig**.
+5. `bash $H vars <instanzId>` → `vorgangsstatus = Erfolgreich abgeschlossen`, `bestand = 140`, `anzahlNachfassen = 1`.
 
 ### Weitere Testfälle
 
-| Fall | Start (Variablen als JSON) | Erwartung |
+| Fall | Start (Variablen) | Erwartung |
 |---|---|---|
-| Kein Bedarf | `MV_Bestandsmeldung_eingegangen` mit `bestand` 100 | Ende „Kein Bedarf: nächste Prüfung terminiert“ |
-| Automatisch | `bestand` 20, `preisgrenze` 100 (Double) | keine Freigabe, direkt Bestellung |
-| Geplante Prüfung | `MV_Bestandspruefung_faellig` ohne Variablen | Aufgabe „Aktuellen Bestand melden“ |
-| Bestand nicht gemeldet | wie oben + `fristBestandsmeldung` "PT1M" | nach 1 Minute Ende „Abgebrochen“ |
-| Verbrauchssprung | `bestand` 20, `preisgrenze` 100, `verbrauchBeobachtetProTag` 7 | Kundenfreigabe mit Hinweis auf Verbrauch |
-| Nicht lieferbar | nach Bestellung `msg MV_Nicht_lieferbar <id>` | Ersatzprodukt, erneut Kundenfreigabe; zweites Mal → Aufgabe „Grenzfall prüfen“ |
-| Kunde lehnt ab | bei der Freigabe **Ablehnen** | Ende „Bestellung nicht ausgelöst“ |
+| Kein Bedarf | `produktId` TP-M, `bestand` 100 | Ende „Kunde informiert: kein Bedarf“ |
+| Automatisch | `produktId` TP-HS, `bestand` 50 | 300 Stück für 24 EUR, keine Freigabe, direkt Bestellung |
+| Geplante Prüfung | `MV_Bestandspruefung_faellig` mit `produktId` TP-SCHNELL | Aufgabe „Aktuellen Bestand melden“; ohne Antwort nach 2 min Ende „Abgebrochen“ |
+| Verbrauchssprung | `produktId` TP-HS, `bestand` 50, `verbrauchBeobachtetProTag` 20 | Kundenfreigabe mit Hinweis auf Verbrauch |
+| Nicht lieferbar | nach Bestellung `msg MV_Nicht_lieferbar <id>` | Ersatzprodukt, erneut Kundenfreigabe; zweites Mal → „Grenzfall prüfen“ |
+| Kunde lehnt ab | bei der Freigabe **Ablehnen** | Ende „Kunde informiert: keine Bestellung“ |
 | Änderung | bei der Freigabe **Ändern** + Menge 60 | neuer Vorschlag 60 Stück (27 EUR) → automatisch |
-| Lieferant schweigt | `fristBestaetigungLieferant` "PT1M", `maxNachfassen` 0 (Long) | Aufgabe „Ausbleibende Lieferantenantwort klären“ |
-| Teillieferung | bei Lieferbestätigung **Nur teilweise** + Menge 60 | Aufgabe „Lieferabweichung klären“ → „Teilmenge übernehmen“ → Bestand 80 |
+| Lieferant schweigt | `produktId` TP-SCHNELL, keine Nachricht senden | nach 2 × 1 min „Ausbleibende Lieferantenantwort klären“ |
+| Teillieferung | bei der Lieferbestätigung **Nur teilweise** + Menge 60 | „Lieferabweichung klären“ → „Teilmenge übernehmen“ → Bestand 80 |
+| Unbekanntes Produkt | `produktId` GIBTSNICHT | Incident im Cockpit statt falschem Ergebnis |
 
-Variablen-Format für `dpe-demo.sh`: `'{"bestand":{"value":20,"type":"Long"},"preisgrenze":{"value":100.0,"type":"Double"}}'`
+Variablen-Format für `dpe-demo.sh`: `'{"bestand":{"value":20,"type":"Long"}}'`
 
-## Konfigurierbare Werte (Projektannahmen)
+### Nachrichten-Korrelation
 
-Alle Werte stehen im Script „Vorgang eröffnen und Versorgungsprofil laden“ und werden nur gesetzt, wenn sie beim Start nicht mitgegeben wurden.
-
-| Variable | Standard | Bedeutung |
-|---|---|---|
-| `packungsgroesse` / `zielbestand` | 30 / 120 | Bestellmenge = Fehlmenge bis Zielbestand, auf Packungen gerundet |
-| `verbrauchProTag` / `verbrauchBeobachtetProTag` | 4 / 4 | Annahme und beobachteter Verbrauch |
-| `schwelleVerbrauchssprung` | 0.3 | ab 30 % Abweichung gilt der Verbrauch als deutlich verändert |
-| `lieferzeitTage` / `tageBisNaechstePruefung` | 3 / 7 | Bedarf, wenn Reichweite ≤ 10 Tage |
-| `stueckpreis` / `stueckpreisAlternativ` / `preisgrenze` | 0.45 / 0.50 / 40 | Preis pro Stück und Freigabegrenze in EUR |
-| `maxBestellmenge` | 150 | höhere Mengen brauchen eine Freigabe |
-| `erinnerungszyklus` / `fristBestandsmeldung` / `fristKundenentscheidung` | R2/P1D / P3D / P3D | Erinnerungen und Fristen für den Kunden |
-| `fristBestaetigungLieferant` / `maxNachfassen` | PT48H / 2 | Warten auf den Lieferanten |
-| `mahnzyklusLieferung` / `fristLieferungEndgueltig` | R2/P2D / P10D | Warten auf die Zustellung |
-| `erinnerungszyklusLieferbestaetigung` | R3/P2D | Erinnerungen an die Lieferbestätigung |
-
-## Entscheidungen (für das Entscheidungsprotokoll)
-
-1. **Kundenentscheidung als eigener Prozess (Call Activity, Call by Value):** Team 2 muss die Freigabefunktion auch Team 1 und 3 anbieten (Teamauftrag 2.2). Eingaben und Ausgaben sind ausdrücklich gemappt, damit andere Teams sie ohne unsere Variablen nutzen können.
-2. **Berechtigungsregel als DMN:** Grenzen sollen konfigurierbar bleiben (Teamauftrag 6.1). Änderungen an Regeln brauchen kein neues Prozessmodell.
-3. **Erinnerungen per nicht unterbrechendem Timer, Abbruch per unterbrechendem Timer:** Die Aufgabe bleibt offen, während erinnert wird; erst die endgültige Frist beendet den Wartezustand.
-4. **Keine Antwort ist keine Freigabe:** Läuft die Entscheidungsfrist ab, wird `KEINE_ANTWORT` gesetzt und nicht bestellt.
-5. **Lieferbestätigung ohne endgültige Frist:** Der Vorgang darf laut Auftrag nicht automatisch erfolgreich schließen; er bleibt sichtbar „Wartet auf Kunde“ mit Erinnerungen.
-6. **Änderungswunsch innerhalb der Grenzen:** Die vom Kunden gewünschte Menge gilt als von ihm gewollt; liegt sie innerhalb der Grenzen, wird ohne zweite Freigabe bestellt.
-7. **Simulation:** Send Tasks verwenden vorerst `${true}` und setzen nur Status-Variablen, damit das Modell ohne weitere Komponenten läuft. Achtung: Für echte Dienste muss die Implementierung dieser Tasks noch umgestellt werden (siehe Offene Punkte), der Ablauf selbst bleibt gleich.
-8. **Freigabe mit Gültigkeit:** Jede Freigabeanforderung trägt Handlung, Begründung, Folgen und Gültigkeit (Teamauftrag Abschnitt 7). Für Bestellungen gilt die Freigabe bis zum voraussichtlichen Ende des Vorrats.
-
-## Nachrichten-Korrelation
-
-Der Prozess setzt beim Start den **Business Key = Vorgangskennung** (`vorgangId`, z. B. `VG-T2-…`). Alle späteren Nachrichten (`MV_Bestellbestaetigung`, `MV_Nicht_lieferbar`, `MV_Zustellung_gemeldet`) werden über diesen Business Key der richtigen Instanz zugeordnet:
+„Vorgang eröffnen“ setzt den **Business Key = Vorgangskennung** (`vorgangId`, z. B. `VG-T2-…`). Lieferant, Team 3 und App schicken ihre Nachrichten mit diesem Business Key:
 
 ```bash
 curl -u demo:demo -H "Content-Type: application/json" -X POST http://localhost:8080/engine-rest/message \
   -d '{"messageName":"MV_Bestellbestaetigung","businessKey":"VG-T2-xxxxxxxx"}'
 ```
 
-Für Tests reicht weiterhin `dpe-demo.sh msg <Name> <instanzId>`.
+## Entscheidungen (für das Entscheidungsprotokoll)
+
+1. **Prozess ohne Programmlogik:** Alle Berechnungen und Kontakte laufen als External Tasks, die Konfiguration steht in DMN. Grund: Trennung von Prozess- und Dienstschicht; simulierte Dienste sind austauschbar, ohne das Modell zu ändern.
+2. **Kundenentscheidung als eigener Prozess (Call Activity, Call by Value):** Team 2 stellt die Freigabefunktion für alle Teams bereit (Teamauftrag 2.2).
+3. **Allgemeine Berechtigungsprüfung:** Die DMN-Tabelle kennt Handlungsarten aller Teams und ist nicht nur auf Bestellungen zugeschnitten.
+4. **Benachrichtigung als gemeinsamer Dienst:** Nachrichten-Endereignisse mit Topic `t2-benachrichtigung-senden` statt eines eigenen Teilprozesses, weil Benachrichtigen ein einzelner Dienstaufruf ist.
+5. **Ein Vorgang je Produkt:** Jede Prozessinstanz versorgt genau ein Produkt aus dem Versorgungsprofil.
+6. **Erinnerungen per nicht unterbrechendem Timer, Abbruch per unterbrechendem Timer:** Die Aufgabe bleibt offen, während erinnert wird.
+7. **Keine Antwort ist keine Freigabe**, und eine **unbestätigte Lieferung** schließt nie automatisch erfolgreich.
+8. **Änderungswunsch innerhalb der Grenzen:** Die vom Kunden gewünschte Menge gilt als von ihm gewollt; liegt sie innerhalb der Grenzen, wird ohne zweite Freigabe bestellt.
+9. **Fehler werden sichtbar:** Der Simulator meldet Fehler mit `retries: 0`, dadurch entsteht ein Incident im Cockpit statt eines stillen Fehlers.
 
 ## Offene Punkte
 
-**Vor der Abgabe nötig:**
-- Auf CIB seven deployen und alle Testfälle durchspielen (bisher nur statisch geprüft, siehe unten).
-- Simulierte Dienste austauschbar machen: Send Tasks und die rechnenden Script Tasks auf **Service Tasks mit External Tasks** (z. B. Topic `t2-bestellung`) oder REST-Aufrufe an einen kleinen Simulationsdienst umstellen. Dann kann später der echte Dienst den Simulator ersetzen, ohne das BPMN-Modell zu ändern. Das entspricht auch der Trennung von Prozess- und Dienstschicht aus der Vorlesung.
-- Grenzen und Versorgungsprofil (Preisgrenze, Zielbestand, Fristen) aus dem Script herausnehmen und konfigurierbar ablegen, z. B. als DMN-Tabelle „Versorgungsprofil“ oder Konfigurationsdatei (Projekthandbuch 5.6).
-- Gemeinsame Funktionen für alle Teams vervollständigen: „Kunden informieren“ (Benachrichtigung) als eigener aufrufbarer Prozess und eine **allgemeine** Berechtigungsprüfung, die nicht nur auf Bestellungen zugeschnitten ist (Teamauftrag 2.2).
-- 2 bis 3 Testprodukte im Versorgungsprofil festlegen (bisher nur „Testprodukt M“; je Produkt ein Vorgang).
+**Vor der Abgabe:**
+- Auf CIB seven deployen und alle Testfälle durchspielen.
+- Alle Entscheidungen oben im Team bestätigen und ins Entscheidungsprotokoll übernehmen.
 
 **Mit Team 1 und 3 abstimmen (Integrationskreis):**
-- Kennungsformat (`PH-0001`, `VG-T2-…`) und Nachrichtennamen.
-- Ereignisrahmen (ereignisId, korrelationsId, schemaVersion) für die Übergaben an Team 1 und 3.
-- Nachfassen und Mahnen über die Bausteine von Team 3 statt eigener Send Tasks.
+- Kennungsformat (`PH-0001`, `VG-T2-…`), Topic- und Nachrichtennamen.
+- Ereignisrahmen (ereignisId, korrelationsId, schemaVersion) für die Übergaben.
+- Ob Team 1 und 3 die gemeinsamen Funktionen so nutzen können (Eingaben, Handlungsarten, Grenzen).
 
 **Im Team entscheiden:**
+- Grenze 40 EUR und alle Werte im Versorgungsprofil.
 - Ob die Prüfstelle eine eigene Gruppe (z. B. `pruefstelle`) statt Benutzer `demo` bekommt.
 - Ob nach „Kunde entscheidet“ durch die Prüfstelle bei ungeklärtem Produkt überhaupt bestellt werden darf.
+- Ob die Endereignisse der Prüfstelle den Kunden ebenfalls benachrichtigen sollen.
 - Formulare später durch eigene Oberflächen ersetzen (Teamauftrag Abschnitt 8).
 
-## Bisherige Prüfung
+## Prüfung
 
-- Gültiges XML, keine Warnungen beim Einlesen mit `bpmn-moddle`/`dmn-moddle` (inkl. Camunda-Erweiterungen).
-- `bpmnlint` mit Regeln `recommended` und `camunda-compat` für Camunda Platform 7.24: 0 Fehler, 0 Warnungen.
-- Alle 16 JavaScript-Skripte syntaktisch geprüft; Rechenlogik mit den Testfällen oben in Node.js nachgespielt.
+```bash
+cd simulator
+npm test          # 12 automatisierte Tests der Dienste und der REST-Anbindung
+npm run pruefen   # Ausführbarkeit für Camunda 7 und Testfälle der DMN-Tabellen
+```
+
+- `npm test`: 12 von 12 bestanden.
+- `npm run pruefen`: 0 Fehler. Geprüft werden Implementierung jeder Aufgabe, Verweise auf DMN, Call Activity und Nachrichten, Bedingungen an Gateways, alle in Ausdrücken benutzten Variablen und die Zuordnung Topic ↔ Simulator.
+- Zusätzlich gültiges XML laut `bpmn-moddle` und `dmn-moddle`, 0 Befunde mit `bpmnlint`.
 - **Nicht** geprüft: tatsächliche Ausführung auf CIB seven.
+
+## Lizenz
+
+Selbst erstellte Bestandteile unter der MIT-Lizenz (Projekthandbuch Abschnitt 13). Der Simulator nutzt nur Node.js, keine Fremdbibliotheken.
