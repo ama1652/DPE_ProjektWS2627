@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_T2_Berechtigungsregel" name="Berechtigungsregel Materialversorgung" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <decision id="T2_Berechtigungsregel" name="Berechtigungsregel anwenden" camunda:historyTimeToLive="180">
+    <description>Team 2: Welcher Freigabeweg gilt für den Bestellvorschlag? Hit Policy FIRST: die erste passende Zeile gewinnt. Alle Regeln sind Projektannahmen (Quelle: Teamauftrag 2, Abschnitt 5 und 6) und noch nicht von der Lehrperson bestätigt.</description>
+    <decisionTable id="DecisionTable_T2_Berechtigungsregel" hitPolicy="FIRST">
+      <input id="Input_1" label="Produkt ungeklärt?">
+        <inputExpression id="InputExpression_1" typeRef="boolean">
+          <text>produktUngeklaert</text>
+        </inputExpression>
+      </input>
+      <input id="Input_2" label="Verbrauch deutlich verändert?">
+        <inputExpression id="InputExpression_2" typeRef="boolean">
+          <text>verbrauchsSprung</text>
+        </inputExpression>
+      </input>
+      <input id="Input_3" label="Preis über Grenze?">
+        <inputExpression id="InputExpression_3" typeRef="boolean">
+          <text>preisUeberGrenze</text>
+        </inputExpression>
+      </input>
+      <input id="Input_4" label="Produktwechsel?">
+        <inputExpression id="InputExpression_4" typeRef="boolean">
+          <text>produktWechsel</text>
+        </inputExpression>
+      </input>
+      <input id="Input_5" label="Lieferantenwechsel?">
+        <inputExpression id="InputExpression_5" typeRef="boolean">
+          <text>lieferantWechsel</text>
+        </inputExpression>
+      </input>
+      <input id="Input_6" label="Menge über Grenze?">
+        <inputExpression id="InputExpression_6" typeRef="boolean">
+          <text>mengeUeberGrenze</text>
+        </inputExpression>
+      </input>
+      <output id="Output_1" label="Freigabeweg" name="freigabeweg" typeRef="string" />
+      <rule id="Rule_1">
+        <description>Kein lieferbares Produkt aus dem Profil: keine eigene Regel erfinden, Prüfstelle entscheidet</description>
+        <inputEntry id="UnaryTests_1_1"><text>true</text></inputEntry>
+        <inputEntry id="UnaryTests_1_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_1_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_1_4"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_1_5"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_1_6"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_1"><text>"PRUEFSTELLE"</text></outputEntry>
+      </rule>
+      <rule id="Rule_2">
+        <description>Keine stille Mengenerhöhung: Abweichung erklären, Kunde entscheidet</description>
+        <inputEntry id="UnaryTests_2_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_2_2"><text>true</text></inputEntry>
+        <inputEntry id="UnaryTests_2_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_2_4"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_2_5"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_2_6"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_2"><text>"KUNDENFREIGABE"</text></outputEntry>
+      </rule>
+      <rule id="Rule_3">
+        <description>Mehrkosten nur mit Freigabe</description>
+        <inputEntry id="UnaryTests_3_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_3_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_3_3"><text>true</text></inputEntry>
+        <inputEntry id="UnaryTests_3_4"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_3_5"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_3_6"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_3"><text>"KUNDENFREIGABE"</text></outputEntry>
+      </rule>
+      <rule id="Rule_4">
+        <description>Nur hinterlegte Ersatzoption, Kunde bestätigt</description>
+        <inputEntry id="UnaryTests_4_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_4_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_4_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_4_4"><text>true</text></inputEntry>
+        <inputEntry id="UnaryTests_4_5"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_4_6"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_4"><text>"KUNDENFREIGABE"</text></outputEntry>
+      </rule>
+      <rule id="Rule_5">
+        <description>Anderer Lieferant als hinterlegt</description>
+        <inputEntry id="UnaryTests_5_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_5_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_5_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_5_4"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_5_5"><text>true</text></inputEntry>
+        <inputEntry id="UnaryTests_5_6"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_5"><text>"KUNDENFREIGABE"</text></outputEntry>
+      </rule>
+      <rule id="Rule_6">
+        <description>Menge über Höchstmenge</description>
+        <inputEntry id="UnaryTests_6_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_6_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_6_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_6_4"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_6_5"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_6_6"><text>true</text></inputEntry>
+        <outputEntry id="LiteralExpression_6"><text>"KUNDENFREIGABE"</text></outputEntry>
+      </rule>
+      <rule id="Rule_7">
+        <description>Alles innerhalb der hinterlegten Grenzen: Bestellung darf simuliert ausgelöst werden</description>
+        <inputEntry id="UnaryTests_7_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_4"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_5"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_6"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_7"><text>"AUTOMATISCH"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_T2">
+      <dmndi:DMNShape id="DMNShape_T2" dmnElementRef="T2_Berechtigungsregel">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

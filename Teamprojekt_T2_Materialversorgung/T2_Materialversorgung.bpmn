@@ -1,0 +1,1511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_T2_Materialversorgung" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+
+  <bpmn:collaboration id="Collaboration_T2_Materialversorgung">
+    <bpmn:participant id="P_T2_Materialversorgung" name="Pflege-Backoffice: Materialversorgung (Team 2)" processRef="T2_Materialversorgung" />
+    <bpmn:participant id="P_T2_App" name="Pflege-App und Prüfplaner (Auslöser)" />
+    <bpmn:participant id="P_T2_Lieferant" name="Lieferant: Versorgungsdienst Beispiel (SIMULIERT)" />
+    <bpmn:participant id="P_T2_Team3" name="Team 3: Kommunikation, Fristen, Nachfassen (SIMULIERT)" />
+    <bpmn:participant id="P_T2_Team1" name="Team 1: Dokumente und Vorgangsübersicht (SIMULIERT)" />
+    <bpmn:messageFlow id="MF_Pruefung" sourceRef="P_T2_App" targetRef="S_Pruefung" />
+    <bpmn:messageFlow id="MF_Meldung" sourceRef="P_T2_App" targetRef="S_Meldung" />
+    <bpmn:messageFlow id="MF_Schwelle" sourceRef="P_T2_App" targetRef="S_Schwelle" />
+    <bpmn:messageFlow id="MF_Bestellung" name="Bestellung" sourceRef="ST_Bestellen" targetRef="P_T2_Lieferant" />
+    <bpmn:messageFlow id="MF_NichtLieferbar" sourceRef="P_T2_Lieferant" targetRef="IC_NichtLieferbar" />
+    <bpmn:messageFlow id="MF_Bestaetigung" sourceRef="P_T2_Lieferant" targetRef="IC_Bestaetigt" />
+    <bpmn:messageFlow id="MF_Nachfassen" sourceRef="ST_Nachfassen" targetRef="P_T2_Team3" />
+    <bpmn:messageFlow id="MF_Zustellung" sourceRef="P_T2_Lieferant" targetRef="RT_Zustellung" />
+    <bpmn:messageFlow id="MF_Mahnen" sourceRef="ST_Mahnen" targetRef="P_T2_Team3" />
+    <bpmn:messageFlow id="MF_Reklamation" sourceRef="ST_Reklamation" targetRef="P_T2_Team3" />
+    <bpmn:messageFlow id="MF_Beleg" name="Liefernachweis" sourceRef="ST_Beleg" targetRef="P_T2_Team1" />
+  </bpmn:collaboration>
+  <bpmn:process id="T2_Materialversorgung" name="Materialversorgung (Team 2)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Team 2 Materialversorgung, Semesterprojekt Pflege-Backoffice MVP (DPE, Prof. Stiehl, WS 2026/27). Wiederkehrende Nachversorgung ausgewählter Verbrauchsprodukte vom Auslöser bis zur bestätigten Lieferung. Alle externen Dienste (Lieferant, Team 1, Team 3) und Benachrichtigungen sind SIMULIERT. Alle Grenzen und Fristen sind Prozessvariablen (Projektannahmen) und lassen sich beim Start überschreiben. Vorgangszustände nach Projekthandbuch 7.2 in der Variable vorgangsstatus, letztes gemeinsames Ereignis in letztesEreignis.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_T2_Materialversorgung">
+      <bpmn:lane id="Lane_T2_Kunde" name="Pflegende Person">
+        <bpmn:flowNodeRef>U_Bestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>B_ErinnBestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>B_FristBestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_ErinnBestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_ErinnBestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_KeinBestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Kunde</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_Entscheidung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Entsch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Risiko</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_Abgelehnt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>U_Lieferung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>B_ErinnLief</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_ErinnLief</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_ErinnLief</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_T2_Backoffice" name="Pflege-Backoffice (Prozess)">
+        <bpmn:flowNodeRef>S_Pruefung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_Meldung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>S_Schwelle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Anlegen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Bestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Bestand</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Reichweite</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Bedarf</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Termin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_KeinBedarf</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Vorschlag</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Vorschlag</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Pruefen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Abweichung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>R_Regel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Weg</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Bestellen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ST_Bestellen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Warten</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EG_Antwort</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IC_NichtLieferbar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IC_Bestaetigt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>IT_Frist</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_NichtVerf</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Nachfassen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ST_Nachfassen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Lieferung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RT_Zustellung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>B_Mahnung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>B_LieferungAus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ST_Mahnen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_Mahnung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_LiefOk</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Erfassen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ST_Reklamation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Fortschreiben</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Fortschreiben</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ST_Beleg</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_Info</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_Erfolg</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_T2_Pruefstelle" name="Menschliche Prüfstelle">
+        <bpmn:flowNodeRef>U_Grenzfall</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Grenz</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_Grenzfall</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>U_LiefAntwort</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_LiefAntwort</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_KeinLieferant</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>J_Klaerung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>U_Klaerung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>G_Klaerung</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>E_Klaerung</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="S_Pruefung" name="Bestandsprüfung fällig">
+      <bpmn:documentation>Prozessbeginn 1: Der Prüfplaner meldet einen geplanten Bestandsprüfungstermin (Nachricht MV_Bestandspruefung_faellig). Bestand ist noch nicht bekannt.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('ausloeser', 'Geplante Bestandsprüfung')}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_S_Pruefung_J_Start</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_S_Pruefung" messageRef="Msg_MV_Pruefung" />
+    </bpmn:startEvent>
+    <bpmn:startEvent id="S_Meldung" name="Bestandsmeldung eingegangen">
+      <bpmn:documentation>Prozessbeginn 2: Die pflegende Person meldet den Bestand über die App (Nachricht MV_Bestandsmeldung_eingegangen mit Variable bestand).</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('ausloeser', 'Manuelle Bestandsmeldung')}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_S_Meldung_J_Start</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_S_Meldung" messageRef="Msg_MV_Meldung" />
+    </bpmn:startEvent>
+    <bpmn:startEvent id="S_Schwelle" name="Schwellenwert unterschritten">
+      <bpmn:documentation>Prozessbeginn 3: Die App erkennt, dass der vereinbarte Schwellenwert unterschritten ist (Nachricht MV_Schwellenwert_unterschritten mit Variable bestand).</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('ausloeser', 'Schwellenwert unterschritten')}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_S_Schwelle_J_Start</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_S_Schwelle" messageRef="Msg_MV_Schwelle" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="J_Start">
+      <bpmn:incoming>Flow_S_Pruefung_J_Start</bpmn:incoming>
+      <bpmn:incoming>Flow_S_Meldung_J_Start</bpmn:incoming>
+      <bpmn:incoming>Flow_S_Schwelle_J_Start</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Start_T_Anlegen</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Anlegen" name="Vorgang eröffnen und Versorgungsprofil laden" scriptFormat="javascript">
+      <bpmn:documentation>Eröffnet den Vorgang (Ereignis: Vorgang eröffnet) und lädt das Versorgungsprofil des Testhaushalts PH-0001. SIMULIERT: Werte kommen aus Testdaten, später aus der gemeinsamen Datenhaltung von Team 1.</bpmn:documentation>
+      <bpmn:incoming>Flow_J_Start_T_Anlegen</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Anlegen_G_Bestand</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Vorgang eroeffnen und Versorgungsprofil laden (SIMULIERT: Testdaten des Testhaushalts PH-0001)
+// Jeder Wert ist eine Projektannahme und kann beim Start als Prozessvariable ueberschrieben werden.
+def('pflegehaushaltId', 'PH-0001');
+def('vorgangId', 'VG-T2-' + String(execution.getProcessInstanceId()).substring(0, 8));
+def('ausloeser', 'unbekannt');
+// Versorgungsprofil
+def('produkt', 'Inkontinenzmaterial Testprodukt M');
+def('ersatzprodukt', 'Inkontinenzmaterial Testprodukt M - Variante B');
+def('lieferant', 'Versorgungsdienst Beispiel (SIMULIERT)');
+def('alternativLieferant', 'Versorgungsdienst Alternativ (SIMULIERT)');
+def('packungsgroesse', 30);
+def('zielbestand', 120);
+def('verbrauchProTag', 4);
+def('verbrauchBeobachtetProTag', v('verbrauchProTag'));
+def('lieferzeitTage', 3);
+def('tageBisNaechstePruefung', 7);
+def('stueckpreis', 0.45);
+def('stueckpreisAlternativ', 0.50);
+// Berechtigungsgrenzen
+def('preisgrenze', 40);
+def('maxBestellmenge', 150);
+def('schwelleVerbrauchssprung', 0.3);
+// Fristen (ISO 8601) - fuer Tests z. B. PT1M setzen
+def('erinnerungszyklus', 'R2/P1D');
+def('fristBestandsmeldung', 'P3D');
+def('fristKundenentscheidung', 'P3D');
+def('fristBestaetigungLieferant', 'PT48H');
+def('maxNachfassen', 2);
+def('mahnzyklusLieferung', 'R2/P2D');
+def('fristLieferungEndgueltig', 'P10D');
+def('erinnerungszyklusLieferbestaetigung', 'R3/P2D');
+// Simulationsschalter fuer Testfaelle
+def('produktVerfuegbar', true);
+set('istSimulation', true);
+set('anzahlNachfassen', 0);
+set('bestandBekannt', has('bestand'));
+set('vorgangsstatus', 'In Bearbeitung');
+set('letztesEreignis', 'Vorgang eroeffnet');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_Bestand" name="Aktueller Bestand gemeldet?" default="Flow_G_Bestand_U_Bestand">
+      <bpmn:incoming>Flow_T_Anlegen_G_Bestand</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_Bestand_J_Bestand</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Bestand_U_Bestand</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="U_Bestand" name="Aktuellen Bestand melden" camunda:assignee="demo">
+      <bpmn:documentation>Anlass: geplante Bestandsprüfung ohne aktuelle Meldung. Benötigt: Produktname, letzter bekannter Bestand. Rolle: pflegende Person. Ergebnis: aktueller Bestand mit Zeitpunkt. Frist: fristBestandsmeldung (Standard P3D), vorher Erinnerungen im Zyklus erinnerungszyklus.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Wartet auf Kunde')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Unterlagen fehlen')}" event="start" />
+        <camunda:formData>
+          <camunda:formField id="bestand" label="Aktueller Bestand (Stück)" type="long">
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="bestandUnsicher" label="Ich bin mir bei der Menge unsicher" type="boolean" defaultValue="false" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_Bestand_U_Bestand</bpmn:incoming>
+      <bpmn:outgoing>Flow_U_Bestand_J_Bestand</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="B_ErinnBestand" name="Erinnerung fällig" attachedToRef="U_Bestand" cancelActivity="false">
+      <bpmn:outgoing>Flow_B_ErinnBestand_T_ErinnBestand</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TED_B_ErinnBestand">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">${erinnerungszyklus}</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="B_FristBestand" name="Meldefrist abgelaufen" attachedToRef="U_Bestand">
+      <bpmn:outgoing>Flow_B_FristBestand_E_KeinBestand</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TED_B_FristBestand">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${fristBestandsmeldung}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:scriptTask id="T_ErinnBestand" name="An Bestandsmeldung erinnern" scriptFormat="javascript">
+      <bpmn:documentation>Gezielte Erinnerung über die gemeinsame Benachrichtigungsfunktion. SIMULIERT: wird nur als Variable protokolliert.</bpmn:documentation>
+      <bpmn:incoming>Flow_B_ErinnBestand_T_ErinnBestand</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_ErinnBestand_E_ErinnBestand</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Gezielte Erinnerung an die Bestandsmeldung (SIMULIERT: Benachrichtigung wird nur protokolliert)
+var n = has('erinnerungenBestand') ? Number(v('erinnerungenBestand')) + 1 : 1;
+set('erinnerungenBestand', n);
+set('letztesEreignis', 'Nachricht versandt (Erinnerung Bestandsmeldung ' + n + ')');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="E_ErinnBestand" name="Erinnerung versandt">
+      <bpmn:incoming>Flow_T_ErinnBestand_E_ErinnBestand</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="E_KeinBestand" name="Abgebrochen: Bestand nicht gemeldet">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Abgebrochen')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('ergebnis', 'Bestand trotz Erinnerung nicht gemeldet')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Vorgang geschlossen')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_B_FristBestand_E_KeinBestand</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="J_Bestand">
+      <bpmn:incoming>Flow_G_Bestand_J_Bestand</bpmn:incoming>
+      <bpmn:incoming>Flow_U_Bestand_J_Bestand</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Bestand_T_Reichweite</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Reichweite" name="Verbrauch und Reichweite berechnen" scriptFormat="javascript">
+      <bpmn:documentation>Berechnet Reichweite = Bestand / Verbrauch pro Tag und den voraussichtlichen Zeitpunkt der Unterschreitung. Keine medizinische Bewertung des Verbrauchs.</bpmn:documentation>
+      <bpmn:incoming>Flow_J_Bestand_T_Reichweite</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Reichweite_G_Bedarf</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Verbrauch und Reichweite berechnen (keine medizinische Bewertung, nur Rechnung mit hinterlegtem Verbrauch)
+var bestand = Number(v('bestand'));
+var verbrauch = Number(v('verbrauchProTag'));
+var reichweite = verbrauch &gt; 0 ? Math.floor(bestand / verbrauch) : 9999;
+var benoetigt = Number(v('tageBisNaechstePruefung')) + Number(v('lieferzeitTage'));
+var datum = new Date();
+datum.setDate(datum.getDate() + reichweite);
+set('reichweiteTage', reichweite);
+set('benoetigteReichweiteTage', benoetigt);
+set('voraussichtlicheUnterschreitung', datum.toISOString().substring(0, 10));
+set('nachversorgungNoetig', reichweite &lt;= benoetigt);
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_Bedarf" name="Reicht der Bestand bis Prüfung + Lieferzeit?" default="Flow_G_Bedarf_T_Termin">
+      <bpmn:incoming>Flow_T_Reichweite_G_Bedarf</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_Bedarf_J_Vorschlag</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Bedarf_T_Termin</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Termin" name="Nächste Prüfung terminieren und Kunden informieren" scriptFormat="javascript">
+      <bpmn:incoming>Flow_G_Bedarf_T_Termin</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Termin_E_KeinBedarf</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Kein Bedarf: naechste Pruefung terminieren und Kunden informieren (SIMULIERT: Benachrichtigung nur protokolliert)
+var d = new Date();
+d.setDate(d.getDate() + Number(v('tageBisNaechstePruefung')));
+set('naechstePruefungAm', d.toISOString().substring(0, 10));
+set('kundenhinweis', 'Bestand reicht ca. ' + v('reichweiteTage') + ' Tage. Naechste Pruefung am ' + v('naechstePruefungAm') + '.');
+set('letztesEreignis', 'Ergebnis bestaetigt');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="E_KeinBedarf" name="Kein Bedarf: nächste Prüfung terminiert">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Erfolgreich abgeschlossen')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('ergebnis', 'Kein Nachversorgungsbedarf, nächste Prüfung terminiert')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Vorgang geschlossen')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_T_Termin_E_KeinBedarf</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="J_Vorschlag">
+      <bpmn:incoming>Flow_G_Bedarf_J_Vorschlag</bpmn:incoming>
+      <bpmn:incoming>Flow_G_Entsch_J_Vorschlag</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Vorschlag_T_Vorschlag</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Vorschlag" name="Produkt, Menge und Lieferant vorschlagen" scriptFormat="javascript">
+      <bpmn:documentation>Menge = Fehlmenge bis Zielbestand, aufgerundet auf ganze Packungen. Bei Änderungswunsch des Kunden wird gewuenschteMenge übernommen.</bpmn:documentation>
+      <bpmn:incoming>Flow_J_Vorschlag_T_Vorschlag</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Vorschlag_J_Pruefen</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Produkt, Menge und Lieferant aus dem Versorgungsprofil vorschlagen
+def('aktuellesProdukt', v('produkt'));
+def('aktuellerLieferant', v('lieferant'));
+var packung = Number(v('packungsgroesse'));
+var fehlmenge = Math.max(Number(v('zielbestand')) - Number(v('bestand')), 0);
+var menge = Math.ceil(fehlmenge / packung) * packung;
+if (has('gewuenschteMenge') &amp;&amp; Number(v('gewuenschteMenge')) &gt; 0) {
+  // Kunde hat eine Aenderung gewuenscht: auf ganze Packungen aufrunden
+  menge = Math.ceil(Number(v('gewuenschteMenge')) / packung) * packung;
+  set('gewuenschteMenge', null);
+}
+set('bestellmenge', menge);
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="J_Pruefen">
+      <bpmn:incoming>Flow_T_Vorschlag_J_Pruefen</bpmn:incoming>
+      <bpmn:incoming>Flow_T_NichtVerf_J_Pruefen</bpmn:incoming>
+      <bpmn:incoming>Flow_G_LiefAntwort_J_Pruefen</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Pruefen_T_Abweichung</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Abweichung" name="Abweichungen prüfen" scriptFormat="javascript">
+      <bpmn:documentation>Bewertet Preis, Produktwechsel, Lieferantenwechsel, Verbrauchssprung und Menge gegenüber Versorgungsprofil und Grenzen. Bei Nichtverfügbarkeit wird nur die hinterlegte Ersatzoption angeboten. Erstellt den Text für die Freigabeanforderung.</bpmn:documentation>
+      <bpmn:incoming>Flow_J_Pruefen_T_Abweichung</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Abweichung_R_Regel</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Abweichungen gegenueber Versorgungsprofil und Berechtigungsgrenzen pruefen
+var hinweise = [];
+set('produktUngeklaert', false);
+if (v('produktVerfuegbar') === false) {
+  if (v('aktuellesProdukt') == v('produkt') &amp;&amp; has('ersatzprodukt')) {
+    // nur hinterlegte Ersatzoption anbieten, kein medizinischer Ersatz
+    set('aktuellesProdukt', v('ersatzprodukt'));
+    set('produktVerfuegbar', true);
+  } else {
+    set('produktUngeklaert', true);
+    hinweise.push('Weder bevorzugtes Produkt noch hinterlegte Ersatzoption lieferbar');
+  }
+}
+var produktWechsel = v('aktuellesProdukt') != v('produkt');
+if (produktWechsel) { hinweise.push('Produktwechsel auf hinterlegte Ersatzoption: ' + v('aktuellesProdukt')); }
+var lieferantWechsel = v('aktuellerLieferant') != v('lieferant');
+if (lieferantWechsel) { hinweise.push('Anderer Lieferant: ' + v('aktuellerLieferant')); }
+var preis = lieferantWechsel ? Number(v('stueckpreisAlternativ')) : Number(v('stueckpreis'));
+var gesamt = Math.round(Number(v('bestellmenge')) * preis * 100) / 100;
+var preisUeber = gesamt &gt; Number(v('preisgrenze'));
+if (preisUeber) { hinweise.push('Preis ' + gesamt + ' EUR liegt ueber der Preisgrenze von ' + v('preisgrenze') + ' EUR (Mehrkosten ' + (Math.round((gesamt - Number(v('preisgrenze'))) * 100) / 100) + ' EUR)'); }
+var annahme = Number(v('verbrauchProTag'));
+var beobachtet = Number(v('verbrauchBeobachtetProTag'));
+var sprung = annahme &gt; 0 &amp;&amp; Math.abs(beobachtet - annahme) / annahme &gt; Number(v('schwelleVerbrauchssprung'));
+if (sprung) { hinweise.push('Verbrauch deutlich veraendert: beobachtet ' + beobachtet + ' statt ' + annahme + ' pro Tag (keine stille Mengenerhoehung)'); }
+var mengeUeber = Number(v('bestellmenge')) &gt; Number(v('maxBestellmenge'));
+if (mengeUeber) { hinweise.push('Menge ' + v('bestellmenge') + ' liegt ueber der Hoechstmenge ' + v('maxBestellmenge')); }
+set('stueckpreisAktuell', preis);
+set('preisGesamt', gesamt);
+set('produktWechsel', produktWechsel);
+set('lieferantWechsel', lieferantWechsel);
+set('preisUeberGrenze', preisUeber);
+set('verbrauchsSprung', sprung);
+set('mengeUeberGrenze', mengeUeber);
+set('abweichungen', hinweise.length &gt; 0 ? hinweise.join('; ') : 'keine');
+// Inhalt fuer die gemeinsame Freigabefunktion (Handlung, Begruendung, Folgen)
+set('freigabeHandlung', 'Bestellung von ' + v('bestellmenge') + ' Stueck ' + v('aktuellesProdukt') + ' bei ' + v('aktuellerLieferant') + ' fuer ' + gesamt + ' EUR');
+set('freigabeBegruendung', 'Bestand reicht voraussichtlich nur ' + v('reichweiteTage') + ' Tage (bis ' + v('voraussichtlicheUnterschreitung') + '). Abweichungen: ' + v('abweichungen'));
+set('freigabeFolgen', 'Freigabe: Bestellung wird simuliert ausgeloest. Ablehnung oder Aufschub: keine Bestellung, Vorrat endet voraussichtlich am ' + v('voraussichtlicheUnterschreitung') + '.');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:businessRuleTask id="R_Regel" name="Berechtigungsregel anwenden" camunda:decisionRef="T2_Berechtigungsregel" camunda:resultVariable="freigabeweg" camunda:mapDecisionResult="singleEntry">
+      <bpmn:documentation>DMN-Tabelle T2_Berechtigungsregel (Hit Policy FIRST): Ergebnis AUTOMATISCH, KUNDENFREIGABE oder PRUEFSTELLE. Grenzen sind konfigurierbar (Projektannahme).</bpmn:documentation>
+      <bpmn:incoming>Flow_T_Abweichung_R_Regel</bpmn:incoming>
+      <bpmn:outgoing>Flow_R_Regel_G_Weg</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="G_Weg" name="Freigabeweg?" default="Flow_G_Weg_U_Grenzfall">
+      <bpmn:incoming>Flow_R_Regel_G_Weg</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_Weg_J_Bestellen</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Weg_J_Kunde</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Weg_U_Grenzfall</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="U_Grenzfall" name="Grenzfall prüfen" camunda:assignee="demo">
+      <bpmn:documentation>Anlass: weder bevorzugtes Produkt noch hinterlegte Ersatzoption lieferbar (ungeklärtes Produkt). Benötigt: Versorgungsprofil, Abweichungen, Lieferantenmeldung. Rolle: menschliche Prüfstelle. Ergebnis: Kundenentscheidung mit Hinweis oder dokumentierte Übergabe. Kein medizinischer Ersatz.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Klärung erforderlich')}" event="start" />
+        <camunda:formData>
+          <camunda:formField id="pruefErgebnis" label="Ergebnis der Prüfung" type="enum">
+            <camunda:value id="KUNDENENTSCHEIDUNG" name="Kunden mit Hinweis entscheiden lassen" />
+            <camunda:value id="UEBERGEBEN" name="Nicht lösbar: Vorgang übergeben" />
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="pruefNotiz" label="Begründung" type="string">
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_Weg_U_Grenzfall</bpmn:incoming>
+      <bpmn:outgoing>Flow_U_Grenzfall_G_Grenz</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Grenz" name="Prüfergebnis?" default="Flow_G_Grenz_E_Grenzfall">
+      <bpmn:incoming>Flow_U_Grenzfall_G_Grenz</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_Grenz_J_Kunde</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Grenz_E_Grenzfall</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E_Grenzfall" name="Übergeben: Grenzfall nicht lösbar">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Übergeben')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('ergebnis', 'Grenzfall von Prüfstelle übergeben')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Vorgang geschlossen')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_Grenz_E_Grenzfall</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="J_Kunde">
+      <bpmn:incoming>Flow_G_Weg_J_Kunde</bpmn:incoming>
+      <bpmn:incoming>Flow_G_Grenz_J_Kunde</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Kunde_C_Entscheidung</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:callActivity id="C_Entscheidung" name="Kundenentscheidung einholen" calledElement="T2_Kundenentscheidung_einholen">
+      <bpmn:documentation>Gemeinsame Funktion von Team 2 (auch für Team 1 und 3): allgemeine Freigabeanforderung mit Handlung, Begründung und Folgen. Call by Value: nur die genannten Variablen gehen hinein und heraus.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Wartet auf Kunde')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Kundenentscheidung angefordert')}" event="start" />
+        <camunda:in businessKey="#{execution.processBusinessKey}" />
+        <camunda:in source="pflegehaushaltId" target="pflegehaushaltId" />
+        <camunda:in source="vorgangId" target="vorgangId" />
+        <camunda:in source="freigabeHandlung" target="freigabeHandlung" />
+        <camunda:in source="freigabeBegruendung" target="freigabeBegruendung" />
+        <camunda:in source="freigabeFolgen" target="freigabeFolgen" />
+        <camunda:in source="fristKundenentscheidung" target="fristKundenentscheidung" />
+        <camunda:in source="erinnerungszyklus" target="erinnerungszyklus" />
+        <camunda:out source="entscheidung" target="entscheidung" />
+        <camunda:out source="entscheidungKommentar" target="entscheidungKommentar" />
+        <camunda:out source="gewuenschteMenge" target="gewuenschteMenge" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_J_Kunde_C_Entscheidung</bpmn:incoming>
+      <bpmn:outgoing>Flow_C_Entscheidung_G_Entsch</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="G_Entsch" name="Entscheidung des Kunden?" default="Flow_G_Entsch_T_Risiko">
+      <bpmn:incoming>Flow_C_Entscheidung_G_Entsch</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_Entsch_J_Bestellen</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Entsch_J_Vorschlag</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Entsch_T_Risiko</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Risiko" name="Reichweitenrisiko sichtbar machen und Kunden informieren" scriptFormat="javascript">
+      <bpmn:incoming>Flow_G_Entsch_T_Risiko</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Risiko_E_Abgelehnt</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Kunde lehnt ab, verschiebt oder antwortet nicht: keine Bestellung, Reichweitenrisiko sichtbar machen
+set('kundenhinweis', 'Keine Bestellung ausgeloest (' + v('entscheidung') + '). Achtung: Der Vorrat reicht voraussichtlich nur bis ' + v('voraussichtlicheUnterschreitung') + '.');
+set('letztesEreignis', 'Ergebnis bestaetigt');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="E_Abgelehnt" name="Bestellung nicht ausgelöst">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Erfolglos abgeschlossen')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('ergebnis', 'Kunde hat abgelehnt, verschoben oder nicht geantwortet; keine Bestellung')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Vorgang geschlossen')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_T_Risiko_E_Abgelehnt</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="J_Bestellen">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Freigegeben')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_Weg_J_Bestellen</bpmn:incoming>
+      <bpmn:incoming>Flow_G_Entsch_J_Bestellen</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Bestellen_ST_Bestellen</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="ST_Bestellen" name="Bestellung simuliert übermitteln" camunda:expression="${true}">
+      <bpmn:documentation>SIMULIERT: keine echte Bestellung. Überträgt Lieferant, Produkt, Menge, Preis und Freigabe an den simulierten Lieferdienst. Später austauschbar gegen echten Dienst, ohne den Prozess zu ändern.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'In Ausführung')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Bestellung ausgelöst')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('bestellstatus', 'Übermittelt (SIMULIERT)')}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_J_Bestellen_ST_Bestellen</bpmn:incoming>
+      <bpmn:outgoing>Flow_ST_Bestellen_J_Warten</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="J_Warten">
+      <bpmn:incoming>Flow_ST_Bestellen_J_Warten</bpmn:incoming>
+      <bpmn:incoming>Flow_ST_Nachfassen_J_Warten</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Warten_EG_Antwort</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:eventBasedGateway id="EG_Antwort" name="Antwort des Lieferanten?">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Wartet auf Gegenstelle')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_J_Warten_EG_Antwort</bpmn:incoming>
+      <bpmn:outgoing>Flow_EG_Antwort_IC_NichtLieferbar</bpmn:outgoing>
+      <bpmn:outgoing>Flow_EG_Antwort_IC_Bestaetigt</bpmn:outgoing>
+      <bpmn:outgoing>Flow_EG_Antwort_IT_Frist</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="IC_NichtLieferbar" name="Nicht lieferbar gemeldet">
+      <bpmn:incoming>Flow_EG_Antwort_IC_NichtLieferbar</bpmn:incoming>
+      <bpmn:outgoing>Flow_IC_NichtLieferbar_T_NichtVerf</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_IC_NichtLieferbar" messageRef="Msg_MV_NichtLieferbar" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="IC_Bestaetigt" name="Bestellung bestätigt">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Antwort eingegangen')}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_EG_Antwort_IC_Bestaetigt</bpmn:incoming>
+      <bpmn:outgoing>Flow_IC_Bestaetigt_J_Lieferung</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_IC_Bestaetigt" messageRef="Msg_MV_Bestaetigung" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="IT_Frist" name="Bestätigungsfrist abgelaufen">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Frist abgelaufen')}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_EG_Antwort_IT_Frist</bpmn:incoming>
+      <bpmn:outgoing>Flow_IT_Frist_G_Nachfassen</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TED_IT_Frist">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${fristBestaetigungLieferant}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:scriptTask id="T_NichtVerf" name="Nichtverfügbarkeit vermerken" scriptFormat="javascript">
+      <bpmn:incoming>Flow_IC_NichtLieferbar_T_NichtVerf</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_NichtVerf_J_Pruefen</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Lieferant meldet: Produkt nicht lieferbar
+set('produktVerfuegbar', false);
+set('anzahlNachfassen', 0);
+set('letztesEreignis', 'Antwort eingegangen (nicht lieferbar)');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="G_Nachfassen" name="Nachfassen noch möglich?" default="Flow_G_Nachfassen_U_LiefAntwort">
+      <bpmn:incoming>Flow_IT_Frist_G_Nachfassen</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_Nachfassen_ST_Nachfassen</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Nachfassen_U_LiefAntwort</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="ST_Nachfassen" name="Beim Lieferanten nachfassen (über Team 3)" camunda:expression="${true}">
+      <bpmn:documentation>Kommunikationsauftrag an Team 3 mit Gegenstelle, Nachricht, Antwortfrist und Nachfassregel. SIMULIERT, solange der Baustein von Team 3 nicht bereitsteht.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('anzahlNachfassen', anzahlNachfassen + 1)}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Nachricht versandt (Nachfassen)')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_Nachfassen_ST_Nachfassen</bpmn:incoming>
+      <bpmn:outgoing>Flow_ST_Nachfassen_J_Warten</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="U_LiefAntwort" name="Ausbleibende Lieferantenantwort klären" camunda:assignee="demo">
+      <bpmn:documentation>Anlass: Lieferant hat trotz maxNachfassen Erinnerungen nicht bestätigt. Benötigt: Bestellung, Nachfassverlauf, zugelassener Alternativlieferant. Rolle: menschliche Prüfstelle. Ergebnis: Alternativlieferant (wird erneut gegen die Berechtigungsregel geprüft) oder dokumentiertes Ende.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Klärung erforderlich')}" event="start" />
+        <camunda:formData>
+          <camunda:formField id="lieferantErgebnis" label="Wie geht es weiter?" type="enum">
+            <camunda:value id="ALTERNATIVLIEFERANT" name="Zugelassenen Alternativlieferanten vorlegen" />
+            <camunda:value id="BEENDEN" name="Vorgang mit Grund beenden" />
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="pruefNotiz" label="Begründung" type="string">
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_Nachfassen_U_LiefAntwort</bpmn:incoming>
+      <bpmn:outgoing>Flow_U_LiefAntwort_G_LiefAntwort</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_LiefAntwort" name="Ergebnis?" default="Flow_G_LiefAntwort_E_KeinLieferant">
+      <bpmn:incoming>Flow_U_LiefAntwort_G_LiefAntwort</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_LiefAntwort_J_Pruefen</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_LiefAntwort_E_KeinLieferant</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E_KeinLieferant" name="Erfolglos: Lieferant antwortet nicht">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Erfolglos abgeschlossen')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('ergebnis', 'Lieferant hat nicht bestätigt, Vorgang beendet')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Vorgang geschlossen')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_LiefAntwort_E_KeinLieferant</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="J_Lieferung">
+      <bpmn:incoming>Flow_IC_Bestaetigt_J_Lieferung</bpmn:incoming>
+      <bpmn:incoming>Flow_G_Klaerung_J_Lieferung</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Lieferung_RT_Zustellung</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:receiveTask id="RT_Zustellung" name="Auf Zustellmeldung warten" messageRef="Msg_MV_Zustellung">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Wartet auf Gegenstelle')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_J_Lieferung_RT_Zustellung</bpmn:incoming>
+      <bpmn:outgoing>Flow_RT_Zustellung_U_Lieferung</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:boundaryEvent id="B_Mahnung" name="Lieferfrist überschritten" attachedToRef="RT_Zustellung" cancelActivity="false">
+      <bpmn:outgoing>Flow_B_Mahnung_ST_Mahnen</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TED_B_Mahnung">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">${mahnzyklusLieferung}</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="B_LieferungAus" name="Lieferung endgültig ausgeblieben" attachedToRef="RT_Zustellung">
+      <bpmn:outgoing>Flow_B_LieferungAus_J_Klaerung</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TED_B_LieferungAus">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${fristLieferungEndgueltig}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sendTask id="ST_Mahnen" name="Lieferung anmahnen (über Team 3)" camunda:expression="${true}">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Nachricht versandt (Mahnung)')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_B_Mahnung_ST_Mahnen</bpmn:incoming>
+      <bpmn:outgoing>Flow_ST_Mahnen_E_Mahnung</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="E_Mahnung" name="Mahnung versandt">
+      <bpmn:incoming>Flow_ST_Mahnen_E_Mahnung</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="U_Lieferung" name="Lieferung prüfen und bestätigen" camunda:assignee="demo">
+      <bpmn:documentation>Anlass: Lieferant meldet Zustellung. Benötigt: Bestellinhalt, erwartete Menge. Rolle: pflegende Person. Ergebnis: korrekt, teilweise, falsch oder nicht geliefert. Ohne Bestätigung wird der Vorgang NICHT automatisch erfolgreich geschlossen; es folgen Erinnerungen.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Wartet auf Kunde')}" event="start" />
+        <camunda:formData>
+          <camunda:formField id="lieferErgebnis" label="Wie ist die Lieferung angekommen?" type="enum">
+            <camunda:value id="KORREKT" name="Richtig und vollständig geliefert" />
+            <camunda:value id="TEILLIEFERUNG" name="Nur teilweise geliefert" />
+            <camunda:value id="FALSCHLIEFERUNG" name="Falsches Produkt geliefert" />
+            <camunda:value id="NICHT_GELIEFERT" name="Nicht angekommen" />
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="gelieferteMenge" label="Tatsächlich gelieferte brauchbare Menge (Stück)" type="long" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_RT_Zustellung_U_Lieferung</bpmn:incoming>
+      <bpmn:outgoing>Flow_U_Lieferung_G_LiefOk</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="B_ErinnLief" name="Erinnerung fällig" attachedToRef="U_Lieferung" cancelActivity="false">
+      <bpmn:outgoing>Flow_B_ErinnLief_T_ErinnLief</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TED_B_ErinnLief">
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">${erinnerungszyklusLieferbestaetigung}</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:scriptTask id="T_ErinnLief" name="An Lieferbestätigung erinnern" scriptFormat="javascript">
+      <bpmn:incoming>Flow_B_ErinnLief_T_ErinnLief</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_ErinnLief_E_ErinnLief</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Erinnerung an die Lieferbestaetigung (SIMULIERT: Benachrichtigung wird nur protokolliert)
+var n = has('erinnerungenLieferbestaetigung') ? Number(v('erinnerungenLieferbestaetigung')) + 1 : 1;
+set('erinnerungenLieferbestaetigung', n);
+set('letztesEreignis', 'Nachricht versandt (Erinnerung Lieferbestaetigung ' + n + ')');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="E_ErinnLief" name="Erinnerung versandt">
+      <bpmn:incoming>Flow_T_ErinnLief_E_ErinnLief</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="G_LiefOk" name="Lieferung korrekt?" default="Flow_G_LiefOk_T_Erfassen">
+      <bpmn:incoming>Flow_U_Lieferung_G_LiefOk</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_LiefOk_J_Fortschreiben</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_LiefOk_T_Erfassen</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Erfassen" name="Lieferabweichung erfassen" scriptFormat="javascript">
+      <bpmn:incoming>Flow_G_LiefOk_T_Erfassen</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Erfassen_ST_Reklamation</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Lieferabweichung erfassen; Status bleibt offen bis zur Klaerung
+set('lieferabweichung', v('lieferErgebnis') + (has('gelieferteMenge') ? ' (geliefert: ' + v('gelieferteMenge') + ' von ' + v('bestellmenge') + ')' : ''));
+set('vorgangsstatus', 'Klaerung erforderlich');
+set('letztesEreignis', 'Lieferung beanstandet');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sendTask id="ST_Reklamation" name="Abweichung an Lieferanten melden (über Team 3)" camunda:expression="${true}">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Nachricht versandt (Beanstandung)')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_T_Erfassen_ST_Reklamation</bpmn:incoming>
+      <bpmn:outgoing>Flow_ST_Reklamation_J_Klaerung</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="J_Klaerung">
+      <bpmn:incoming>Flow_B_LieferungAus_J_Klaerung</bpmn:incoming>
+      <bpmn:incoming>Flow_ST_Reklamation_J_Klaerung</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Klaerung_U_Klaerung</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="U_Klaerung" name="Lieferabweichung klären" camunda:assignee="demo">
+      <bpmn:documentation>Anlass: Teil-, Falsch- oder Nichtlieferung bzw. Lieferung endgültig ausgeblieben. Benötigt: Bestellung, Lieferabweichung, Antwort des Lieferanten (über Team 3). Rolle: menschliche Prüfstelle. Ergebnis: Nachlieferung, Übernahme der Teilmenge oder dokumentierte Übergabe.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Klärung erforderlich')}" event="start" />
+        <camunda:formData>
+          <camunda:formField id="klaerErgebnis" label="Ergebnis der Klärung" type="enum">
+            <camunda:value id="NACHLIEFERUNG" name="Lieferant liefert nach" />
+            <camunda:value id="TEILMENGE_UEBERNEHMEN" name="Gelieferte Menge übernehmen" />
+            <camunda:value id="NICHT_LOESBAR" name="Nicht lösbar: Vorgang übergeben" />
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="gelieferteMenge" label="Übernommene Menge (Stück)" type="long" />
+          <camunda:formField id="pruefNotiz" label="Antwort des Lieferanten / Begründung" type="string">
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_J_Klaerung_U_Klaerung</bpmn:incoming>
+      <bpmn:outgoing>Flow_U_Klaerung_G_Klaerung</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Klaerung" name="Klärungsergebnis?" default="Flow_G_Klaerung_E_Klaerung">
+      <bpmn:incoming>Flow_U_Klaerung_G_Klaerung</bpmn:incoming>
+      <bpmn:outgoing>Flow_G_Klaerung_J_Fortschreiben</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Klaerung_J_Lieferung</bpmn:outgoing>
+      <bpmn:outgoing>Flow_G_Klaerung_E_Klaerung</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="E_Klaerung" name="Übergeben: Lieferabweichung offen">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Übergeben')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('ergebnis', 'Lieferabweichung nicht lösbar, an andere Stelle übergeben')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Vorgang geschlossen')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_G_Klaerung_E_Klaerung</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="J_Fortschreiben">
+      <bpmn:incoming>Flow_G_LiefOk_J_Fortschreiben</bpmn:incoming>
+      <bpmn:incoming>Flow_G_Klaerung_J_Fortschreiben</bpmn:incoming>
+      <bpmn:outgoing>Flow_J_Fortschreiben_T_Fortschreiben</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="T_Fortschreiben" name="Bestand und Verbrauch fortschreiben" scriptFormat="javascript">
+      <bpmn:documentation>Schreibt den Bestand mit der gelieferten Menge fort und legt neue Reichweite und nächsten Prüfzeitpunkt fest.</bpmn:documentation>
+      <bpmn:incoming>Flow_J_Fortschreiben_T_Fortschreiben</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Fortschreiben_ST_Beleg</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Bestand und Verbrauch fortschreiben, neue Reichweite und naechsten Pruefzeitpunkt festlegen
+var zugang = has('gelieferteMenge') ? Number(v('gelieferteMenge')) : Number(v('bestellmenge'));
+var neu = Number(v('bestand')) + zugang;
+set('bestand', neu);
+var verbrauch = Number(v('verbrauchProTag'));
+set('reichweiteTage', verbrauch &gt; 0 ? Math.floor(neu / verbrauch) : 9999);
+var d = new Date();
+d.setDate(d.getDate() + Number(v('tageBisNaechstePruefung')));
+set('naechstePruefungAm', d.toISOString().substring(0, 10));
+set('letztesEreignis', 'Lieferung bestaetigt');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sendTask id="ST_Beleg" name="Liefernachweis an Team 1 übergeben" camunda:expression="${true}">
+      <bpmn:documentation>Übergabe an Team 1 mit pflegehaushaltId, vorgangId, Bestellung und Ergebnis (gemeinsamer Ereignisrahmen). SIMULIERT.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Rechnung oder Nachweis übergeben')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('belegStatus', 'An Team 1 übergeben (SIMULIERT)')}" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_T_Fortschreiben_ST_Beleg</bpmn:incoming>
+      <bpmn:outgoing>Flow_ST_Beleg_T_Info</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:scriptTask id="T_Info" name="Kunden über Ergebnis informieren" scriptFormat="javascript">
+      <bpmn:incoming>Flow_ST_Beleg_T_Info</bpmn:incoming>
+      <bpmn:outgoing>Flow_T_Info_E_Erfolg</bpmn:outgoing>
+      <bpmn:script>function v(n) { return execution.getVariable(n); }
+function has(n) { return execution.hasVariable(n) &amp;&amp; execution.getVariable(n) !== null; }
+function set(n, w) { execution.setVariable(n, w); }
+function def(n, w) { if (!has(n)) { set(n, w); } }
+// Kunden ueber das Ergebnis informieren (SIMULIERT)
+set('kundenhinweis', 'Lieferung bestaetigt. Neuer Bestand: ' + v('bestand') + ', reicht ca. ' + v('reichweiteTage') + ' Tage. Naechste Pruefung am ' + v('naechstePruefungAm') + '.');
+set('letztesEreignis', 'Ergebnis bestaetigt');
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="E_Erfolg" name="Lieferung bestätigt, Bestand fortgeschrieben">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Erfolgreich abgeschlossen')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('ergebnis', 'Lieferung bestätigt und Bestand fortgeschrieben')}" event="start" />
+        <camunda:executionListener expression="${execution.setVariable('letztesEreignis', 'Vorgang geschlossen')}" event="start" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_T_Info_E_Erfolg</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_S_Pruefung_J_Start" sourceRef="S_Pruefung" targetRef="J_Start" />
+    <bpmn:sequenceFlow id="Flow_S_Meldung_J_Start" sourceRef="S_Meldung" targetRef="J_Start" />
+    <bpmn:sequenceFlow id="Flow_S_Schwelle_J_Start" sourceRef="S_Schwelle" targetRef="J_Start" />
+    <bpmn:sequenceFlow id="Flow_J_Start_T_Anlegen" sourceRef="J_Start" targetRef="T_Anlegen" />
+    <bpmn:sequenceFlow id="Flow_T_Anlegen_G_Bestand" sourceRef="T_Anlegen" targetRef="G_Bestand" />
+    <bpmn:sequenceFlow id="Flow_G_Bestand_J_Bestand" name="ja" sourceRef="G_Bestand" targetRef="J_Bestand">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${bestandBekannt}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Bestand_U_Bestand" name="nein" sourceRef="G_Bestand" targetRef="U_Bestand" />
+    <bpmn:sequenceFlow id="Flow_U_Bestand_J_Bestand" sourceRef="U_Bestand" targetRef="J_Bestand" />
+    <bpmn:sequenceFlow id="Flow_B_ErinnBestand_T_ErinnBestand" sourceRef="B_ErinnBestand" targetRef="T_ErinnBestand" />
+    <bpmn:sequenceFlow id="Flow_T_ErinnBestand_E_ErinnBestand" sourceRef="T_ErinnBestand" targetRef="E_ErinnBestand" />
+    <bpmn:sequenceFlow id="Flow_B_FristBestand_E_KeinBestand" sourceRef="B_FristBestand" targetRef="E_KeinBestand" />
+    <bpmn:sequenceFlow id="Flow_J_Bestand_T_Reichweite" sourceRef="J_Bestand" targetRef="T_Reichweite" />
+    <bpmn:sequenceFlow id="Flow_T_Reichweite_G_Bedarf" sourceRef="T_Reichweite" targetRef="G_Bedarf" />
+    <bpmn:sequenceFlow id="Flow_G_Bedarf_J_Vorschlag" name="nein" sourceRef="G_Bedarf" targetRef="J_Vorschlag">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${nachversorgungNoetig}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Bedarf_T_Termin" name="ja" sourceRef="G_Bedarf" targetRef="T_Termin" />
+    <bpmn:sequenceFlow id="Flow_T_Termin_E_KeinBedarf" sourceRef="T_Termin" targetRef="E_KeinBedarf" />
+    <bpmn:sequenceFlow id="Flow_J_Vorschlag_T_Vorschlag" sourceRef="J_Vorschlag" targetRef="T_Vorschlag" />
+    <bpmn:sequenceFlow id="Flow_T_Vorschlag_J_Pruefen" sourceRef="T_Vorschlag" targetRef="J_Pruefen" />
+    <bpmn:sequenceFlow id="Flow_J_Pruefen_T_Abweichung" sourceRef="J_Pruefen" targetRef="T_Abweichung" />
+    <bpmn:sequenceFlow id="Flow_T_Abweichung_R_Regel" sourceRef="T_Abweichung" targetRef="R_Regel" />
+    <bpmn:sequenceFlow id="Flow_R_Regel_G_Weg" sourceRef="R_Regel" targetRef="G_Weg" />
+    <bpmn:sequenceFlow id="Flow_G_Weg_J_Bestellen" name="automatisch" sourceRef="G_Weg" targetRef="J_Bestellen">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${freigabeweg == 'AUTOMATISCH'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Weg_J_Kunde" name="Kundenfreigabe" sourceRef="G_Weg" targetRef="J_Kunde">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${freigabeweg == 'KUNDENFREIGABE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Weg_U_Grenzfall" name="Prüfstelle" sourceRef="G_Weg" targetRef="U_Grenzfall" />
+    <bpmn:sequenceFlow id="Flow_U_Grenzfall_G_Grenz" sourceRef="U_Grenzfall" targetRef="G_Grenz" />
+    <bpmn:sequenceFlow id="Flow_G_Grenz_J_Kunde" name="Kunde entscheidet" sourceRef="G_Grenz" targetRef="J_Kunde">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${pruefErgebnis == 'KUNDENENTSCHEIDUNG'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Grenz_E_Grenzfall" name="nicht lösbar" sourceRef="G_Grenz" targetRef="E_Grenzfall" />
+    <bpmn:sequenceFlow id="Flow_J_Kunde_C_Entscheidung" sourceRef="J_Kunde" targetRef="C_Entscheidung" />
+    <bpmn:sequenceFlow id="Flow_C_Entscheidung_G_Entsch" sourceRef="C_Entscheidung" targetRef="G_Entsch" />
+    <bpmn:sequenceFlow id="Flow_G_Entsch_J_Bestellen" name="freigegeben" sourceRef="G_Entsch" targetRef="J_Bestellen">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung == 'FREIGEGEBEN'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Entsch_J_Vorschlag" name="Änderung gewünscht" sourceRef="G_Entsch" targetRef="J_Vorschlag">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung == 'AENDERUNG'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Entsch_T_Risiko" name="abgelehnt, Aufschub, keine Antwort" sourceRef="G_Entsch" targetRef="T_Risiko" />
+    <bpmn:sequenceFlow id="Flow_T_Risiko_E_Abgelehnt" sourceRef="T_Risiko" targetRef="E_Abgelehnt" />
+    <bpmn:sequenceFlow id="Flow_J_Bestellen_ST_Bestellen" sourceRef="J_Bestellen" targetRef="ST_Bestellen" />
+    <bpmn:sequenceFlow id="Flow_ST_Bestellen_J_Warten" sourceRef="ST_Bestellen" targetRef="J_Warten" />
+    <bpmn:sequenceFlow id="Flow_J_Warten_EG_Antwort" sourceRef="J_Warten" targetRef="EG_Antwort" />
+    <bpmn:sequenceFlow id="Flow_EG_Antwort_IC_NichtLieferbar" sourceRef="EG_Antwort" targetRef="IC_NichtLieferbar" />
+    <bpmn:sequenceFlow id="Flow_EG_Antwort_IC_Bestaetigt" sourceRef="EG_Antwort" targetRef="IC_Bestaetigt" />
+    <bpmn:sequenceFlow id="Flow_EG_Antwort_IT_Frist" sourceRef="EG_Antwort" targetRef="IT_Frist" />
+    <bpmn:sequenceFlow id="Flow_IC_NichtLieferbar_T_NichtVerf" sourceRef="IC_NichtLieferbar" targetRef="T_NichtVerf" />
+    <bpmn:sequenceFlow id="Flow_T_NichtVerf_J_Pruefen" sourceRef="T_NichtVerf" targetRef="J_Pruefen" />
+    <bpmn:sequenceFlow id="Flow_IT_Frist_G_Nachfassen" sourceRef="IT_Frist" targetRef="G_Nachfassen" />
+    <bpmn:sequenceFlow id="Flow_G_Nachfassen_ST_Nachfassen" name="ja" sourceRef="G_Nachfassen" targetRef="ST_Nachfassen">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${anzahlNachfassen &lt; maxNachfassen}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Nachfassen_U_LiefAntwort" name="nein" sourceRef="G_Nachfassen" targetRef="U_LiefAntwort" />
+    <bpmn:sequenceFlow id="Flow_ST_Nachfassen_J_Warten" sourceRef="ST_Nachfassen" targetRef="J_Warten" />
+    <bpmn:sequenceFlow id="Flow_U_LiefAntwort_G_LiefAntwort" sourceRef="U_LiefAntwort" targetRef="G_LiefAntwort" />
+    <bpmn:sequenceFlow id="Flow_G_LiefAntwort_J_Pruefen" name="Alternativlieferant" sourceRef="G_LiefAntwort" targetRef="J_Pruefen">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('aktuellerLieferant', alternativLieferant)}" event="take" />
+        <camunda:executionListener expression="${execution.setVariable('anzahlNachfassen', 0)}" event="take" />
+      </bpmn:extensionElements>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${lieferantErgebnis == 'ALTERNATIVLIEFERANT'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_LiefAntwort_E_KeinLieferant" name="beenden" sourceRef="G_LiefAntwort" targetRef="E_KeinLieferant" />
+    <bpmn:sequenceFlow id="Flow_IC_Bestaetigt_J_Lieferung" sourceRef="IC_Bestaetigt" targetRef="J_Lieferung" />
+    <bpmn:sequenceFlow id="Flow_J_Lieferung_RT_Zustellung" sourceRef="J_Lieferung" targetRef="RT_Zustellung" />
+    <bpmn:sequenceFlow id="Flow_B_Mahnung_ST_Mahnen" sourceRef="B_Mahnung" targetRef="ST_Mahnen" />
+    <bpmn:sequenceFlow id="Flow_ST_Mahnen_E_Mahnung" sourceRef="ST_Mahnen" targetRef="E_Mahnung" />
+    <bpmn:sequenceFlow id="Flow_B_LieferungAus_J_Klaerung" sourceRef="B_LieferungAus" targetRef="J_Klaerung">
+      <bpmn:extensionElements>
+        <camunda:executionListener expression="${execution.setVariable('lieferErgebnis', 'NICHT_GELIEFERT')}" event="take" />
+      </bpmn:extensionElements>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_RT_Zustellung_U_Lieferung" sourceRef="RT_Zustellung" targetRef="U_Lieferung" />
+    <bpmn:sequenceFlow id="Flow_B_ErinnLief_T_ErinnLief" sourceRef="B_ErinnLief" targetRef="T_ErinnLief" />
+    <bpmn:sequenceFlow id="Flow_T_ErinnLief_E_ErinnLief" sourceRef="T_ErinnLief" targetRef="E_ErinnLief" />
+    <bpmn:sequenceFlow id="Flow_U_Lieferung_G_LiefOk" sourceRef="U_Lieferung" targetRef="G_LiefOk" />
+    <bpmn:sequenceFlow id="Flow_G_LiefOk_J_Fortschreiben" name="ja" sourceRef="G_LiefOk" targetRef="J_Fortschreiben">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${lieferErgebnis == 'KORREKT'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_LiefOk_T_Erfassen" name="nein" sourceRef="G_LiefOk" targetRef="T_Erfassen" />
+    <bpmn:sequenceFlow id="Flow_T_Erfassen_ST_Reklamation" sourceRef="T_Erfassen" targetRef="ST_Reklamation" />
+    <bpmn:sequenceFlow id="Flow_ST_Reklamation_J_Klaerung" sourceRef="ST_Reklamation" targetRef="J_Klaerung" />
+    <bpmn:sequenceFlow id="Flow_J_Klaerung_U_Klaerung" sourceRef="J_Klaerung" targetRef="U_Klaerung" />
+    <bpmn:sequenceFlow id="Flow_U_Klaerung_G_Klaerung" sourceRef="U_Klaerung" targetRef="G_Klaerung" />
+    <bpmn:sequenceFlow id="Flow_G_Klaerung_J_Fortschreiben" name="Teilmenge übernehmen" sourceRef="G_Klaerung" targetRef="J_Fortschreiben">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${klaerErgebnis == 'TEILMENGE_UEBERNEHMEN'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Klaerung_J_Lieferung" name="Nachlieferung" sourceRef="G_Klaerung" targetRef="J_Lieferung">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${klaerErgebnis == 'NACHLIEFERUNG'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_G_Klaerung_E_Klaerung" name="nicht lösbar" sourceRef="G_Klaerung" targetRef="E_Klaerung" />
+    <bpmn:sequenceFlow id="Flow_J_Fortschreiben_T_Fortschreiben" sourceRef="J_Fortschreiben" targetRef="T_Fortschreiben" />
+    <bpmn:sequenceFlow id="Flow_T_Fortschreiben_ST_Beleg" sourceRef="T_Fortschreiben" targetRef="ST_Beleg" />
+    <bpmn:sequenceFlow id="Flow_ST_Beleg_T_Info" sourceRef="ST_Beleg" targetRef="T_Info" />
+    <bpmn:sequenceFlow id="Flow_T_Info_E_Erfolg" sourceRef="T_Info" targetRef="E_Erfolg" />
+  </bpmn:process>
+  <bpmn:message id="Msg_MV_Pruefung" name="MV_Bestandspruefung_faellig" />
+  <bpmn:message id="Msg_MV_Meldung" name="MV_Bestandsmeldung_eingegangen" />
+  <bpmn:message id="Msg_MV_Schwelle" name="MV_Schwellenwert_unterschritten" />
+  <bpmn:message id="Msg_MV_Bestaetigung" name="MV_Bestellbestaetigung" />
+  <bpmn:message id="Msg_MV_NichtLieferbar" name="MV_Nicht_lieferbar" />
+  <bpmn:message id="Msg_MV_Zustellung" name="MV_Zustellung_gemeldet" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_T2_Materialversorgung">
+    <bpmndi:BPMNPlane id="BPMNPlane_T2_Materialversorgung" bpmnElement="Collaboration_T2_Materialversorgung">
+      <bpmndi:BPMNShape id="P_T2_Materialversorgung_di" bpmnElement="P_T2_Materialversorgung" isHorizontal="true">
+        <dc:Bounds x="150" y="180" width="5510" height="880" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_T2_Kunde_di" bpmnElement="Lane_T2_Kunde" isHorizontal="true">
+        <dc:Bounds x="180" y="180" width="5480" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_T2_Backoffice_di" bpmnElement="Lane_T2_Backoffice" isHorizontal="true">
+        <dc:Bounds x="180" y="440" width="5480" height="400" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_T2_Pruefstelle_di" bpmnElement="Lane_T2_Pruefstelle" isHorizontal="true">
+        <dc:Bounds x="180" y="840" width="5480" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_T2_App_di" bpmnElement="P_T2_App" isHorizontal="true">
+        <dc:Bounds x="150" y="40" width="630" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_T2_Lieferant_di" bpmnElement="P_T2_Lieferant" isHorizontal="true">
+        <dc:Bounds x="2670" y="1120" width="750" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_T2_Team3_di" bpmnElement="P_T2_Team3" isHorizontal="true">
+        <dc:Bounds x="3580" y="1120" width="1290" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_T2_Team1_di" bpmnElement="P_T2_Team1" isHorizontal="true">
+        <dc:Bounds x="5090" y="1120" width="510" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Pruefung_di" bpmnElement="S_Pruefung">
+        <dc:Bounds x="312" y="502" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Meldung_di" bpmnElement="S_Meldung">
+        <dc:Bounds x="312" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Schwelle_di" bpmnElement="S_Schwelle">
+        <dc:Bounds x="312" y="742" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Start_di" bpmnElement="J_Start" isMarkerVisible="true">
+        <dc:Bounds x="455" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Anlegen_di" bpmnElement="T_Anlegen">
+        <dc:Bounds x="570" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Bestand_di" bpmnElement="G_Bestand" isMarkerVisible="true">
+        <dc:Bounds x="755" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="U_Bestand_di" bpmnElement="U_Bestand">
+        <dc:Bounds x="1020" y="330" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_ErinnBestand_di" bpmnElement="B_ErinnBestand">
+        <dc:Bounds x="1032" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="935" y="285" width="95" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_FristBestand_di" bpmnElement="B_FristBestand">
+        <dc:Bounds x="1122" y="352" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1145" y="330" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ErinnBestand_di" bpmnElement="T_ErinnBestand">
+        <dc:Bounds x="1170" y="210" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_ErinnBestand_di" bpmnElement="E_ErinnBestand">
+        <dc:Bounds x="1362" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_KeinBestand_di" bpmnElement="E_KeinBestand">
+        <dc:Bounds x="1242" y="352" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Bestand_di" bpmnElement="J_Bestand" isMarkerVisible="true">
+        <dc:Bounds x="1055" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Reichweite_di" bpmnElement="T_Reichweite">
+        <dc:Bounds x="1170" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Bedarf_di" bpmnElement="G_Bedarf" isMarkerVisible="true">
+        <dc:Bounds x="1355" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1320" y="578" width="120" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Termin_di" bpmnElement="T_Termin">
+        <dc:Bounds x="1470" y="720" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_KeinBedarf_di" bpmnElement="E_KeinBedarf">
+        <dc:Bounds x="1662" y="742" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Vorschlag_di" bpmnElement="J_Vorschlag" isMarkerVisible="true">
+        <dc:Bounds x="1505" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Vorschlag_di" bpmnElement="T_Vorschlag">
+        <dc:Bounds x="1620" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Pruefen_di" bpmnElement="J_Pruefen" isMarkerVisible="true">
+        <dc:Bounds x="1805" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Abweichung_di" bpmnElement="T_Abweichung">
+        <dc:Bounds x="1920" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Regel_di" bpmnElement="R_Regel">
+        <dc:Bounds x="2070" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Weg_di" bpmnElement="G_Weg" isMarkerVisible="true">
+        <dc:Bounds x="2255" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2195" y="662" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="U_Grenzfall_di" bpmnElement="U_Grenzfall">
+        <dc:Bounds x="2220" y="880" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Grenz_di" bpmnElement="G_Grenz" isMarkerVisible="true">
+        <dc:Bounds x="2405" y="895" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Grenzfall_di" bpmnElement="E_Grenzfall">
+        <dc:Bounds x="2562" y="902" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Kunde_di" bpmnElement="J_Kunde" isMarkerVisible="true">
+        <dc:Bounds x="2405" y="345" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="C_Entscheidung_di" bpmnElement="C_Entscheidung">
+        <dc:Bounds x="2520" y="330" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Entsch_di" bpmnElement="G_Entsch" isMarkerVisible="true">
+        <dc:Bounds x="2705" y="345" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2738" y="316" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Risiko_di" bpmnElement="T_Risiko">
+        <dc:Bounds x="2820" y="330" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Abgelehnt_di" bpmnElement="E_Abgelehnt">
+        <dc:Bounds x="3012" y="352" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Bestellen_di" bpmnElement="J_Bestellen" isMarkerVisible="true">
+        <dc:Bounds x="2705" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ST_Bestellen_di" bpmnElement="ST_Bestellen">
+        <dc:Bounds x="2820" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Warten_di" bpmnElement="J_Warten" isMarkerVisible="true">
+        <dc:Bounds x="3005" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EG_Antwort_di" bpmnElement="EG_Antwort">
+        <dc:Bounds x="3155" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3055" y="588" width="95" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IC_NichtLieferbar_di" bpmnElement="IC_NichtLieferbar">
+        <dc:Bounds x="3312" y="502" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IC_Bestaetigt_di" bpmnElement="IC_Bestaetigt">
+        <dc:Bounds x="3312" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IT_Frist_di" bpmnElement="IT_Frist">
+        <dc:Bounds x="3312" y="742" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_NichtVerf_di" bpmnElement="T_NichtVerf">
+        <dc:Bounds x="3420" y="480" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Nachfassen_di" bpmnElement="G_Nachfassen" isMarkerVisible="true">
+        <dc:Bounds x="3455" y="735" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3420" y="705" width="120" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ST_Nachfassen_di" bpmnElement="ST_Nachfassen">
+        <dc:Bounds x="3570" y="720" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="U_LiefAntwort_di" bpmnElement="U_LiefAntwort">
+        <dc:Bounds x="3420" y="880" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_LiefAntwort_di" bpmnElement="G_LiefAntwort" isMarkerVisible="true">
+        <dc:Bounds x="3605" y="895" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3580" y="875" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_KeinLieferant_di" bpmnElement="E_KeinLieferant">
+        <dc:Bounds x="3762" y="902" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Lieferung_di" bpmnElement="J_Lieferung" isMarkerVisible="true">
+        <dc:Bounds x="3905" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RT_Zustellung_di" bpmnElement="RT_Zustellung">
+        <dc:Bounds x="4020" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_Mahnung_di" bpmnElement="B_Mahnung">
+        <dc:Bounds x="4122" y="647" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4095" y="690" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_LieferungAus_di" bpmnElement="B_LieferungAus">
+        <dc:Bounds x="4022" y="662" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3920" y="695" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ST_Mahnen_di" bpmnElement="ST_Mahnen">
+        <dc:Bounds x="4200" y="720" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Mahnung_di" bpmnElement="E_Mahnung">
+        <dc:Bounds x="4392" y="742" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="U_Lieferung_di" bpmnElement="U_Lieferung">
+        <dc:Bounds x="4170" y="330" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="B_ErinnLief_di" bpmnElement="B_ErinnLief">
+        <dc:Bounds x="4182" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4085" y="285" width="95" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_ErinnLief_di" bpmnElement="T_ErinnLief">
+        <dc:Bounds x="4320" y="210" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_ErinnLief_di" bpmnElement="E_ErinnLief">
+        <dc:Bounds x="4512" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_LiefOk_di" bpmnElement="G_LiefOk" isMarkerVisible="true">
+        <dc:Bounds x="4505" y="615" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4400" y="630" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Erfassen_di" bpmnElement="T_Erfassen">
+        <dc:Bounds x="4470" y="720" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ST_Reklamation_di" bpmnElement="ST_Reklamation">
+        <dc:Bounds x="4620" y="720" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Klaerung_di" bpmnElement="J_Klaerung" isMarkerVisible="true">
+        <dc:Bounds x="4655" y="895" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="U_Klaerung_di" bpmnElement="U_Klaerung">
+        <dc:Bounds x="4770" y="880" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Klaerung_di" bpmnElement="G_Klaerung" isMarkerVisible="true">
+        <dc:Bounds x="4955" y="895" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4990" y="875" width="95" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Klaerung_di" bpmnElement="E_Klaerung">
+        <dc:Bounds x="5112" y="902" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Fortschreiben_di" bpmnElement="J_Fortschreiben" isMarkerVisible="true">
+        <dc:Bounds x="4955" y="615" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Fortschreiben_di" bpmnElement="T_Fortschreiben">
+        <dc:Bounds x="5070" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ST_Beleg_di" bpmnElement="ST_Beleg">
+        <dc:Bounds x="5220" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T_Info_di" bpmnElement="T_Info">
+        <dc:Bounds x="5370" y="600" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="E_Erfolg_di" bpmnElement="E_Erfolg">
+        <dc:Bounds x="5562" y="622" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_S_Pruefung_J_Start_di" bpmnElement="Flow_S_Pruefung_J_Start">
+        <di:waypoint x="348" y="520" />
+        <di:waypoint x="480" y="520" />
+        <di:waypoint x="480" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S_Meldung_J_Start_di" bpmnElement="Flow_S_Meldung_J_Start">
+        <di:waypoint x="348" y="640" />
+        <di:waypoint x="455" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S_Schwelle_J_Start_di" bpmnElement="Flow_S_Schwelle_J_Start">
+        <di:waypoint x="348" y="760" />
+        <di:waypoint x="480" y="760" />
+        <di:waypoint x="480" y="665" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Start_T_Anlegen_di" bpmnElement="Flow_J_Start_T_Anlegen">
+        <di:waypoint x="505" y="640" />
+        <di:waypoint x="570" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Anlegen_G_Bestand_di" bpmnElement="Flow_T_Anlegen_G_Bestand">
+        <di:waypoint x="690" y="640" />
+        <di:waypoint x="755" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Bestand_J_Bestand_di" bpmnElement="Flow_G_Bestand_J_Bestand">
+        <di:waypoint x="805" y="640" />
+        <di:waypoint x="1055" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Bestand_U_Bestand_di" bpmnElement="Flow_G_Bestand_U_Bestand">
+        <di:waypoint x="780" y="615" />
+        <di:waypoint x="780" y="370" />
+        <di:waypoint x="1020" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U_Bestand_J_Bestand_di" bpmnElement="Flow_U_Bestand_J_Bestand">
+        <di:waypoint x="1080" y="410" />
+        <di:waypoint x="1080" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B_ErinnBestand_T_ErinnBestand_di" bpmnElement="Flow_B_ErinnBestand_T_ErinnBestand">
+        <di:waypoint x="1050" y="312" />
+        <di:waypoint x="1050" y="250" />
+        <di:waypoint x="1170" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_ErinnBestand_E_ErinnBestand_di" bpmnElement="Flow_T_ErinnBestand_E_ErinnBestand">
+        <di:waypoint x="1290" y="250" />
+        <di:waypoint x="1362" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B_FristBestand_E_KeinBestand_di" bpmnElement="Flow_B_FristBestand_E_KeinBestand">
+        <di:waypoint x="1158" y="370" />
+        <di:waypoint x="1242" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Bestand_T_Reichweite_di" bpmnElement="Flow_J_Bestand_T_Reichweite">
+        <di:waypoint x="1105" y="640" />
+        <di:waypoint x="1170" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Reichweite_G_Bedarf_di" bpmnElement="Flow_T_Reichweite_G_Bedarf">
+        <di:waypoint x="1290" y="640" />
+        <di:waypoint x="1355" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Bedarf_J_Vorschlag_di" bpmnElement="Flow_G_Bedarf_J_Vorschlag">
+        <di:waypoint x="1405" y="640" />
+        <di:waypoint x="1505" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Bedarf_T_Termin_di" bpmnElement="Flow_G_Bedarf_T_Termin">
+        <di:waypoint x="1380" y="665" />
+        <di:waypoint x="1380" y="760" />
+        <di:waypoint x="1470" y="760" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1386" y="680" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Termin_E_KeinBedarf_di" bpmnElement="Flow_T_Termin_E_KeinBedarf">
+        <di:waypoint x="1590" y="760" />
+        <di:waypoint x="1662" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Vorschlag_T_Vorschlag_di" bpmnElement="Flow_J_Vorschlag_T_Vorschlag">
+        <di:waypoint x="1555" y="640" />
+        <di:waypoint x="1620" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Vorschlag_J_Pruefen_di" bpmnElement="Flow_T_Vorschlag_J_Pruefen">
+        <di:waypoint x="1740" y="640" />
+        <di:waypoint x="1805" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Pruefen_T_Abweichung_di" bpmnElement="Flow_J_Pruefen_T_Abweichung">
+        <di:waypoint x="1855" y="640" />
+        <di:waypoint x="1920" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Abweichung_R_Regel_di" bpmnElement="Flow_T_Abweichung_R_Regel">
+        <di:waypoint x="2040" y="640" />
+        <di:waypoint x="2070" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_R_Regel_G_Weg_di" bpmnElement="Flow_R_Regel_G_Weg">
+        <di:waypoint x="2190" y="640" />
+        <di:waypoint x="2255" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Weg_J_Bestellen_di" bpmnElement="Flow_G_Weg_J_Bestellen">
+        <di:waypoint x="2305" y="640" />
+        <di:waypoint x="2705" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2320" y="622" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Weg_J_Kunde_di" bpmnElement="Flow_G_Weg_J_Kunde">
+        <di:waypoint x="2280" y="615" />
+        <di:waypoint x="2280" y="370" />
+        <di:waypoint x="2405" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Weg_U_Grenzfall_di" bpmnElement="Flow_G_Weg_U_Grenzfall">
+        <di:waypoint x="2280" y="665" />
+        <di:waypoint x="2280" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U_Grenzfall_G_Grenz_di" bpmnElement="Flow_U_Grenzfall_G_Grenz">
+        <di:waypoint x="2340" y="920" />
+        <di:waypoint x="2405" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Grenz_J_Kunde_di" bpmnElement="Flow_G_Grenz_J_Kunde">
+        <di:waypoint x="2430" y="895" />
+        <di:waypoint x="2430" y="395" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2438" y="845" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Grenz_E_Grenzfall_di" bpmnElement="Flow_G_Grenz_E_Grenzfall">
+        <di:waypoint x="2455" y="920" />
+        <di:waypoint x="2562" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Kunde_C_Entscheidung_di" bpmnElement="Flow_J_Kunde_C_Entscheidung">
+        <di:waypoint x="2455" y="370" />
+        <di:waypoint x="2520" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_C_Entscheidung_G_Entsch_di" bpmnElement="Flow_C_Entscheidung_G_Entsch">
+        <di:waypoint x="2640" y="370" />
+        <di:waypoint x="2705" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Entsch_J_Bestellen_di" bpmnElement="Flow_G_Entsch_J_Bestellen">
+        <di:waypoint x="2730" y="395" />
+        <di:waypoint x="2730" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Entsch_J_Vorschlag_di" bpmnElement="Flow_G_Entsch_J_Vorschlag">
+        <di:waypoint x="2730" y="345" />
+        <di:waypoint x="2730" y="250" />
+        <di:waypoint x="1530" y="250" />
+        <di:waypoint x="1530" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Entsch_T_Risiko_di" bpmnElement="Flow_G_Entsch_T_Risiko">
+        <di:waypoint x="2755" y="370" />
+        <di:waypoint x="2820" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2757" y="376" width="62" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Risiko_E_Abgelehnt_di" bpmnElement="Flow_T_Risiko_E_Abgelehnt">
+        <di:waypoint x="2940" y="370" />
+        <di:waypoint x="3012" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Bestellen_ST_Bestellen_di" bpmnElement="Flow_J_Bestellen_ST_Bestellen">
+        <di:waypoint x="2755" y="640" />
+        <di:waypoint x="2820" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ST_Bestellen_J_Warten_di" bpmnElement="Flow_ST_Bestellen_J_Warten">
+        <di:waypoint x="2940" y="640" />
+        <di:waypoint x="3005" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Warten_EG_Antwort_di" bpmnElement="Flow_J_Warten_EG_Antwort">
+        <di:waypoint x="3055" y="640" />
+        <di:waypoint x="3155" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EG_Antwort_IC_NichtLieferbar_di" bpmnElement="Flow_EG_Antwort_IC_NichtLieferbar">
+        <di:waypoint x="3180" y="615" />
+        <di:waypoint x="3180" y="520" />
+        <di:waypoint x="3312" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EG_Antwort_IC_Bestaetigt_di" bpmnElement="Flow_EG_Antwort_IC_Bestaetigt">
+        <di:waypoint x="3205" y="640" />
+        <di:waypoint x="3312" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EG_Antwort_IT_Frist_di" bpmnElement="Flow_EG_Antwort_IT_Frist">
+        <di:waypoint x="3180" y="665" />
+        <di:waypoint x="3180" y="760" />
+        <di:waypoint x="3312" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_IC_NichtLieferbar_T_NichtVerf_di" bpmnElement="Flow_IC_NichtLieferbar_T_NichtVerf">
+        <di:waypoint x="3348" y="520" />
+        <di:waypoint x="3420" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_NichtVerf_J_Pruefen_di" bpmnElement="Flow_T_NichtVerf_J_Pruefen">
+        <di:waypoint x="3480" y="480" />
+        <di:waypoint x="3480" y="462" />
+        <di:waypoint x="1830" y="462" />
+        <di:waypoint x="1830" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_IT_Frist_G_Nachfassen_di" bpmnElement="Flow_IT_Frist_G_Nachfassen">
+        <di:waypoint x="3348" y="760" />
+        <di:waypoint x="3455" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Nachfassen_ST_Nachfassen_di" bpmnElement="Flow_G_Nachfassen_ST_Nachfassen">
+        <di:waypoint x="3505" y="760" />
+        <di:waypoint x="3570" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Nachfassen_U_LiefAntwort_di" bpmnElement="Flow_G_Nachfassen_U_LiefAntwort">
+        <di:waypoint x="3480" y="785" />
+        <di:waypoint x="3480" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ST_Nachfassen_J_Warten_di" bpmnElement="Flow_ST_Nachfassen_J_Warten">
+        <di:waypoint x="3630" y="800" />
+        <di:waypoint x="3630" y="815" />
+        <di:waypoint x="3030" y="815" />
+        <di:waypoint x="3030" y="665" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U_LiefAntwort_G_LiefAntwort_di" bpmnElement="Flow_U_LiefAntwort_G_LiefAntwort">
+        <di:waypoint x="3540" y="920" />
+        <di:waypoint x="3605" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_LiefAntwort_J_Pruefen_di" bpmnElement="Flow_G_LiefAntwort_J_Pruefen">
+        <di:waypoint x="3630" y="945" />
+        <di:waypoint x="3630" y="1010" />
+        <di:waypoint x="1830" y="1010" />
+        <di:waypoint x="1830" y="665" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_LiefAntwort_E_KeinLieferant_di" bpmnElement="Flow_G_LiefAntwort_E_KeinLieferant">
+        <di:waypoint x="3655" y="920" />
+        <di:waypoint x="3762" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_IC_Bestaetigt_J_Lieferung_di" bpmnElement="Flow_IC_Bestaetigt_J_Lieferung">
+        <di:waypoint x="3348" y="640" />
+        <di:waypoint x="3905" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Lieferung_RT_Zustellung_di" bpmnElement="Flow_J_Lieferung_RT_Zustellung">
+        <di:waypoint x="3955" y="640" />
+        <di:waypoint x="4020" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B_Mahnung_ST_Mahnen_di" bpmnElement="Flow_B_Mahnung_ST_Mahnen">
+        <di:waypoint x="4158" y="665" />
+        <di:waypoint x="4180" y="665" />
+        <di:waypoint x="4180" y="760" />
+        <di:waypoint x="4200" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ST_Mahnen_E_Mahnung_di" bpmnElement="Flow_ST_Mahnen_E_Mahnung">
+        <di:waypoint x="4320" y="760" />
+        <di:waypoint x="4392" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B_LieferungAus_J_Klaerung_di" bpmnElement="Flow_B_LieferungAus_J_Klaerung">
+        <di:waypoint x="4040" y="698" />
+        <di:waypoint x="4040" y="920" />
+        <di:waypoint x="4655" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RT_Zustellung_U_Lieferung_di" bpmnElement="Flow_RT_Zustellung_U_Lieferung">
+        <di:waypoint x="4140" y="640" />
+        <di:waypoint x="4230" y="640" />
+        <di:waypoint x="4230" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B_ErinnLief_T_ErinnLief_di" bpmnElement="Flow_B_ErinnLief_T_ErinnLief">
+        <di:waypoint x="4200" y="312" />
+        <di:waypoint x="4200" y="250" />
+        <di:waypoint x="4320" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_ErinnLief_E_ErinnLief_di" bpmnElement="Flow_T_ErinnLief_E_ErinnLief">
+        <di:waypoint x="4440" y="250" />
+        <di:waypoint x="4512" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U_Lieferung_G_LiefOk_di" bpmnElement="Flow_U_Lieferung_G_LiefOk">
+        <di:waypoint x="4290" y="370" />
+        <di:waypoint x="4530" y="370" />
+        <di:waypoint x="4530" y="615" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_LiefOk_J_Fortschreiben_di" bpmnElement="Flow_G_LiefOk_J_Fortschreiben">
+        <di:waypoint x="4555" y="640" />
+        <di:waypoint x="4955" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_LiefOk_T_Erfassen_di" bpmnElement="Flow_G_LiefOk_T_Erfassen">
+        <di:waypoint x="4530" y="665" />
+        <di:waypoint x="4530" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Erfassen_ST_Reklamation_di" bpmnElement="Flow_T_Erfassen_ST_Reklamation">
+        <di:waypoint x="4590" y="760" />
+        <di:waypoint x="4620" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ST_Reklamation_J_Klaerung_di" bpmnElement="Flow_ST_Reklamation_J_Klaerung">
+        <di:waypoint x="4680" y="800" />
+        <di:waypoint x="4680" y="895" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Klaerung_U_Klaerung_di" bpmnElement="Flow_J_Klaerung_U_Klaerung">
+        <di:waypoint x="4705" y="920" />
+        <di:waypoint x="4770" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_U_Klaerung_G_Klaerung_di" bpmnElement="Flow_U_Klaerung_G_Klaerung">
+        <di:waypoint x="4890" y="920" />
+        <di:waypoint x="4955" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Klaerung_J_Fortschreiben_di" bpmnElement="Flow_G_Klaerung_J_Fortschreiben">
+        <di:waypoint x="4980" y="895" />
+        <di:waypoint x="4980" y="665" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4988" y="780" width="110" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Klaerung_J_Lieferung_di" bpmnElement="Flow_G_Klaerung_J_Lieferung">
+        <di:waypoint x="4980" y="945" />
+        <di:waypoint x="4980" y="1010" />
+        <di:waypoint x="3930" y="1010" />
+        <di:waypoint x="3930" y="665" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_G_Klaerung_E_Klaerung_di" bpmnElement="Flow_G_Klaerung_E_Klaerung">
+        <di:waypoint x="5005" y="920" />
+        <di:waypoint x="5112" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_J_Fortschreiben_T_Fortschreiben_di" bpmnElement="Flow_J_Fortschreiben_T_Fortschreiben">
+        <di:waypoint x="5005" y="640" />
+        <di:waypoint x="5070" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Fortschreiben_ST_Beleg_di" bpmnElement="Flow_T_Fortschreiben_ST_Beleg">
+        <di:waypoint x="5190" y="640" />
+        <di:waypoint x="5220" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ST_Beleg_T_Info_di" bpmnElement="Flow_ST_Beleg_T_Info">
+        <di:waypoint x="5340" y="640" />
+        <di:waypoint x="5370" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_T_Info_E_Erfolg_di" bpmnElement="Flow_T_Info_E_Erfolg">
+        <di:waypoint x="5490" y="640" />
+        <di:waypoint x="5562" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Pruefung_di" bpmnElement="MF_Pruefung">
+        <di:waypoint x="240" y="110" />
+        <di:waypoint x="240" y="520" />
+        <di:waypoint x="312" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Meldung_di" bpmnElement="MF_Meldung">
+        <di:waypoint x="270" y="110" />
+        <di:waypoint x="270" y="640" />
+        <di:waypoint x="312" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Schwelle_di" bpmnElement="MF_Schwelle">
+        <di:waypoint x="300" y="110" />
+        <di:waypoint x="300" y="760" />
+        <di:waypoint x="312" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Bestellung_di" bpmnElement="MF_Bestellung">
+        <di:waypoint x="2880" y="680" />
+        <di:waypoint x="2880" y="1120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_NichtLieferbar_di" bpmnElement="MF_NichtLieferbar">
+        <di:waypoint x="3290" y="1120" />
+        <di:waypoint x="3290" y="550" />
+        <di:waypoint x="3317" y="533" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Bestaetigung_di" bpmnElement="MF_Bestaetigung">
+        <di:waypoint x="3370" y="1120" />
+        <di:waypoint x="3370" y="670" />
+        <di:waypoint x="3343" y="653" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Nachfassen_di" bpmnElement="MF_Nachfassen">
+        <di:waypoint x="3670" y="800" />
+        <di:waypoint x="3670" y="1120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Zustellung_di" bpmnElement="MF_Zustellung">
+        <di:waypoint x="3410" y="1120" />
+        <di:waypoint x="3410" y="1080" />
+        <di:waypoint x="4080" y="1080" />
+        <di:waypoint x="4080" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Mahnen_di" bpmnElement="MF_Mahnen">
+        <di:waypoint x="4300" y="800" />
+        <di:waypoint x="4300" y="1120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Reklamation_di" bpmnElement="MF_Reklamation">
+        <di:waypoint x="4720" y="800" />
+        <di:waypoint x="4720" y="1120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_Beleg_di" bpmnElement="MF_Beleg">
+        <di:waypoint x="5280" y="680" />
+        <di:waypoint x="5280" y="1120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
