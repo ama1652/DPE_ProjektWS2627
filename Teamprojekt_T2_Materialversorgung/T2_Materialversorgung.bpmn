@@ -167,6 +167,8 @@ def('erinnerungszyklusLieferbestaetigung', 'R3/P2D');
 // Simulationsschalter fuer Testfaelle
 def('produktVerfuegbar', true);
 set('istSimulation', true);
+// Business Key = Vorgangskennung: alle spaeteren Nachrichten werden ueber den Business Key korreliert
+if (!execution.getProcessBusinessKey()) { execution.setProcessBusinessKey(String(v('vorgangId'))); }
 set('anzahlNachfassen', 0);
 set('bestandBekannt', has('bestand'));
 set('vorgangsstatus', 'In Bearbeitung');
@@ -363,6 +365,7 @@ set('abweichungen', hinweise.length &gt; 0 ? hinweise.join('; ') : 'keine');
 // Inhalt fuer die gemeinsame Freigabefunktion (Handlung, Begruendung, Folgen)
 set('freigabeHandlung', 'Bestellung von ' + v('bestellmenge') + ' Stueck ' + v('aktuellesProdukt') + ' bei ' + v('aktuellerLieferant') + ' fuer ' + gesamt + ' EUR');
 set('freigabeBegruendung', 'Bestand reicht voraussichtlich nur ' + v('reichweiteTage') + ' Tage (bis ' + v('voraussichtlicheUnterschreitung') + '). Abweichungen: ' + v('abweichungen'));
+set('freigabeGueltigBis', v('voraussichtlicheUnterschreitung'));
 set('freigabeFolgen', 'Freigabe: Bestellung wird simuliert ausgeloest. Ablehnung oder Aufschub: keine Bestellung, Vorrat endet voraussichtlich am ' + v('voraussichtlicheUnterschreitung') + '.');
 </bpmn:script>
     </bpmn:scriptTask>
@@ -424,6 +427,7 @@ set('freigabeFolgen', 'Freigabe: Bestellung wird simuliert ausgeloest. Ablehnung
         <camunda:in source="freigabeHandlung" target="freigabeHandlung" />
         <camunda:in source="freigabeBegruendung" target="freigabeBegruendung" />
         <camunda:in source="freigabeFolgen" target="freigabeFolgen" />
+        <camunda:in source="freigabeGueltigBis" target="freigabeGueltigBis" />
         <camunda:in source="fristKundenentscheidung" target="fristKundenentscheidung" />
         <camunda:in source="erinnerungszyklus" target="erinnerungszyklus" />
         <camunda:out source="entscheidung" target="entscheidung" />

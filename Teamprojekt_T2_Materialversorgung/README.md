@@ -115,14 +115,37 @@ Alle Werte stehen im Script „Vorgang eröffnen und Versorgungsprofil laden“ 
 4. **Keine Antwort ist keine Freigabe:** Läuft die Entscheidungsfrist ab, wird `KEINE_ANTWORT` gesetzt und nicht bestellt.
 5. **Lieferbestätigung ohne endgültige Frist:** Der Vorgang darf laut Auftrag nicht automatisch erfolgreich schließen; er bleibt sichtbar „Wartet auf Kunde“ mit Erinnerungen.
 6. **Änderungswunsch innerhalb der Grenzen:** Die vom Kunden gewünschte Menge gilt als von ihm gewollt; liegt sie innerhalb der Grenzen, wird ohne zweite Freigabe bestellt.
-7. **Simulation:** Send Tasks verwenden `${true}` und setzen nur Status-Variablen. Später werden sie gegen echte Dienste (Team 3, Team 1, Lieferant) getauscht, ohne den Ablauf zu ändern.
+7. **Simulation:** Send Tasks verwenden vorerst `${true}` und setzen nur Status-Variablen, damit das Modell ohne weitere Komponenten läuft. Achtung: Für echte Dienste muss die Implementierung dieser Tasks noch umgestellt werden (siehe Offene Punkte), der Ablauf selbst bleibt gleich.
+8. **Freigabe mit Gültigkeit:** Jede Freigabeanforderung trägt Handlung, Begründung, Folgen und Gültigkeit (Teamauftrag Abschnitt 7). Für Bestellungen gilt die Freigabe bis zum voraussichtlichen Ende des Vorrats.
+
+## Nachrichten-Korrelation
+
+Der Prozess setzt beim Start den **Business Key = Vorgangskennung** (`vorgangId`, z. B. `VG-T2-…`). Alle späteren Nachrichten (`MV_Bestellbestaetigung`, `MV_Nicht_lieferbar`, `MV_Zustellung_gemeldet`) werden über diesen Business Key der richtigen Instanz zugeordnet:
+
+```bash
+curl -u demo:demo -H "Content-Type: application/json" -X POST http://localhost:8080/engine-rest/message \
+  -d '{"messageName":"MV_Bestellbestaetigung","businessKey":"VG-T2-xxxxxxxx"}'
+```
+
+Für Tests reicht weiterhin `dpe-demo.sh msg <Name> <instanzId>`.
 
 ## Offene Punkte
 
+**Vor der Abgabe nötig:**
 - Auf CIB seven deployen und alle Testfälle durchspielen (bisher nur statisch geprüft, siehe unten).
-- Kennungsformat (`PH-0001`, `VG-T2-…`) und Nachrichtennamen im Integrationskreis mit Team 1 und 3 abstimmen.
-- Ereignisrahmen (ereignisId, korrelationsId, schemaVersion) für die Übergaben an Team 1 und 3 ergänzen, sobald das Format vereinbart ist.
-- Klären, ob die Prüfstelle eine eigene Gruppe (z. B. `pruefstelle`) statt Benutzer `demo` bekommt.
+- Simulierte Dienste austauschbar machen: Send Tasks und die rechnenden Script Tasks auf **Service Tasks mit External Tasks** (z. B. Topic `t2-bestellung`) oder REST-Aufrufe an einen kleinen Simulationsdienst umstellen. Dann kann später der echte Dienst den Simulator ersetzen, ohne das BPMN-Modell zu ändern. Das entspricht auch der Trennung von Prozess- und Dienstschicht aus der Vorlesung.
+- Grenzen und Versorgungsprofil (Preisgrenze, Zielbestand, Fristen) aus dem Script herausnehmen und konfigurierbar ablegen, z. B. als DMN-Tabelle „Versorgungsprofil“ oder Konfigurationsdatei (Projekthandbuch 5.6).
+- Gemeinsame Funktionen für alle Teams vervollständigen: „Kunden informieren“ (Benachrichtigung) als eigener aufrufbarer Prozess und eine **allgemeine** Berechtigungsprüfung, die nicht nur auf Bestellungen zugeschnitten ist (Teamauftrag 2.2).
+- 2 bis 3 Testprodukte im Versorgungsprofil festlegen (bisher nur „Testprodukt M“; je Produkt ein Vorgang).
+
+**Mit Team 1 und 3 abstimmen (Integrationskreis):**
+- Kennungsformat (`PH-0001`, `VG-T2-…`) und Nachrichtennamen.
+- Ereignisrahmen (ereignisId, korrelationsId, schemaVersion) für die Übergaben an Team 1 und 3.
+- Nachfassen und Mahnen über die Bausteine von Team 3 statt eigener Send Tasks.
+
+**Im Team entscheiden:**
+- Ob die Prüfstelle eine eigene Gruppe (z. B. `pruefstelle`) statt Benutzer `demo` bekommt.
+- Ob nach „Kunde entscheidet“ durch die Prüfstelle bei ungeklärtem Produkt überhaupt bestellt werden darf.
 - Formulare später durch eigene Oberflächen ersetzen (Teamauftrag Abschnitt 8).
 
 ## Bisherige Prüfung

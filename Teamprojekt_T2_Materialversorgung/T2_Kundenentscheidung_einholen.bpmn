@@ -25,7 +25,7 @@
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="KE_Start" name="Freigabe angefordert">
-      <bpmn:documentation>Wird per Call Activity gestartet. Eingaben: freigabeHandlung, freigabeBegruendung, freigabeFolgen, fristKundenentscheidung, erinnerungszyklus, pflegehaushaltId, vorgangId.</bpmn:documentation>
+      <bpmn:documentation>Wird per Call Activity gestartet. Eingaben: freigabeHandlung, freigabeBegruendung, freigabeFolgen, freigabeGueltigBis, fristKundenentscheidung, erinnerungszyklus, pflegehaushaltId, vorgangId.</bpmn:documentation>
       <bpmn:outgoing>Flow_KE_Start_KE_Anfrage</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:scriptTask id="KE_Anfrage" name="Freigabeanforderung erstellen und Kunden benachrichtigen" scriptFormat="javascript">
@@ -40,6 +40,7 @@ function def(n, w) { if (!has(n)) { set(n, w); } }
 def('freigabeHandlung', '(keine Handlung uebergeben)');
 def('freigabeBegruendung', '-');
 def('freigabeFolgen', '-');
+def('freigabeGueltigBis', 'unbefristet');
 def('fristKundenentscheidung', 'P3D');
 def('erinnerungszyklus', 'R2/P1D');
 var d = new Date();
@@ -50,7 +51,7 @@ set('letztesEreignis', 'Kundenentscheidung angefordert');
 </bpmn:script>
     </bpmn:scriptTask>
     <bpmn:userTask id="KE_Entscheiden" name="Über Freigabe entscheiden" camunda:assignee="demo">
-      <bpmn:documentation>Anlass: eine konkret beschriebene Handlung braucht eine Freigabe. Benötigt: Handlung, Begründung, Folgen. Rolle: pflegende Person (Kunde). Ergebnis: freigegeben, abgelehnt, Änderung oder Aufschub. Frist: fristKundenentscheidung.</bpmn:documentation>
+      <bpmn:documentation>Anlass: eine konkret beschriebene Handlung braucht eine Freigabe. Benötigt: Handlung, Begründung, Folgen, Gültigkeit. Rolle: pflegende Person (Kunde). Ergebnis: freigegeben, abgelehnt, Änderung oder Aufschub. Frist: fristKundenentscheidung.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="freigabeHandlung" label="Was soll passieren?" type="string">
@@ -60,6 +61,9 @@ set('letztesEreignis', 'Kundenentscheidung angefordert');
             <camunda:validation><camunda:constraint name="readonly" /></camunda:validation>
           </camunda:formField>
           <camunda:formField id="freigabeFolgen" label="Folgen der Entscheidung" type="string">
+            <camunda:validation><camunda:constraint name="readonly" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="freigabeGueltigBis" label="Freigabe gültig bis" type="string">
             <camunda:validation><camunda:constraint name="readonly" /></camunda:validation>
           </camunda:formField>
           <camunda:formField id="entscheidung" label="Ihre Entscheidung" type="enum">
