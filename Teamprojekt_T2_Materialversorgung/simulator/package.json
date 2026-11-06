@@ -1,0 +1,17 @@
+{
+  "name": "team2-simulator",
+  "version": "1.0.0",
+  "description": "Simulierte Dienste für Team 2 Materialversorgung (External Tasks für CIB seven)",
+  "main": "t2-simulator.js",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node t2-simulator.js",
+    "start:auto": "SIM_LIEFERANT=auto node t2-simulator.js",
+    "test": "node --test",
+    "pruefen": "node pruefung/camunda7-pruefung.mjs .. && node pruefung/dmn-pruefung.mjs .."
+  }
+}
