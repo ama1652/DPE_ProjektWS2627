@@ -3,6 +3,18 @@
 Ausführbares Prozessmodell für den Teamauftrag 2 „Ausgewählte Verbrauchsprodukte rechtzeitig und kontrolliert nachversorgen“.
 Für **Camunda 7 / CIB seven** (Modeler: Camunda 7.24). Stand 6. November 2026, **Version 2, Entwurf**: noch nicht auf CIB seven getestet und noch nicht vom Team bestätigt.
 
+## Diagramme
+
+GitHub zeigt `.bpmn`-Dateien nur als XML. Hier die Diagramme als Bild (zum Vergrößern anklicken). Bearbeiten: `.bpmn`-Datei herunterladen und im Camunda Modeler öffnen.
+
+**Hauptprozess** (`T2_Materialversorgung.bpmn`)
+
+[![Hauptprozess Materialversorgung](bilder/T2_Materialversorgung.svg)](bilder/T2_Materialversorgung.svg)
+
+**Teilprozess Kundenentscheidung einholen** (`T2_Kundenentscheidung_einholen.bpmn`, gemeinsame Funktion für Team 1, 2 und 3)
+
+[![Teilprozess Kundenentscheidung einholen](bilder/T2_Kundenentscheidung_einholen.svg)](bilder/T2_Kundenentscheidung_einholen.svg)
+
 ## Aufbau: Prozess, Regeln und Dienste getrennt
 
 | Schicht | Inhalt | Dateien |
