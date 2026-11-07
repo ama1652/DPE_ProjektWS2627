@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_T2_Berechtigungsregel" name="Berechtigung prüfen" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+
+  <decision id="T2_Berechtigungsregel" name="Berechtigung prüfen" camunda:historyTimeToLive="180">
+    <description>Gemeinsamer Dienst von Team 2 für Team 1, 2 und 3: Darf eine Handlung automatisch ausgeführt werden, braucht sie eine Kundenfreigabe oder eine menschliche Prüfung? Hit Policy FIRST: die erste passende Zeile gewinnt. Die Betragsgrenze kommt vom aufrufenden Team (bei Team 2 aus dem Produktprofil). Noch nicht im Integrationskreis bestätigt.</description>
+    <decisionTable id="DecisionTable_T2_Berechtigungsregel" hitPolicy="FIRST">
+      <input id="Input_1" label="Handlungsart"><inputExpression id="InputExpression_1" typeRef="string"><text>handlungsart</text></inputExpression></input>
+      <input id="Input_2" label="Betrag innerhalb der Grenze?"><inputExpression id="InputExpression_2" typeRef="boolean"><text>betrag &lt;= betragsgrenze</text></inputExpression></input>
+      <input id="Input_3" label="Fall ungeklärt?"><inputExpression id="InputExpression_3" typeRef="boolean"><text>fallUngeklaert</text></inputExpression></input>
+      <input id="Input_4" label="Abweichung mit Folgen?"><inputExpression id="InputExpression_4" typeRef="boolean"><text>abweichungMitFolgen</text></inputExpression></input>
+      <output id="Output_1" label="Freigabeweg" name="freigabeweg" typeRef="string" />
+      <output id="Output_2" label="Begründung" name="begruendung" typeRef="string" />
+      <rule id="Rule_1">
+        <description>Teamauftrag 2, Abschnitt 3.2 und 5</description>
+        <inputEntry id="UnaryTests_1_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_1_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_1_3"><text>true</text></inputEntry>
+        <inputEntry id="UnaryTests_1_4"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_1_1"><text>"PRUEFSTELLE"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_2"><text>"Ungeklärter Fall: menschliche Prüfung, kein erfundener Ersatz"</text></outputEntry>
+      </rule>
+      <rule id="Rule_2">
+        <description>Teamauftrag 2, Abschnitt 5 (keine stille Abweichung)</description>
+        <inputEntry id="UnaryTests_2_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_2_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_2_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_2_4"><text>true</text></inputEntry>
+        <outputEntry id="LiteralExpression_2_1"><text>"KUNDENFREIGABE"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_2"><text>"Abweichung mit Folgen: Entscheidung des Kunden nötig"</text></outputEntry>
+      </rule>
+      <rule id="Rule_3">
+        <description>Projektannahme: Preisgrenze je Produkt</description>
+        <inputEntry id="UnaryTests_3_1"><text>"BESTELLUNG"</text></inputEntry>
+        <inputEntry id="UnaryTests_3_2"><text>true</text></inputEntry>
+        <inputEntry id="UnaryTests_3_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_3_4"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_3_1"><text>"AUTOMATISCH"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_2"><text>"Bestellung im Rahmen des Profils und unter der Preisgrenze"</text></outputEntry>
+      </rule>
+      <rule id="Rule_4">
+        <description>Teamauftrag 2, Abschnitt 5</description>
+        <inputEntry id="UnaryTests_4_1"><text>"BESTELLUNG"</text></inputEntry>
+        <inputEntry id="UnaryTests_4_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_4_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_4_4"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_4_1"><text>"KUNDENFREIGABE"</text></outputEntry>
+        <outputEntry id="LiteralExpression_4_2"><text>"Preisgrenze überschritten: Freigabe mit Mehrkosten oder Alternative"</text></outputEntry>
+      </rule>
+      <rule id="Rule_5">
+        <description>Projektannahme für Team 1</description>
+        <inputEntry id="UnaryTests_5_1"><text>"EINREICHUNG"</text></inputEntry>
+        <inputEntry id="UnaryTests_5_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_5_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_5_4"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_5_1"><text>"KUNDENFREIGABE"</text></outputEntry>
+        <outputEntry id="LiteralExpression_5_2"><text>"Einreichung nur mit ausdrücklicher Freigabe"</text></outputEntry>
+      </rule>
+      <rule id="Rule_6">
+        <description>Projektannahme für Team 3</description>
+        <inputEntry id="UnaryTests_6_1"><text>"ERSATZVERSORGUNG"</text></inputEntry>
+        <inputEntry id="UnaryTests_6_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_6_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_6_4"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_6_1"><text>"KUNDENFREIGABE"</text></outputEntry>
+        <outputEntry id="LiteralExpression_6_2"><text>"Ersatzversorgung nur mit ausdrücklicher Freigabe"</text></outputEntry>
+      </rule>
+      <rule id="Rule_7">
+        <description>Sicherer Standard</description>
+        <inputEntry id="UnaryTests_7_1"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_2"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_3"><text></text></inputEntry>
+        <inputEntry id="UnaryTests_7_4"><text></text></inputEntry>
+        <outputEntry id="LiteralExpression_7_1"><text>"KUNDENFREIGABE"</text></outputEntry>
+        <outputEntry id="LiteralExpression_7_2"><text>"Unbekannte Handlung: sicherheitshalber Kunde fragen"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI><dmndi:DMNDiagram id="DMNDiagram_T2_Berechtigungsregel"><dmndi:DMNShape id="DMNShape_T2_Berechtigungsregel" dmnElementRef="T2_Berechtigungsregel"><dc:Bounds height="80" width="180" x="160" y="100" /></dmndi:DMNShape></dmndi:DMNDiagram></dmndi:DMNDI>
+</definitions>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_T2_Fristen" name="Fristen laden" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+
+  <decision id="T2_Fristen" name="Fristen laden" camunda:historyTimeToLive="180">
+    <description>Erinnerungen und Fristen je Testprodukt im Format ISO 8601 (R2/P1D = zweimal, je nach einem Tag). Projektannahmen. Die endgültigen Fristen liegen nach den Zyklen, damit erst erinnert bzw. nachgefasst wird. TP-SCHNELL in Minuten zum Vorführen.</description>
+    <decisionTable id="DecisionTable_T2_Fristen" hitPolicy="UNIQUE">
+      <input id="Input_1" label="Produkt-ID"><inputExpression id="InputExpression_1" typeRef="string"><text>produktId</text></inputExpression></input>
+      <output id="Output_1" label="Erinnerungszyklus Kunde" name="erinnerungszyklus" typeRef="string" />
+      <output id="Output_2" label="Frist Bestandsmeldung (je Anfrage)" name="fristBestandsmeldung" typeRef="string" />
+      <output id="Output_3" label="Anfragen Bestand (max.)" name="maxAnfragenBestand" typeRef="integer" />
+      <output id="Output_4" label="Frist Kundenentscheidung" name="fristKundenentscheidung" typeRef="string" />
+      <output id="Output_5" label="Nachfasszyklus Lieferant" name="nachfasszyklusLieferant" typeRef="string" />
+      <output id="Output_6" label="Endgültige Frist Bestellbestätigung" name="fristBestaetigungEndgueltig" typeRef="string" />
+      <output id="Output_7" label="Mahnzyklus Lieferung" name="mahnzyklusLieferung" typeRef="string" />
+      <output id="Output_8" label="Endgültige Lieferfrist" name="fristLieferungEndgueltig" typeRef="string" />
+      <output id="Output_9" label="Erinnerungszyklus Lieferbestätigung" name="erinnerungszyklusLieferbestaetigung" typeRef="string" />
+      <output id="Output_10" label="Frist Lieferbestätigung" name="fristLieferbestaetigung" typeRef="string" />
+      <output id="Output_11" label="Frist Prüfstelle" name="fristPruefstelle" typeRef="string" />
+      <rule id="Rule_1">
+        <description>Projektannahme</description>
+        <inputEntry id="UnaryTests_1_1"><text>"TP-M"</text></inputEntry>
+        <outputEntry id="LiteralExpression_1_1"><text>"R2/P1D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_2"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_3"><text>2</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_4"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_5"><text>"R2/PT48H"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_6"><text>"PT144H"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_7"><text>"R3/P2D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_8"><text>"P10D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_9"><text>"R3/P2D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_10"><text>"P7D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_1_11"><text>"P2D"</text></outputEntry>
+      </rule>
+      <rule id="Rule_2">
+        <description>Projektannahme</description>
+        <inputEntry id="UnaryTests_2_1"><text>"TP-HS"</text></inputEntry>
+        <outputEntry id="LiteralExpression_2_1"><text>"R2/P1D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_2"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_3"><text>2</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_4"><text>"P3D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_5"><text>"R2/PT48H"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_6"><text>"PT144H"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_7"><text>"R3/P2D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_8"><text>"P10D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_9"><text>"R3/P2D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_10"><text>"P7D"</text></outputEntry>
+        <outputEntry id="LiteralExpression_2_11"><text>"P2D"</text></outputEntry>
+      </rule>
+      <rule id="Rule_3">
+        <description>Projektannahme; nur für Tests und Vorführung</description>
+        <inputEntry id="UnaryTests_3_1"><text>"TP-SCHNELL"</text></inputEntry>
+        <outputEntry id="LiteralExpression_3_1"><text>"R2/PT30S"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_2"><text>"PT2M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_3"><text>2</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_4"><text>"PT2M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_5"><text>"R1/PT1M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_6"><text>"PT3M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_7"><text>"R2/PT1M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_8"><text>"PT5M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_9"><text>"R3/PT1M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_10"><text>"PT4M"</text></outputEntry>
+        <outputEntry id="LiteralExpression_3_11"><text>"PT3M"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI><dmndi:DMNDiagram id="DMNDiagram_T2_Fristen"><dmndi:DMNShape id="DMNShape_T2_Fristen" dmnElementRef="T2_Fristen"><dc:Bounds height="80" width="180" x="160" y="100" /></dmndi:DMNShape></dmndi:DMNDiagram></dmndi:DMNDI>
+</definitions>

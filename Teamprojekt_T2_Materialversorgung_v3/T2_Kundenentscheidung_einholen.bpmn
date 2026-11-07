@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_T2_Kundenentscheidung_einholen" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.52.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:collaboration id="Collaboration_T2_Kundenentscheidung_einholen">
+    <bpmn:participant id="P_T2_Kundenentscheidung_einholen" name="Gemeinsame Funktion: Kundenentscheidung einholen (Team 2)" processRef="T2_Kundenentscheidung_einholen" />
+    <bpmn:participant id="P_KE_App" name="Pflege-App" />
+    <bpmn:messageFlow id="MF_1" name="Freigabeanfrage" sourceRef="KE_Benachr" targetRef="P_KE_App" />
+    <bpmn:messageFlow id="MF_2" name="Erinnerung" sourceRef="KE_SP" targetRef="P_KE_App" />
+    <bpmn:messageFlow id="MF_3" name="Entscheidung" sourceRef="P_KE_App" targetRef="KE_SP" />
+  </bpmn:collaboration>
+  <bpmn:process id="T2_Kundenentscheidung_einholen" name="Kundenentscheidung einholen (gemeinsame Funktion)" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:documentation>Gemeinsame Funktion von Team 2 für alle Teams, Version 3: Freigabeanforderung mit Handlung, Begründung, Folgen und Gültigkeit. Eingaben: freigabeHandlung, freigabeBegruendung, freigabeFolgen, freigabeGueltigBis, fristKundenentscheidung, erinnerungszyklus. Ausgabe: entscheidung (FREIGEGEBEN, ABGELEHNT, AENDERUNG, AUFSCHUB, KEINE_ANTWORT) und entscheidungKommentar. Je Ergebnis ein Endereignis. Keine Antwort innerhalb der Frist ist nie eine Freigabe.</bpmn:documentation>
+    <bpmn:startEvent id="KE_Start" name="Freigabe angefordert">
+      <bpmn:outgoing>Flow_KE_Start_KE_Anfrage</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="KE_Anfrage" name="Freigabeanforderung anlegen" camunda:type="external" camunda:topic="t2-freigabe-anlegen">
+      <bpmn:documentation>Legt die Freigabeanforderung mit Kennung und Zeitpunkt an (SIMULIERT).</bpmn:documentation>
+      <bpmn:incoming>Flow_KE_Start_KE_Anfrage</bpmn:incoming>
+      <bpmn:outgoing>Flow_KE_Anfrage_KE_Benachr</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateThrowEvent id="KE_Benachr" name="Kunde benachrichtigt">
+      <bpmn:documentation>Benachrichtigung über den gemeinsamen Dienst: Handlung, Begründung, Folgen und Frist.</bpmn:documentation>
+      <bpmn:incoming>Flow_KE_Anfrage_KE_Benachr</bpmn:incoming>
+      <bpmn:outgoing>Flow_KE_Benachr_KE_SP</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="ED_KE_Benachr" messageRef="Msg_MV_Benachrichtigung" camunda:type="external" camunda:topic="t2-benachrichtigung-senden" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:subProcess id="KE_SP" name="Entscheidung des Kunden einholen">
+      <bpmn:documentation>Kapselt die Entscheidung samt Erinnerungen. Läuft die Frist am Rand ab, enden Aufgabe und Erinnerungen gemeinsam.</bpmn:documentation>
+      <bpmn:incoming>Flow_KE_Benachr_KE_SP</bpmn:incoming>
+      <bpmn:outgoing>Flow_KE_SP_KE_Doku</bpmn:outgoing>
+      <bpmn:startEvent id="KE_SP_Start" name="Anfrage offen">
+        <bpmn:outgoing>Flow_KE_SP_Start_KE_Entscheiden</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="KE_Entscheiden" name="Über Freigabe entscheiden" camunda:candidateGroups="pflegende-person">
+        <bpmn:documentation>Anlass: Handlung braucht eine ausdrückliche Freigabe. Benötigt: Handlung, Begründung, Folgen, Gültigkeit. Rolle: pflegende Person. Ergebnis: Freigabe, Ablehnung, Änderung (Menge oder Alternative) oder Aufschub. Frist: fristKundenentscheidung.</bpmn:documentation>
+        <bpmn:extensionElements><camunda:executionListener expression="${execution.setVariable('vorgangsstatus', 'Wartet auf Kunde')}" event="start" /><camunda:formData><camunda:formField id="freigabeHandlung" label="Was soll passieren?" type="string"><camunda:validation><camunda:constraint name="readonly" /></camunda:validation></camunda:formField><camunda:formField id="freigabeBegruendung" label="Warum?" type="string"><camunda:validation><camunda:constraint name="readonly" /></camunda:validation></camunda:formField><camunda:formField id="freigabeFolgen" label="Was passiert bei Ja oder Nein?" type="string"><camunda:validation><camunda:constraint name="readonly" /></camunda:validation></camunda:formField><camunda:formField id="freigabeGueltigBis" label="Entscheidung gilt bis" type="string"><camunda:validation><camunda:constraint name="readonly" /></camunda:validation></camunda:formField><camunda:formField id="entscheidung" label="Ihre Entscheidung" type="enum"><camunda:validation><camunda:constraint name="required" /></camunda:validation><camunda:value id="FREIGEGEBEN" name="Freigeben" /><camunda:value id="ABGELEHNT" name="Ablehnen" /><camunda:value id="AENDERUNG" name="Ändern" /><camunda:value id="AUFSCHUB" name="Später entscheiden" /></camunda:formField><camunda:formField id="gewuenschteMenge" label="Nur bei Änderung: gewünschte Menge" type="long"></camunda:formField><camunda:formField id="gewuenschteAlternative" label="Nur bei Änderung: Alternative" type="enum"><camunda:value id="KEINE" name="Keine" /><camunda:value id="ERSATZPRODUKT" name="Hinterlegtes Ersatzprodukt" /><camunda:value id="ALTERNATIVLIEFERANT" name="Zugelassener Alternativlieferant" /></camunda:formField><camunda:formField id="entscheidungKommentar" label="Kommentar" type="string"></camunda:formField></camunda:formData></bpmn:extensionElements>
+        <bpmn:incoming>Flow_KE_SP_Start_KE_Entscheiden</bpmn:incoming>
+        <bpmn:outgoing>Flow_KE_Entscheiden_KE_SP_Ende</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="KE_SP_Ende" name="Entschieden">
+        <bpmn:incoming>Flow_KE_Entscheiden_KE_SP_Ende</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:boundaryEvent id="KE_B_Erinn" name="Erinnerung fällig" attachedToRef="KE_Entscheiden" cancelActivity="false">
+        <bpmn:outgoing>Flow_KE_B_Erinn_KE_Erinn</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="ED_KE_B_Erinn"><bpmn:timeCycle xsi:type="bpmn:tFormalExpression">${erinnerungszyklus}</bpmn:timeCycle></bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:endEvent id="KE_Erinn" name="Erinnerung versandt">
+        <bpmn:incoming>Flow_KE_B_Erinn_KE_Erinn</bpmn:incoming>
+        <bpmn:messageEventDefinition id="ED_KE_Erinn" messageRef="Msg_MV_Benachrichtigung" camunda:type="external" camunda:topic="t2-benachrichtigung-senden" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_KE_SP_Start_KE_Entscheiden" sourceRef="KE_SP_Start" targetRef="KE_Entscheiden" />
+      <bpmn:sequenceFlow id="Flow_KE_Entscheiden_KE_SP_Ende" sourceRef="KE_Entscheiden" targetRef="KE_SP_Ende" />
+      <bpmn:sequenceFlow id="Flow_KE_B_Erinn_KE_Erinn" sourceRef="KE_B_Erinn" targetRef="KE_Erinn" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="KE_B_Frist" name="Entscheidungsfrist abgelaufen" attachedToRef="KE_SP">
+      <bpmn:outgoing>Flow_KE_B_Frist_KE_Keine</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="ED_KE_B_Frist"><bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${fristKundenentscheidung}</bpmn:timeDuration></bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="KE_Doku" name="Entscheidung dokumentieren" camunda:type="external" camunda:topic="t2-freigabe-dokumentieren">
+      <bpmn:incoming>Flow_KE_SP_KE_Doku</bpmn:incoming>
+      <bpmn:outgoing>Flow_KE_Doku_KE_G</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="KE_Keine" name="Keine Antwort dokumentieren" camunda:type="external" camunda:topic="t2-freigabe-dokumentieren">
+      <bpmn:documentation>Frist ohne Rückmeldung abgelaufen: entscheidung = KEINE_ANTWORT. Das ist keine Freigabe.</bpmn:documentation>
+      <bpmn:incoming>Flow_KE_B_Frist_KE_Keine</bpmn:incoming>
+      <bpmn:outgoing>Flow_KE_Keine_KE_E_Keine</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="KE_G" name="Entscheidung?" default="Flow_KE_G_KE_E_Aufs">
+      <bpmn:incoming>Flow_KE_Doku_KE_G</bpmn:incoming>
+      <bpmn:outgoing>Flow_KE_G_KE_E_Frei</bpmn:outgoing>
+      <bpmn:outgoing>Flow_KE_G_KE_E_Abg</bpmn:outgoing>
+      <bpmn:outgoing>Flow_KE_G_KE_E_Aend</bpmn:outgoing>
+      <bpmn:outgoing>Flow_KE_G_KE_E_Aufs</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="KE_E_Frei" name="Freigegeben">
+      <bpmn:incoming>Flow_KE_G_KE_E_Frei</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="KE_E_Abg" name="Abgelehnt">
+      <bpmn:incoming>Flow_KE_G_KE_E_Abg</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="KE_E_Aend" name="Änderung gewünscht">
+      <bpmn:incoming>Flow_KE_G_KE_E_Aend</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="KE_E_Aufs" name="Aufgeschoben">
+      <bpmn:incoming>Flow_KE_G_KE_E_Aufs</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="KE_E_Keine" name="Keine Antwort">
+      <bpmn:incoming>Flow_KE_Keine_KE_E_Keine</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_KE_Start_KE_Anfrage" sourceRef="KE_Start" targetRef="KE_Anfrage" />
+    <bpmn:sequenceFlow id="Flow_KE_Anfrage_KE_Benachr" sourceRef="KE_Anfrage" targetRef="KE_Benachr" />
+    <bpmn:sequenceFlow id="Flow_KE_Benachr_KE_SP" sourceRef="KE_Benachr" targetRef="KE_SP" />
+    <bpmn:sequenceFlow id="Flow_KE_SP_KE_Doku" sourceRef="KE_SP" targetRef="KE_Doku" />
+    <bpmn:sequenceFlow id="Flow_KE_B_Frist_KE_Keine" sourceRef="KE_B_Frist" targetRef="KE_Keine" />
+    <bpmn:sequenceFlow id="Flow_KE_Keine_KE_E_Keine" sourceRef="KE_Keine" targetRef="KE_E_Keine" />
+    <bpmn:sequenceFlow id="Flow_KE_Doku_KE_G" sourceRef="KE_Doku" targetRef="KE_G" />
+    <bpmn:sequenceFlow id="Flow_KE_G_KE_E_Frei" name="Freigegeben" sourceRef="KE_G" targetRef="KE_E_Frei"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung == 'FREIGEGEBEN'}</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_KE_G_KE_E_Abg" name="Abgelehnt" sourceRef="KE_G" targetRef="KE_E_Abg"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung == 'ABGELEHNT'}</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_KE_G_KE_E_Aend" name="Änderung gewünscht" sourceRef="KE_G" targetRef="KE_E_Aend"><bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${entscheidung == 'AENDERUNG'}</bpmn:conditionExpression></bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_KE_G_KE_E_Aufs" name="Aufgeschoben" sourceRef="KE_G" targetRef="KE_E_Aufs" />
+  </bpmn:process>
+  <bpmn:message id="Msg_MV_Benachrichtigung" name="MV_Benachrichtigung" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_T2_Kundenentscheidung_einholen">
+    <bpmndi:BPMNPlane id="BPMNPlane_T2_Kundenentscheidung_einholen" bpmnElement="Collaboration_T2_Kundenentscheidung_einholen">
+      <bpmndi:BPMNShape id="P_T2_Kundenentscheidung_einholen_di" bpmnElement="P_T2_Kundenentscheidung_einholen" isHorizontal="true"><dc:Bounds x="100" y="200" width="1286" height="714" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="P_KE_App_di" bpmnElement="P_KE_App" isHorizontal="true"><dc:Bounds x="100" y="60" width="1286" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Start_di" bpmnElement="KE_Start"><dc:Bounds x="170" y="402" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Anfrage_di" bpmnElement="KE_Anfrage"><dc:Bounds x="298" y="380" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Benachr_di" bpmnElement="KE_Benachr"><dc:Bounds x="490" y="402" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_SP_di" bpmnElement="KE_SP" isExpanded="false"><dc:Bounds x="618" y="380" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Doku_di" bpmnElement="KE_Doku"><dc:Bounds x="826" y="380" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Keine_di" bpmnElement="KE_Keine"><dc:Bounds x="826" y="764" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_G_di" bpmnElement="KE_G" isMarkerVisible="true"><dc:Bounds x="1011" y="395" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="986" y="448" width="100" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_E_Frei_di" bpmnElement="KE_E_Frei"><dc:Bounds x="1290" y="282" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_E_Abg_di" bpmnElement="KE_E_Abg"><dc:Bounds x="1290" y="402" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_E_Aend_di" bpmnElement="KE_E_Aend"><dc:Bounds x="1290" y="522" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_E_Aufs_di" bpmnElement="KE_E_Aufs"><dc:Bounds x="1290" y="642" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_E_Keine_di" bpmnElement="KE_E_Keine"><dc:Bounds x="1290" y="786" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_B_Frist_di" bpmnElement="KE_B_Frist"><dc:Bounds x="650" y="442" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="680" y="464" width="90" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_KE_Start_KE_Anfrage_di" bpmnElement="Flow_KE_Start_KE_Anfrage"><di:waypoint x="206" y="420" /><di:waypoint x="298" y="420" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_Anfrage_KE_Benachr_di" bpmnElement="Flow_KE_Anfrage_KE_Benachr"><di:waypoint x="398" y="420" /><di:waypoint x="490" y="420" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_Benachr_KE_SP_di" bpmnElement="Flow_KE_Benachr_KE_SP"><di:waypoint x="526" y="420" /><di:waypoint x="618" y="420" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_SP_KE_Doku_di" bpmnElement="Flow_KE_SP_KE_Doku"><di:waypoint x="718" y="420" /><di:waypoint x="826" y="420" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_B_Frist_KE_Keine_di" bpmnElement="Flow_KE_B_Frist_KE_Keine"><di:waypoint x="668" y="478" /><di:waypoint x="668" y="804" /><di:waypoint x="826" y="804" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_Keine_KE_E_Keine_di" bpmnElement="Flow_KE_Keine_KE_E_Keine"><di:waypoint x="926" y="804" /><di:waypoint x="1290" y="804" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_Doku_KE_G_di" bpmnElement="Flow_KE_Doku_KE_G"><di:waypoint x="926" y="420" /><di:waypoint x="1011" y="420" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_G_KE_E_Frei_di" bpmnElement="Flow_KE_G_KE_E_Frei"><di:waypoint x="1061" y="420" /><di:waypoint x="1091" y="420" /><di:waypoint x="1091" y="300" /><di:waypoint x="1290" y="300" /><bpmndi:BPMNLabel><dc:Bounds x="1099" y="283" width="68" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_G_KE_E_Abg_di" bpmnElement="Flow_KE_G_KE_E_Abg"><di:waypoint x="1061" y="420" /><di:waypoint x="1290" y="420" /><bpmndi:BPMNLabel><dc:Bounds x="1069" y="403" width="55" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_G_KE_E_Aend_di" bpmnElement="Flow_KE_G_KE_E_Aend"><di:waypoint x="1061" y="420" /><di:waypoint x="1091" y="420" /><di:waypoint x="1091" y="540" /><di:waypoint x="1290" y="540" /><bpmndi:BPMNLabel><dc:Bounds x="1099" y="523" width="111" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_G_KE_E_Aufs_di" bpmnElement="Flow_KE_G_KE_E_Aufs"><di:waypoint x="1061" y="420" /><di:waypoint x="1091" y="420" /><di:waypoint x="1091" y="660" /><di:waypoint x="1290" y="660" /><bpmndi:BPMNLabel><dc:Bounds x="1099" y="643" width="74" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_1_di" bpmnElement="MF_1"><di:waypoint x="508" y="402" /><di:waypoint x="508" y="140" /><bpmndi:BPMNLabel><dc:Bounds x="513" y="154" width="93" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_2_di" bpmnElement="MF_2"><di:waypoint x="651" y="380" /><di:waypoint x="651" y="140" /><bpmndi:BPMNLabel><dc:Bounds x="656" y="154" width="62" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_3_di" bpmnElement="MF_3"><di:waypoint x="684" y="140" /><di:waypoint x="684" y="380" /><bpmndi:BPMNLabel><dc:Bounds x="689" y="169" width="74" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_KE_SP">
+    <bpmndi:BPMNPlane id="BPMNPlane_KE_SP" bpmnElement="KE_SP">
+      <bpmndi:BPMNShape id="KE_SP_Start_di" bpmnElement="KE_SP_Start"><dc:Bounds x="102" y="222" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Entscheiden_di" bpmnElement="KE_Entscheiden"><dc:Bounds x="230" y="200" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_SP_Ende_di" bpmnElement="KE_SP_Ende"><dc:Bounds x="454" y="222" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_Erinn_di" bpmnElement="KE_Erinn"><dc:Bounds x="454" y="366" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="KE_B_Erinn_di" bpmnElement="KE_B_Erinn"><dc:Bounds x="262" y="262" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="185" y="284" width="80" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_KE_SP_Start_KE_Entscheiden_di" bpmnElement="Flow_KE_SP_Start_KE_Entscheiden"><di:waypoint x="138" y="240" /><di:waypoint x="230" y="240" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_Entscheiden_KE_SP_Ende_di" bpmnElement="Flow_KE_Entscheiden_KE_SP_Ende"><di:waypoint x="330" y="240" /><di:waypoint x="454" y="240" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KE_B_Erinn_KE_Erinn_di" bpmnElement="Flow_KE_B_Erinn_KE_Erinn"><di:waypoint x="280" y="298" /><di:waypoint x="280" y="384" /><di:waypoint x="454" y="384" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
